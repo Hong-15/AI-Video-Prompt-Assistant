@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  // 窗口控制
+  winMinimize: () => ipcRenderer.send('win-minimize'),
+  winMaximize: () => ipcRenderer.send('win-maximize'),
+  winClose: () => ipcRenderer.send('win-close'),
+
+  // 监听窗口最大化状态变化
+  onWindowMaximized: (callback) => {
+    ipcRenderer.on('window-maximized', (event, isMaximized) => callback(isMaximized));
+  },
+
   // 打开文件夹对话框
   openFolder: () => ipcRenderer.invoke('open-folder'),
 

@@ -24,6 +24,25 @@ const Toolbar = (function() {
     _onThemeChange = callbacks.onThemeChange || null;
     _onShortcutSettings = callbacks.onShortcutSettings || null;
 
+    // ========== 窗口控制按钮 ==========
+    document.getElementById('winMinimizeBtn').addEventListener('click', () => {
+      window.electronAPI.winMinimize();
+    });
+    document.getElementById('winMaximizeBtn').addEventListener('click', () => {
+      window.electronAPI.winMaximize();
+    });
+    document.getElementById('winCloseBtn').addEventListener('click', () => {
+      window.electronAPI.winClose();
+    });
+
+    // 监听窗口最大化状态，更新图标
+    window.electronAPI.onWindowMaximized((isMaximized) => {
+      const btn = document.getElementById('winMaximizeBtn');
+      if (btn) {
+        btn.textContent = isMaximized ? '❐' : '❐';
+      }
+    });
+
     // ========== 文件菜单 ==========
     const menuFileBtn = document.getElementById('menuFileBtn');
     const menuFileDropdown = document.getElementById('menuFileDropdown');

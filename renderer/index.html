@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <!-- 顶部工具栏（与标题同一行） -->
+  <!-- 顶部工具栏（单行：菜单 + 标题 + 文件夹路径 + 设置 + 窗口控制） -->
   <div id="toolbar" class="toolbar">
     <div class="toolbar-left">
       <button id="toggleSidebarBtn" class="toolbar-btn toggle-btn" title="展开/隐藏左侧任务栏">[|]</button>
@@ -33,9 +33,9 @@
           <button id="menuResetAllLayout" class="dropdown-item">全局任务工作台布局恢复默认</button>
         </div>
       </div>
+      <h1 id="workspaceTitle" class="toolbar-title">AI提示词助手</h1>
     </div>
     <div class="toolbar-center">
-      <h1 id="workspaceTitle" class="toolbar-title">AI提示词助手</h1>
       <span id="folderPath" class="folder-path"></span>
     </div>
     <div class="toolbar-right">
@@ -46,12 +46,17 @@
           <div id="menuThemeSubmenu" class="dropdown-submenu" style="display:none;">
             <button id="menuThemeLight" class="dropdown-item">浅色</button>
             <button id="menuThemeDark" class="dropdown-item">暗色</button>
-            <button id="menuThemeDefault" class="dropdown-item">默认（当前风格）</button>
+            <button id="menuThemeDefault" class="dropdown-item">默认</button>
             <button id="menuThemeSystem" class="dropdown-item">跟随系统</button>
           </div>
           <div class="dropdown-separator"></div>
           <button id="menuShortcutSettings" class="dropdown-item">快捷键设置</button>
         </div>
+      </div>
+      <div class="window-controls">
+        <button id="winMinimizeBtn" class="win-ctrl-btn win-minimize-btn" title="最小化">─</button>
+        <button id="winMaximizeBtn" class="win-ctrl-btn win-maximize-btn" title="最大化">❐</button>
+        <button id="winCloseBtn" class="win-ctrl-btn win-close-btn" title="关闭">✕</button>
       </div>
     </div>
   </div>
@@ -61,6 +66,7 @@
     <!-- 左侧提示词任务栏 -->
     <div id="sidebar" class="sidebar">
       <div class="sidebar-header">
+        <span class="sidebar-add-label">新建任务</span>
         <button id="addTaskBtn" class="add-task-btn" title="新建提示词任务">+</button>
       </div>
       <div id="taskList" class="task-list">
@@ -98,6 +104,19 @@
           <button id="clearBtn" class="clear-btn">清空所有输入</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 底部状态栏 -->
+  <div id="statusBar" class="status-bar">
+    <div class="status-bar-left">
+      <span id="statusSaveIndicator" class="status-save-indicator" title="保存状态">●</span>
+      <span id="statusFolderPath" class="status-item status-folder-path" title="点击复制路径"></span>
+    </div>
+    <div class="status-bar-right">
+      <span id="statusTaskName" class="status-item status-task-name"></span>
+      <span class="status-separator">|</span>
+      <span id="statusCardName" class="status-item status-card-name"></span>
     </div>
   </div>
 

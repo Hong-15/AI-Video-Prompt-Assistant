@@ -42,11 +42,14 @@ const App = (function() {
     // 6. 初始化侧边栏拖动调整大小
     initResizeHandle();
 
-    // 7. 监听主进程事件
+    // 7. 初始化状态栏
+    initStatusBar();
+
+    // 8. 监听主进程事件
     window.electronAPI.onFolderOpened(handleFolderOpened);
     window.electronAPI.onSaveBeforeClose(handleSaveBeforeClose);
 
-    // 8. 检查是否有已打开的文件夹
+    // 9. 检查是否有已打开的文件夹
     const existingFolder = await window.electronAPI.getCurrentFolder();
     if (existingFolder) {
       await handleFolderOpened(existingFolder);
@@ -461,6 +464,12 @@ const App = (function() {
 
   // 处理文件夹打开
   async function handleFolderOpened(folderPath) {
+    // 清除待处理的防抖保存定时器，防止旧文件夹的延迟保存将数据写入新文件夹
+    if (_saveTimer) {
+      clearTimeout(_saveTimer);
+      _saveTimer = null;
+    }
+
     // 先保存当前数据
     if (_currentFolder && _currentFolder !== folderPath) {
       await autoSave();
@@ -469,6 +478,8 @@ const App = (function() {
     _currentFolder = folderPath;
     FileManager.setCurrentFolder(folderPath);
     Toolbar.setFolderPath(folderPath);
+    updateStatusFolderPath(folderPath);
+    updateSaveStatus(true);
 
     // 尝试加载数据
     const data = await FileManager.loadData(folderPath);
@@ -530,6 +541,9 @@ const App = (function() {
     }
     // 切换到新任务
     Content.switchToTask(task);
+    // 更新状态栏
+    updateStatusTaskName(task ? task.name : '');
+    updateStatusCardName('');
   }
 
   // 任务删除
@@ -583,12 +597,16 @@ const App = (function() {
       tasks: tasks,
       activeTaskId: activeTask ? activeTask.id : null
     };
-    await FileManager.saveData(data);
+    const result = await FileManager.saveData(data);
+    if (result) {
+      updateSaveStatus(true);
+    }
   }
 
   // 防抖保存：用户输入后 800ms 自动保存，避免频繁写入
   function debounceSave() {
     if (!_currentFolder) return;
+    updateSaveStatus(false);
     if (_saveTimer) clearTimeout(_saveTimer);
     _saveTimer = setTimeout(() => {
       autoSave();
@@ -651,7 +669,58 @@ const App = (function() {
     }
   }, 30000);
 
-  return { init };
+  // ========== 状态栏管理 ==========
+
+  // 初始化状态栏
+  function initStatusBar() {
+    const folderPathEl = document.getElementById('statusFolderPath');
+    folderPathEl.addEventListener('click', () => {
+      const path = folderPathEl.textContent;
+      if (path) {
+        navigator.clipboard.writeText(path).then(() => {
+          const original = folderPathEl.textContent;
+          folderPathEl.textContent = '已复制路径!';
+          setTimeout(() => {
+            folderPathEl.textContent = original;
+          }, 1500);
+        }).catch(() => {});
+      }
+    });
+  }
+
+  function updateStatusFolderPath(folderPath) {
+    const el = document.getElementById('statusFolderPath');
+    if (el) el.textContent = folderPath || '';
+  }
+
+  function updateSaveStatus(saved) {
+    const el = document.getElementById('statusSaveIndicator');
+    if (!el) return;
+    if (saved) {
+      el.className = 'status-save-indicator saved';
+      el.title = '已保存';
+    } else {
+      el.className = 'status-save-indicator unsaved';
+      el.title = '未保存';
+    }
+  }
+
+  function updateStatusTaskName(taskName) {
+    const el = document.getElementById('statusTaskName');
+    if (el) el.textContent = taskName ? '任务：' + taskName : '';
+  }
+
+  function updateStatusCardName(cardName) {
+    const el = document.getElementById('statusCardName');
+    if (el) el.textContent = cardName ? '卡片：' + cardName : '';
+  }
+
+  // 暴露给 Content 模块调用，用于更新当前聚焦的卡片
+  function notifyCardFocused(cardLabel) {
+    updateStatusCardName(cardLabel);
+  }
+
+  return { init, notifyCardFocused };
 })();
 
 // 启动应用

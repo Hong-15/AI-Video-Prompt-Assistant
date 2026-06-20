@@ -50,6 +50,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   z-index: 100;
+  -webkit-app-region: drag;
 }
 
 .toolbar-left {
@@ -61,11 +62,9 @@ body {
 .toolbar-center {
   flex: 1;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  gap: 1px;
 }
 
 .toolbar-title {
@@ -76,13 +75,15 @@ body {
   background-clip: text;
   color: transparent;
   letter-spacing: 0.5px;
-  margin: 0;
+  margin: 0 0 0 12px;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .toolbar-right {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .folder-path {
@@ -105,6 +106,7 @@ body {
   font-size: 13px;
   transition: background var(--transition-speed);
   white-space: nowrap;
+  -webkit-app-region: no-drag;
 }
 
 .toolbar-btn:hover {
@@ -121,6 +123,7 @@ body {
 /* 下拉菜单 */
 .toolbar-menu {
   position: relative;
+  -webkit-app-region: no-drag;
 }
 
 .dropdown-menu {
@@ -135,6 +138,7 @@ body {
   z-index: 200;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
+  -webkit-app-region: no-drag;
 }
 
 /* 右对齐的下拉菜单（用于最右侧按钮） */
@@ -167,6 +171,38 @@ body {
 
 .dropdown-item-disabled:hover {
   background: transparent;
+}
+
+/* 窗口控制按钮 */
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  -webkit-app-region: no-drag;
+}
+
+.win-ctrl-btn {
+  width: 46px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background var(--transition-speed);
+}
+
+.win-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.win-close-btn:hover {
+  background: #e81123;
+  color: #fff;
 }
 
 .dropdown-separator {
@@ -227,7 +263,15 @@ body {
   padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
+}
+
+.sidebar-add-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .add-task-btn {
@@ -357,6 +401,82 @@ body {
 
 .resize-handle:hover {
   background: rgba(99, 102, 241, 0.3);
+}
+
+/* ========== 底部状态栏 ========== */
+.status-bar {
+  height: 28px;
+  min-height: 28px;
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.status-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.status-item {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-save-indicator {
+  font-size: 10px;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.status-save-indicator.saved {
+  color: #34d399;
+}
+
+.status-save-indicator.unsaved {
+  color: #fbbf24;
+}
+
+.status-folder-path {
+  cursor: pointer;
+  max-width: 500px;
+}
+
+.status-folder-path:hover {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+.status-separator {
+  color: var(--border-color);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.status-task-name {
+  max-width: 200px;
+}
+
+.status-card-name {
+  max-width: 200px;
 }
 
 /* ========== 内容区域 ========== */
@@ -822,6 +942,10 @@ html[data-theme="light"] body {
 }
 
 html[data-theme="light"] .toolbar {
+  background: #f0f0f3;
+}
+
+html[data-theme="light"] .status-bar {
   background: #f0f0f3;
 }
 

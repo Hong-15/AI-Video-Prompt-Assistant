@@ -89,6 +89,13 @@ const Content = (function() {
         if (_onInputChange) _onInputChange();
       });
 
+      // 聚焦时更新状态栏显示当前卡片
+      textarea.addEventListener('focus', () => {
+        if (typeof App !== 'undefined' && App.notifyCardFocused) {
+          App.notifyCardFocused(field.label);
+        }
+      });
+
       clearFieldBtn.addEventListener('click', () => {
         textarea.value = '';
         updatePrompt();

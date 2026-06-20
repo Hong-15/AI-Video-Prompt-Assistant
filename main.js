@@ -22,6 +22,7 @@ function createWindow(parentFolderPath) {
     title: strings.app?.windowTitle || 'AI提示词助手',
     icon: path.join(__dirname, 'assets', 'transparent.png'),
     backgroundColor: '#0b0b1a',
+    frame: false,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -29,6 +30,14 @@ function createWindow(parentFolderPath) {
       nodeIntegration: false
     },
     show: false
+  });
+
+  // 转发窗口最大化/取消最大化状态到渲染进程
+  win.on('maximize', () => {
+    win.webContents.send('window-maximized', true);
+  });
+  win.on('unmaximize', () => {
+    win.webContents.send('window-maximized', false);
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
@@ -161,6 +170,23 @@ function saveUserData(folderPath, data) {
 
 // IPC 处理
 function setupIPC() {
+  // 窗口控制
+  ipcMain.on('win-minimize', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.minimize();
+  });
+  ipcMain.on('win-maximize', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
+    }
+  });
+  ipcMain.on('win-close', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
+  });
+
   // 渲染进程请求打开文件夹
   ipcMain.handle('open-folder', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {

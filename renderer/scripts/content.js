@@ -567,6 +567,14 @@ const Content = (function() {
     _fieldLabels = {};
     _customCards = [];
     _cardOrder = [];
+
+    // 先同步清空 Sidebar 中的任务数据，避免 refreshCurrentTask 读到旧数据覆盖
+    Sidebar.updateTaskLayout(_currentTaskId, {});
+    Sidebar.updateTaskHiddenFields(_currentTaskId, []);
+    Sidebar.updateTaskFieldLabels(_currentTaskId, {});
+    Sidebar.updateTaskCustomCards(_currentTaskId, []);
+    Sidebar.updateTaskCardOrder(_currentTaskId, []);
+
     // 重新渲染以显示所有卡片
     refreshCurrentTask();
     layoutMasonry();

@@ -200,6 +200,10 @@ const Sidebar = (function() {
   function resetAllLayouts() {
     _tasks.forEach(task => {
       task.layout = {};
+      task.hiddenFields = [];
+      task.fieldLabels = {};
+      task.customCards = [];
+      task.cardOrder = [];
     });
   }
 

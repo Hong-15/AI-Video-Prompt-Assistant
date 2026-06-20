@@ -93,6 +93,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 通知主进程保存完成
   saveComplete: () => ipcRenderer.send('save-complete'),
 
+  // 通知主进程渲染进程已就绪，可以显示窗口
+  rendererReady: () => ipcRenderer.send('renderer-ready'),
+
   // 移除所有监听器
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

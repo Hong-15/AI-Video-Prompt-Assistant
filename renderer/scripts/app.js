@@ -79,17 +79,22 @@ const App = (function() {
     const html = document.documentElement;
     if (theme === 'light') {
       html.setAttribute('data-theme', 'light');
+      html.style.background = '#f5f5f7';
     } else if (theme === 'dark') {
       html.removeAttribute('data-theme');
+      html.style.background = '#0b0b1a';
     } else if (theme === 'system') {
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
         html.setAttribute('data-theme', 'light');
+        html.style.background = '#f5f5f7';
       } else {
         html.removeAttribute('data-theme');
+        html.style.background = '#0b0b1a';
       }
       listenSystemTheme();
     } else {
       html.removeAttribute('data-theme');
+      html.style.background = '#0b0b1a';
       removeSystemThemeListener();
     }
   }
@@ -101,8 +106,10 @@ const App = (function() {
     _systemThemeQuery.addEventListener('change', (e) => {
       if (e.matches) {
         document.documentElement.removeAttribute('data-theme');
+        document.documentElement.style.background = '#0b0b1a';
       } else {
         document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.style.background = '#f5f5f7';
       }
     });
   }
@@ -1330,5 +1337,8 @@ const App = (function() {
 
 // 启动应用
 document.addEventListener('DOMContentLoaded', () => {
-  App.init();
+  App.init().then(() => {
+    // 所有资源就绪，通知主进程显示窗口
+    window.electronAPI.rendererReady();
+  });
 });

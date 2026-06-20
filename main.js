@@ -69,7 +69,8 @@ function createWindow(parentFolderPath) {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      backgroundThrottling: false
     },
     show: false
   });
@@ -84,22 +85,23 @@ function createWindow(parentFolderPath) {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
+  // 等待渲染进程所有资源就绪后再显示，避免白屏
   win.once('ready-to-show', () => {
-    win.show();
+    // 不立即显示，等待渲染进程发来 renderer-ready 信号
   });
 
-  // 窗口关闭前，通知渲染进程保存数据
+  // 窗口关闭前，通知渲染进程保存数据（非重启场景）
   let closeTimeout = null;
   win.on('close', (e) => {
-    if (currentFolderPath && !win.isDestroyed()) {
+    if (currentFolderPath && !win.isDestroyed() && !isRestarting) {
       e.preventDefault();
       win.webContents.send('save-before-close');
-      // 安全超时：5秒后强制关闭
+      // 安全超时：1秒后强制关闭
       closeTimeout = setTimeout(() => {
         if (win && !win.isDestroyed()) {
           win.destroy();
         }
-      }, 5000);
+      }, 1000);
     }
   });
   win.on('closed', () => {
@@ -212,6 +214,15 @@ function saveUserData(folderPath, data) {
 
 // IPC 处理
 function setupIPC() {
+  // 渲染进程就绪，显示窗口
+  ipcMain.on('renderer-ready', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+      win.show();
+      win.focus();
+    }
+  });
+
   // 窗口控制
   ipcMain.on('win-minimize', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -554,6 +565,10 @@ function createTray() {
     }
   });
 }
+
+// 防止窗口最小化时渲染进程被挂起，避免恢复时闪白
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows', 'true');
+app.commandLine.appendSwitch('disable-renderer-backgrounding', 'true');
 
 app.whenReady().then(() => {
   loadSettings();

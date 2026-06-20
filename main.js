@@ -198,21 +198,24 @@ function saveUserData(folderPath, data) {
 // IPC 处理
 function setupIPC() {
   // 窗口控制
-  ipcMain.on('win-minimize', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.minimize();
+  ipcMain.on('win-minimize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) win.minimize();
   });
-  ipcMain.on('win-maximize', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      if (mainWindow.isMaximized()) {
-        mainWindow.unmaximize();
+  ipcMain.on('win-maximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+      if (win.isMaximized()) {
+        win.unmaximize();
       } else {
-        mainWindow.maximize();
+        win.maximize();
       }
     }
   });
-  ipcMain.on('win-close', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      handleWindowClose();
+  ipcMain.on('win-close', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+      handleWindowClose(win);
     }
   });
 
@@ -240,9 +243,10 @@ function setupIPC() {
   });
 
   // 渲染进程通知保存完成
-  ipcMain.on('save-complete', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.destroy();
+  ipcMain.on('save-complete', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+      win.destroy();
     }
   });
 
@@ -357,22 +361,22 @@ function setupIPC() {
 }
 
 // 处理窗口关闭（根据设置决定行为）
-function handleWindowClose() {
+function handleWindowClose(win) {
   if (closeBehavior === 'tray') {
     // 隐藏到托盘
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.hide();
+    if (win && !win.isDestroyed()) {
+      win.hide();
       if (!tray) createTray();
     }
   } else if (closeBehavior === 'taskbar') {
     // 隐藏到任务栏（最小化）
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.minimize();
+    if (win && !win.isDestroyed()) {
+      win.minimize();
     }
   } else {
     // 默认退出
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.close();
+    if (win && !win.isDestroyed()) {
+      win.close();
     }
   }
 }

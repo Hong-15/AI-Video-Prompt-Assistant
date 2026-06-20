@@ -75,6 +75,9 @@ function createWindow(parentFolderPath) {
     show: false
   });
 
+  // 显式设置背景色，避免 show:false 窗口首次显示时 GPU 表面为白色
+  win.setBackgroundColor('#0b0b1a');
+
   // 转发窗口最大化/取消最大化状态到渲染进程
   win.on('maximize', () => {
     win.webContents.send('window-maximized', true);
@@ -85,9 +88,9 @@ function createWindow(parentFolderPath) {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // 等待渲染进程所有资源就绪后再显示，避免白屏
+  // 窗口首帧就绪即显示（body 被 visibility:hidden 锁定，等 JS 初始化完成后解锁）
   win.once('ready-to-show', () => {
-    // 不立即显示，等待渲染进程发来 renderer-ready 信号
+    win.show();
   });
 
   // 窗口关闭前，通知渲染进程保存数据（非重启场景）
@@ -214,13 +217,9 @@ function saveUserData(folderPath, data) {
 
 // IPC 处理
 function setupIPC() {
-  // 渲染进程就绪，显示窗口
+  // 渲染进程就绪（JS 初始化完成，已移除 visibility:hidden 锁）
   ipcMain.on('renderer-ready', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win && !win.isDestroyed()) {
-      win.show();
-      win.focus();
-    }
+    // 窗口已由 ready-to-show 显示，此处仅做确认
   });
 
   // 窗口控制
@@ -560,6 +559,7 @@ function createTray() {
 
   tray.on('double-click', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setBackgroundColor('#0b0b1a');
       mainWindow.show();
       mainWindow.focus();
     }

@@ -1338,7 +1338,8 @@ const App = (function() {
 // 启动应用
 document.addEventListener('DOMContentLoaded', () => {
   App.init().then(() => {
-    // 所有资源就绪，通知主进程显示窗口
+    // 所有资源就绪，解锁界面显示（移除 visibility:hidden 锁）
+    document.body.style.visibility = 'visible';
     window.electronAPI.rendererReady();
   });
 });

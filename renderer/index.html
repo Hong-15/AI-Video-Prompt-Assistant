@@ -68,13 +68,9 @@
       <div class="sidebar-header">
         <span class="sidebar-add-label">新建任务</span>
         <button id="addTaskBtn" class="add-task-btn" title="新建提示词任务">+</button>
-        <span class="sidebar-add-label">新建任务</span>
       </div>
       <div id="taskList" class="task-list">
         <!-- 任务列表动态生成 -->
-      </div>
-      <div class="sidebar-footer">
-        <span id="taskCount" class="task-count"></span>
       </div>
     </div>
 
@@ -115,6 +111,8 @@
       <span id="statusFolderPath" class="status-item status-folder-path" title="点击复制路径"></span>
     </div>
     <div class="status-bar-right">
+      <span id="statusTaskCount" class="status-item status-task-count"></span>
+      <span class="status-separator">|</span>
       <span id="statusTaskName" class="status-item status-task-name"></span>
       <span class="status-separator">|</span>
       <span id="statusCardName" class="status-item status-card-name"></span>

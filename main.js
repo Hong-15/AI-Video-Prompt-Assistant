@@ -103,7 +103,7 @@ function buildMenu() {
           enabled: false
         },
         { type: 'separator' },
-        { role: 'quit', label: '退出' }
+        { role: 'quit', label: strings.menu?.quit || '退出' }
       ]
     }
   ];
@@ -268,7 +268,7 @@ function setupIPC() {
   // 导出文件（弹出保存对话框）
   ipcMain.handle('export-file', async (event, { defaultName, filters, content }) => {
     const result = await dialog.showSaveDialog(mainWindow, {
-      title: '导出项目任务',
+      title: strings.dialog?.exportTitle || '导出项目任务',
       defaultPath: defaultName,
       filters: filters
     });

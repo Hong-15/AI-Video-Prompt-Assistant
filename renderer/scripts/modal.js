@@ -26,7 +26,10 @@ const Modal = (function() {
     }
 
     // 键盘快捷键提示
-    const keyboardHints = options.keyboardHints || '按 Y 确认，按 N 取消';
+    const defaultHint = options.input
+      ? StringLoader.get('modal.hintEnterN', '按 Enter 确认，按 N 取消')
+      : StringLoader.get('modal.hintYN', '按 Y / Enter 确认，按 N 取消');
+    const keyboardHints = options.keyboardHints || defaultHint;
     const hints = document.createElement('div');
     hints.className = 'modal-keyboard-hints';
     hints.textContent = keyboardHints;
@@ -55,14 +58,15 @@ const Modal = (function() {
     if (showCancel) {
       const cancelBtn = document.createElement('button');
       cancelBtn.className = 'modal-btn modal-btn-cancel';
-      cancelBtn.textContent = '取消 (N)';
+      cancelBtn.textContent = StringLoader.get('modal.cancelN', '取消 (N)');
       cancelBtn.addEventListener('click', () => overlay.remove());
       actions.appendChild(cancelBtn);
     }
 
     const confirmBtn = document.createElement('button');
     confirmBtn.className = 'modal-btn ' + (options.confirmClass || 'modal-btn-confirm');
-    confirmBtn.textContent = (options.confirmText || '确认') + ' (Y)';
+    const confirmLabel = options.confirmText || StringLoader.get('modal.confirm', '确认');
+    confirmBtn.textContent = confirmLabel + ' (Y)';
 
     function confirm() {
       const inputValue = inputEl ? inputEl.value : null;
@@ -82,9 +86,11 @@ const Modal = (function() {
       if (e.target === overlay) overlay.remove();
     });
 
-    // Y/N 键盘快捷键
+    // Y/N/Enter 键盘快捷键
     const onKeydown = (e) => {
-      if (e.key === 'y' || e.key === 'Y') {
+      // 如果焦点在输入框内，Enter 由输入框自身处理
+      if (inputEl && document.activeElement === inputEl) return;
+      if (e.key === 'y' || e.key === 'Y' || e.key === 'Enter') {
         e.preventDefault();
         confirm();
       } else if (e.key === 'n' || e.key === 'N') {
@@ -111,9 +117,9 @@ const Modal = (function() {
       title: title,
       message: message,
       onConfirm: onConfirm,
-      confirmText: options.confirmText || '确认',
+      confirmText: options.confirmText || StringLoader.get('modal.confirm', '确认'),
       confirmClass: options.confirmClass || 'modal-btn-confirm',
-      keyboardHints: options.keyboardHints || '按 Y 确认，按 N 取消'
+      keyboardHints: options.keyboardHints || StringLoader.get('modal.hintYN', '按 Y / Enter 确认，按 N 取消')
     });
   }
 
@@ -127,9 +133,9 @@ const Modal = (function() {
       inputValue: options.inputValue || '',
       inputPlaceholder: options.inputPlaceholder || '',
       onConfirm: onConfirm,
-      confirmText: options.confirmText || '确认',
+      confirmText: options.confirmText || StringLoader.get('modal.confirm', '确认'),
       confirmClass: options.confirmClass || 'modal-btn-confirm',
-      keyboardHints: '按 Enter 确认，按 N 取消'
+      keyboardHints: StringLoader.get('modal.hintEnterN', '按 Enter 确认，按 N 取消')
     });
   }
 

@@ -39,7 +39,7 @@ const Sidebar = (function() {
   // 自动生成不重复的任务名称：找到"新任务N"中最大的 N，+1
   function generateTaskName() {
     let maxNum = 0;
-    const prefix = '新任务';
+    const prefix = StringLoader.get('sidebar.defaultTaskName', '新任务');
     _tasks.forEach(t => {
       if (t.name === prefix) {
         maxNum = Math.max(maxNum, 1);
@@ -164,6 +164,22 @@ const Sidebar = (function() {
     }
   }
 
+  // 更新任务隐藏字段列表
+  function updateTaskHiddenFields(taskId, hiddenFields) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.hiddenFields = hiddenFields;
+    }
+  }
+
+  // 更新任务字段标签映射
+  function updateTaskFieldLabels(taskId, fieldLabels) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.fieldLabels = fieldLabels;
+    }
+  }
+
   // 重置所有任务的布局为默认
   function resetAllLayouts() {
     _tasks.forEach(task => {
@@ -185,7 +201,6 @@ const Sidebar = (function() {
   // 渲染任务列表
   function render() {
     const taskList = document.getElementById('taskList');
-    const taskCount = document.getElementById('taskCount');
 
     taskList.innerHTML = '';
 
@@ -206,7 +221,7 @@ const Sidebar = (function() {
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'task-delete-btn';
       deleteBtn.textContent = '−';
-      deleteBtn.title = '删除任务';
+      deleteBtn.title = StringLoader.get('sidebar.deleteTitle', '删除任务');
 
       item.appendChild(indexSpan);
       item.appendChild(nameSpan);
@@ -238,51 +253,55 @@ const Sidebar = (function() {
 
       taskList.appendChild(item);
     });
-
-    taskCount.textContent = _tasks.length > 0 ? `共 ${_tasks.length} 个任务` : '';
   }
 
   // 显示删除确认对话框
   function showDeleteConfirm(task) {
+    const msg = StringLoader.get('sidebar.deleteConfirmMsg', '确认删除任务"{name}"吗？此操作不可恢复。').replace('{name}', task.name);
     Modal.confirm(
-      '删除任务',
-      `确认删除任务"${task.name}"吗？此操作不可恢复。`,
+      StringLoader.get('sidebar.deleteTitle', '删除任务'),
+      msg,
       () => deleteTask(task.id),
-      { confirmText: '删除', confirmClass: 'modal-btn-danger' }
+      { confirmText: StringLoader.get('sidebar.deleteBtn', '删除'), confirmClass: 'modal-btn-danger' }
     );
   }
 
   // 显示重命名对话框
   function showRenameDialog(task) {
     Modal.prompt(
-      '重命名任务',
+      StringLoader.get('sidebar.renameTitle', '重命名任务'),
       null,
       (newName) => {
         if (newName && newName.trim()) {
           const trimmed = newName.trim();
           if (!renameTask(task.id, trimmed)) {
-            showToast('任务名称已存在，请使用其他名称');
+            showToast(StringLoader.get('sidebar.renameDuplicate', '任务名称已存在，请使用其他名称'));
           }
         }
       },
-      { inputValue: task.name, inputPlaceholder: '请输入新名称', confirmText: '确认' }
+      { inputValue: task.name, inputPlaceholder: StringLoader.get('sidebar.renamePlaceholder', '请输入新名称'), confirmText: StringLoader.get('modal.confirm', '确认') }
     );
   }
 
   // 显示重构帧位置对话框
   function showReorderDialog(task) {
+    const msg = StringLoader.get('sidebar.reorderMessage', '当前任务"{name}"位于第 {order} 位，请输入新的位置序号（1-{total}）：')
+      .replace('{name}', task.name)
+      .replace('{order}', task.order + 1)
+      .replace('{total}', _tasks.length);
     Modal.prompt(
-      '重构帧位置',
-      `当前任务"${task.name}"位于第 ${task.order + 1} 位，请输入新的位置序号（1-${_tasks.length}）：`,
+      StringLoader.get('sidebar.reorderTitle', '重构帧位置'),
+      msg,
       (value) => {
         const num = parseInt(value, 10);
         if (isNaN(num) || num < 1 || num > _tasks.length) {
-          alert('请输入有效的位置序号（1-' + _tasks.length + '）');
+          const errorMsg = StringLoader.get('sidebar.reorderError', '请输入有效的位置序号（1-{total}）').replace('{total}', _tasks.length);
+          alert(errorMsg);
           return false;
         }
         return reorderTask(task.id, num);
       },
-      { inputValue: String(task.order + 1), inputPlaceholder: '请输入位置序号', confirmText: '确认' }
+      { inputValue: String(task.order + 1), inputPlaceholder: StringLoader.get('sidebar.reorderPlaceholder', '请输入位置序号'), confirmText: StringLoader.get('modal.confirm', '确认') }
     );
   }
 
@@ -297,7 +316,7 @@ const Sidebar = (function() {
 
     const reorderItem = document.createElement('button');
     reorderItem.className = 'context-menu-item';
-    reorderItem.textContent = '重构帧位置';
+    reorderItem.textContent = StringLoader.get('sidebar.contextMenu.reorder', '重构帧位置');
     reorderItem.addEventListener('click', () => {
       hideContextMenu();
       showReorderDialog(task);
@@ -305,7 +324,7 @@ const Sidebar = (function() {
 
     const renameItem = document.createElement('button');
     renameItem.className = 'context-menu-item';
-    renameItem.textContent = '重命名';
+    renameItem.textContent = StringLoader.get('sidebar.contextMenu.rename', '重命名');
     renameItem.addEventListener('click', () => {
       hideContextMenu();
       showRenameDialog(task);
@@ -354,6 +373,8 @@ const Sidebar = (function() {
     setTasks,
     updateTaskFields,
     updateTaskLayout,
+    updateTaskHiddenFields,
+    updateTaskFieldLabels,
     resetAllLayouts,
     setActiveTask,
     showDeleteConfirm,

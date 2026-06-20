@@ -29,21 +29,29 @@
     "themeDark": "暗色",
     "themeDefault": "默认",
     "themeSystem": "跟随系统",
-    "shortcutSettings": "快捷键设置"
+    "shortcutSettings": "快捷键设置",
+    "winMinimize": "最小化",
+    "winMaximize": "最大化",
+    "winClose": "关闭"
   },
   "sidebar": {
     "addTask": "+",
     "addTaskTitle": "新建提示词任务",
+    "addTaskLabel": "新建任务",
     "deleteConfirm": "确认删除任务",
     "deleteTitle": "删除任务",
     "deleteBtn": "删除",
+    "deleteConfirmMsg": "确认删除任务\"{name}\"吗？此操作不可恢复。",
     "renameTitle": "重命名任务",
     "renamePrompt": "请输入新名称：",
     "renameDuplicate": "任务名称已存在，请使用其他名称",
     "renameBtn": "重命名",
+    "renamePlaceholder": "请输入新名称",
     "reorderTitle": "重构帧位置",
     "reorderPrompt": "请输入新的位置序号",
-    "reorderError": "请输入有效的位置序号",
+    "reorderMessage": "当前任务\"{name}\"位于第 {order} 位，请输入新的位置序号（1-{total}）：",
+    "reorderError": "请输入有效的位置序号（1-{total}）",
+    "reorderPlaceholder": "请输入位置序号",
     "defaultTaskName": "新任务",
     "noFolderPrompt": "请先打开一个工作文件夹，数据将保存在该文件夹中",
     "openFolderAction": "打开文件夹",
@@ -68,7 +76,16 @@
     "emptyPlaceholder": "在上方输入框中填写描述，组合后的提示词将自动显示在这里...",
     "emptyAlert": "请先填写至少一个维度",
     "emptyStateNoFolder": "请先通过\"文件 → 打开文件夹\"选择一个工作目录",
-    "emptyStateNoTask": "暂无任务，点击左侧 + 新建一个提示词任务"
+    "emptyStateNoTask": "暂无任务，点击左侧 + 新建一个提示词任务",
+    "cardRename": "重命名",
+    "cardRenameTitle": "重命名此卡片",
+    "cardDelete": "删除",
+    "cardDeleteTitle": "删除此卡片",
+    "cardDeleteConfirmTitle": "删除卡片",
+    "cardDeleteConfirmMsg": "确认删除卡片\"{name}\"吗？删除后可通过\"恢复默认布局\"恢复。",
+    "cardRenameConfirmTitle": "重命名卡片",
+    "cardRenameConfirmMsg": "请输入卡片\"{name}\"的新名称：",
+    "cardNewNamePlaceholder": "请输入新名称"
   },
   "modal": {
     "confirm": "确认",
@@ -76,7 +93,7 @@
     "save": "保存",
     "ok": "确定",
     "hint": "提示",
-    "hintYN": "按 Y 确认，按 N 取消",
+    "hintYN": "按 Y / Enter 确认，按 N 取消",
     "hintEnterN": "按 Enter 确认，按 N 取消",
     "confirmY": "确认 (Y)",
     "cancelN": "取消 (N)"
@@ -88,7 +105,22 @@
     "exportSuccessMsg": "文件已保存至：",
     "exportFailed": "导出失败",
     "exportEmpty": "当前没有任务数据可导出",
-    "unknownError": "未知错误"
+    "unknownError": "未知错误",
+    "exportTime": "导出时间",
+    "exportTaskCount": "任务总数",
+    "unnamedTask": "未命名任务",
+    "exportFileName": "项目任务导出",
+    "markdownFile": "Markdown 文件",
+    "textFile": "文本文件"
+  },
+  "status": {
+    "saved": "已保存",
+    "unsaved": "未保存（Ctrl+S 保存）",
+    "taskPrefix": "任务：",
+    "cardPrefix": "卡片：",
+    "taskCount": "共 {count} 个任务",
+    "copiedPath": "已复制路径!",
+    "clickToCopy": "点击复制路径"
   },
   "shortcuts": {
     "title": "快捷键设置",

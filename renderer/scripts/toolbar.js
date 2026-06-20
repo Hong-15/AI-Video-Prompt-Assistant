@@ -24,6 +24,9 @@ const Toolbar = (function() {
     _onThemeChange = callbacks.onThemeChange || null;
     _onShortcutSettings = callbacks.onShortcutSettings || null;
 
+    // 从字符串资源更新工具栏文本
+    updateToolbarText();
+
     // ========== 窗口控制按钮 ==========
     document.getElementById('winMinimizeBtn').addEventListener('click', () => {
       window.electronAPI.winMinimize();
@@ -220,6 +223,112 @@ const Toolbar = (function() {
   function setFolderPath(path) {
     const el = document.getElementById('folderPath');
     el.textContent = path || '';
+  }
+
+  // 从 StringLoader 更新工具栏中所有静态文本
+  function updateToolbarText() {
+    // 侧边栏切换按钮
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    if (toggleBtn) {
+      toggleBtn.title = StringLoader.get('toolbar.toggleSidebarTitle', '展开/隐藏左侧任务栏');
+    }
+
+    // 菜单按钮
+    const menuFileBtn = document.getElementById('menuFileBtn');
+    if (menuFileBtn) menuFileBtn.textContent = StringLoader.get('menu.file', '文件');
+
+    const menuLayoutBtn = document.getElementById('menuLayoutBtn');
+    if (menuLayoutBtn) menuLayoutBtn.textContent = StringLoader.get('menu.layout', '布局');
+
+    const menuSettingsBtn = document.getElementById('menuSettingsBtn');
+    if (menuSettingsBtn) menuSettingsBtn.textContent = StringLoader.get('toolbar.settings', '设置');
+
+    // 文件菜单项
+    const elOpenFolder = document.getElementById('menuOpenFolder');
+    if (elOpenFolder) elOpenFolder.textContent = StringLoader.get('menu.openFolder', '打开文件夹');
+
+    const elNewWindow = document.getElementById('menuNewWindow');
+    if (elNewWindow) elNewWindow.textContent = StringLoader.get('menu.newWindow', '新建窗口');
+
+    const elExport = document.getElementById('menuExport');
+    if (elExport) elExport.textContent = StringLoader.get('menu.export', '项目任务导出');
+
+    const elExportMD = document.getElementById('menuExportMD');
+    if (elExportMD) elExportMD.textContent = StringLoader.get('menu.exportMD', '导出为 Markdown');
+
+    const elExportTXT = document.getElementById('menuExportTXT');
+    if (elExportTXT) elExportTXT.textContent = StringLoader.get('menu.exportTXT', '导出为 文本文件');
+
+    const elTutorial = document.getElementById('menuTutorial');
+    if (elTutorial) {
+      elTutorial.textContent = StringLoader.get('menu.tutorial', '教学') + '（' + StringLoader.get('menu.tutorialPlaceholder', '暂未开放') + '）';
+    }
+
+    // 布局菜单项
+    const elResetCurrent = document.getElementById('menuResetCurrentLayout');
+    if (elResetCurrent) elResetCurrent.textContent = StringLoader.get('menu.resetCurrentLayout', '当前任务工作台布局恢复默认');
+
+    const elResetAll = document.getElementById('menuResetAllLayout');
+    if (elResetAll) elResetAll.textContent = StringLoader.get('menu.resetAllLayout', '全局任务工作台布局恢复默认');
+
+    // 设置菜单项
+    const elTheme = document.getElementById('menuTheme');
+    if (elTheme) elTheme.textContent = StringLoader.get('toolbar.theme', '主题');
+
+    const elThemeLight = document.getElementById('menuThemeLight');
+    if (elThemeLight) elThemeLight.textContent = StringLoader.get('toolbar.themeLight', '浅色');
+
+    const elThemeDark = document.getElementById('menuThemeDark');
+    if (elThemeDark) elThemeDark.textContent = StringLoader.get('toolbar.themeDark', '暗色');
+
+    const elThemeDefault = document.getElementById('menuThemeDefault');
+    if (elThemeDefault) elThemeDefault.textContent = StringLoader.get('toolbar.themeDefault', '默认');
+
+    const elThemeSystem = document.getElementById('menuThemeSystem');
+    if (elThemeSystem) elThemeSystem.textContent = StringLoader.get('toolbar.themeSystem', '跟随系统');
+
+    const elShortcut = document.getElementById('menuShortcutSettings');
+    if (elShortcut) elShortcut.textContent = StringLoader.get('toolbar.shortcutSettings', '快捷键设置');
+
+    // 窗口控制按钮
+    const winMinBtn = document.getElementById('winMinimizeBtn');
+    if (winMinBtn) winMinBtn.title = StringLoader.get('toolbar.winMinimize', '最小化');
+
+    const winMaxBtn = document.getElementById('winMaximizeBtn');
+    if (winMaxBtn) winMaxBtn.title = StringLoader.get('toolbar.winMaximize', '最大化');
+
+    const winCloseBtn = document.getElementById('winCloseBtn');
+    if (winCloseBtn) winCloseBtn.title = StringLoader.get('toolbar.winClose', '关闭');
+
+    // 工作区标题
+    const title = document.getElementById('workspaceTitle');
+    if (title) title.textContent = StringLoader.get('app.title', 'AI提示词助手');
+
+    // 输出区域标签
+    const outputLabel = document.querySelector('.output-label');
+    if (outputLabel) outputLabel.textContent = StringLoader.get('content.preview', '完整提示词预览');
+
+    // 复制按钮
+    const copyBtn = document.getElementById('copyBtn');
+    if (copyBtn) copyBtn.textContent = StringLoader.get('content.copy', '复制');
+
+    // 清空所有按钮
+    const clearBtn = document.getElementById('clearBtn');
+    if (clearBtn) clearBtn.textContent = StringLoader.get('content.clearAll', '清空所有输入');
+
+    // 侧边栏
+    const addLabel = document.querySelector('.sidebar-add-label');
+    if (addLabel) addLabel.textContent = StringLoader.get('sidebar.addTaskLabel', '新建任务');
+
+    const addBtn = document.getElementById('addTaskBtn');
+    if (addBtn) addBtn.title = StringLoader.get('sidebar.addTaskTitle', '新建提示词任务');
+
+    // 状态栏
+    const saveIndicator = document.getElementById('statusSaveIndicator');
+    if (saveIndicator) saveIndicator.title = StringLoader.get('status.saved', '已保存');
+
+    const statusFolder = document.getElementById('statusFolderPath');
+    if (statusFolder) statusFolder.title = StringLoader.get('status.clickToCopy', '点击复制路径');
   }
 
   return { init, setFolderPath };

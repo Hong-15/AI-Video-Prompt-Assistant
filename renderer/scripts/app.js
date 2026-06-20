@@ -4,7 +4,7 @@
 const App = (function() {
   let _sidebarCollapsed = false;
   let _currentFolder = null;
-  let _saveTimer = null;
+  let _isDirty = false;       // 是否有未保存的更改
   let _shortcutCfg = {};      // 当前快捷键配置
   let _shortcutKeys = {};     // 快捷键 keydown 监听引用
 
@@ -18,7 +18,7 @@ const App = (function() {
 
     // 3. 初始化内容区域（加载维度配置，传入输入变更回调）
     await Content.init({
-      onInputChange: debounceSave
+      onInputChange: markDirty
     });
 
     // 4. 初始化侧边栏
@@ -55,7 +55,7 @@ const App = (function() {
       await handleFolderOpened(existingFolder);
     }
 
-    // 9. 注册全局键盘快捷键
+    // 10. 注册全局键盘快捷键
     await initKeyboardShortcuts();
   }
 
@@ -77,18 +77,14 @@ const App = (function() {
     } else if (theme === 'dark') {
       html.removeAttribute('data-theme');
     } else if (theme === 'system') {
-      // 跟随系统：检测系统颜色方案
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
         html.setAttribute('data-theme', 'light');
       } else {
         html.removeAttribute('data-theme');
       }
-      // 监听系统主题变化
       listenSystemTheme();
     } else {
-      // default：当前暗色风格
       html.removeAttribute('data-theme');
-      // 移除系统主题监听
       removeSystemThemeListener();
     }
   }
@@ -154,7 +150,7 @@ const App = (function() {
         return;
       }
 
-      // Ctrl+Delete：删除当前任务（需已打开文件夹）
+      // Ctrl+D：删除当前任务（需已打开文件夹）
       if (matchShortcut(e, deleteTaskCfg)) {
         e.preventDefault();
         if (!_currentFolder) return;
@@ -177,7 +173,6 @@ const App = (function() {
     bindShortcutKeys();
   }
 
-  // 判断按键是否匹配快捷键配置
   function matchShortcut(e, cfg) {
     if (!cfg) return false;
     const keyMatch = e.key.toLowerCase() === cfg.key.toLowerCase();
@@ -193,15 +188,13 @@ const App = (function() {
 
   // ========== 快捷键设置弹窗 ==========
 
-  // 默认快捷键配置（用于恢复默认）
   const DEFAULT_SHORTCUTS = {
-    save: { key: "s", ctrl: true, shift: false, alt: false, description: "保存所有数据" },
-    newTask: { key: "n", ctrl: true, shift: false, alt: false, description: "新建任务" },
-    deleteTask: { key: "d", ctrl: true, shift: false, alt: false, description: "删除当前任务" }
+    save: { key: "s", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.save', '保存所有数据') },
+    newTask: { key: "n", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.newTask', '新建任务') },
+    deleteTask: { key: "d", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.deleteTask', '删除当前任务') }
   };
 
   function showShortcutSettings() {
-    // 创建遮罩
     const overlay = document.createElement('div');
     overlay.className = 'shortcut-settings-overlay';
 
@@ -210,21 +203,18 @@ const App = (function() {
 
     const title = document.createElement('div');
     title.className = 'shortcut-settings-title';
-    title.textContent = '快捷键设置';
+    title.textContent = StringLoader.get('shortcuts.title', '快捷键设置');
     box.appendChild(title);
 
-    // 表格
     const table = document.createElement('table');
     table.className = 'shortcut-settings-table';
 
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>功能</th><th>按键</th><th>Ctrl</th><th>Shift</th><th>Alt</th></tr>';
+    thead.innerHTML = '<tr><th>' + StringLoader.get('shortcuts.function', '功能') + '</th><th>' + StringLoader.get('shortcuts.key', '按键') + '</th><th>' + StringLoader.get('shortcuts.ctrl', 'Ctrl') + '</th><th>' + StringLoader.get('shortcuts.shift', 'Shift') + '</th><th>' + StringLoader.get('shortcuts.alt', 'Alt') + '</th></tr>';
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
     const shortcutKeys = Object.keys(_shortcutCfg);
-
-    // 保存输入框引用
     const inputs = {};
 
     shortcutKeys.forEach(key => {
@@ -232,13 +222,11 @@ const App = (function() {
       if (!cfg) return;
       const tr = document.createElement('tr');
 
-      // 描述
       const tdDesc = document.createElement('td');
       tdDesc.className = 'shortcut-desc';
       tdDesc.textContent = cfg.description || key;
       tr.appendChild(tdDesc);
 
-      // 按键输入
       const tdKey = document.createElement('td');
       const keyInput = document.createElement('input');
       keyInput.className = 'shortcut-key-input';
@@ -247,14 +235,12 @@ const App = (function() {
       keyInput.value = cfg.key || '';
       keyInput.addEventListener('keydown', (e) => {
         e.preventDefault();
-        // 只记录功能键本身
         if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
         keyInput.value = e.key.length === 1 ? e.key : e.key;
       });
       tdKey.appendChild(keyInput);
       tr.appendChild(tdKey);
 
-      // Ctrl
       const tdCtrl = document.createElement('td');
       const ctrlCheck = document.createElement('input');
       ctrlCheck.type = 'checkbox';
@@ -263,7 +249,6 @@ const App = (function() {
       tdCtrl.appendChild(ctrlCheck);
       tr.appendChild(tdCtrl);
 
-      // Shift
       const tdShift = document.createElement('td');
       const shiftCheck = document.createElement('input');
       shiftCheck.type = 'checkbox';
@@ -272,7 +257,6 @@ const App = (function() {
       tdShift.appendChild(shiftCheck);
       tr.appendChild(tdShift);
 
-      // Alt
       const tdAlt = document.createElement('td');
       const altCheck = document.createElement('input');
       altCheck.type = 'checkbox';
@@ -288,16 +272,13 @@ const App = (function() {
     table.appendChild(tbody);
     box.appendChild(table);
 
-    // 底部按钮
     const actions = document.createElement('div');
     actions.className = 'shortcut-settings-actions';
 
-    // 恢复默认
     const resetBtn = document.createElement('button');
     resetBtn.className = 'modal-btn modal-btn-cancel';
-    resetBtn.textContent = '恢复默认设置';
+    resetBtn.textContent = StringLoader.get('shortcuts.restoreDefault', '恢复默认设置');
     resetBtn.addEventListener('click', () => {
-      // 将默认值填入输入框
       Object.keys(DEFAULT_SHORTCUTS).forEach(key => {
         const def = DEFAULT_SHORTCUTS[key];
         const inp = inputs[key];
@@ -316,15 +297,14 @@ const App = (function() {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'modal-btn modal-btn-cancel';
-    cancelBtn.textContent = '取消';
+    cancelBtn.textContent = StringLoader.get('modal.cancel', '取消');
     cancelBtn.addEventListener('click', () => overlay.remove());
     actionsRight.appendChild(cancelBtn);
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'modal-btn modal-btn-confirm';
-    saveBtn.textContent = '保存';
+    saveBtn.textContent = StringLoader.get('modal.save', '保存');
     saveBtn.addEventListener('click', async () => {
-      // 收集新配置
       const newCfg = {};
       shortcutKeys.forEach(key => {
         const inp = inputs[key];
@@ -354,7 +334,6 @@ const App = (function() {
 
     overlay.appendChild(box);
 
-    // 点击遮罩关闭
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.remove();
     });
@@ -373,29 +352,27 @@ const App = (function() {
     // 先保存当前数据
     await autoSave();
 
-    // 加载最新数据
     const data = await FileManager.loadData(_currentFolder);
     if (!data || !data.tasks || data.tasks.length === 0) {
       Modal.show({
-        title: '提示',
-        message: '当前没有任务数据可导出',
+        title: StringLoader.get('modal.hint', '提示'),
+        message: StringLoader.get('dialog.exportEmpty', '当前没有任务数据可导出'),
         showCancel: false,
-        confirmText: '确定'
+        confirmText: StringLoader.get('modal.ok', '确定')
       });
       return;
     }
 
-    // 构建导出内容（排除 order、id、layout）
     let content = '';
     const ext = format === 'md' ? 'md' : 'txt';
 
     if (format === 'md') {
-      content = '# 项目任务导出\n\n';
-      content += `> 导出时间：${new Date().toLocaleString()}\n`;
-      content += `> 任务总数：${data.tasks.length}\n\n---\n\n`;
+      content = '# ' + StringLoader.get('dialog.exportFileName', '项目任务导出') + '\n\n';
+      content += '> ' + StringLoader.get('dialog.exportTime', '导出时间') + '：' + new Date().toLocaleString() + '\n';
+      content += '> ' + StringLoader.get('dialog.exportTaskCount', '任务总数') + '：' + data.tasks.length + '\n\n---\n\n';
 
       data.tasks.forEach((task, index) => {
-        content += `## ${index + 1}. ${task.name || '未命名任务'}\n\n`;
+        content += '## ' + (index + 1) + '. ' + (task.name || StringLoader.get('dialog.unnamedTask', '未命名任务')) + '\n\n';
         if (task.fields) {
           Object.keys(task.fields).forEach(fieldKey => {
             const val = task.fields[fieldKey];
@@ -407,14 +384,13 @@ const App = (function() {
         content += '---\n\n';
       });
     } else {
-      // TXT 格式
-      content = `项目任务导出\n`;
-      content += `导出时间：${new Date().toLocaleString()}\n`;
-      content += `任务总数：${data.tasks.length}\n`;
-      content += `${'='.repeat(50)}\n\n`;
+      content = StringLoader.get('dialog.exportFileName', '项目任务导出') + '\n';
+      content += StringLoader.get('dialog.exportTime', '导出时间') + '：' + new Date().toLocaleString() + '\n';
+      content += StringLoader.get('dialog.exportTaskCount', '任务总数') + '：' + data.tasks.length + '\n';
+      content += '='.repeat(50) + '\n\n';
 
       data.tasks.forEach((task, index) => {
-        content += `【${index + 1}. ${task.name || '未命名任务'}】\n`;
+        content += '【' + (index + 1) + '. ' + (task.name || StringLoader.get('dialog.unnamedTask', '未命名任务')) + '】\n';
         content += `${'-'.repeat(40)}\n`;
         if (task.fields) {
           Object.keys(task.fields).forEach(fieldKey => {
@@ -430,29 +406,28 @@ const App = (function() {
 
     try {
       const result = await window.electronAPI.exportFile({
-        defaultName: `项目任务导出_${new Date().toISOString().slice(0, 10)}.${ext}`,
+        defaultName: StringLoader.get('dialog.exportFileName', '项目任务导出') + '_' + new Date().toISOString().slice(0, 10) + '.' + ext,
         filters: [
           format === 'md'
-            ? { name: 'Markdown 文件', extensions: ['md'] }
-            : { name: '文本文件', extensions: ['txt'] }
+            ? { name: StringLoader.get('dialog.markdownFile', 'Markdown 文件'), extensions: ['md'] }
+            : { name: StringLoader.get('dialog.textFile', '文本文件'), extensions: ['txt'] }
         ],
         content: content
       });
 
       if (result.success) {
-        // 简单提示（不阻塞）
         Modal.show({
-          title: '导出成功',
-          message: `文件已保存至：${result.filePath}`,
+          title: StringLoader.get('dialog.exportSuccess', '导出成功'),
+          message: StringLoader.get('dialog.exportSuccessMsg', '文件已保存至：') + result.filePath,
           showCancel: false,
-          confirmText: '确定'
+          confirmText: StringLoader.get('modal.ok', '确定')
         });
       } else if (!result.canceled) {
         Modal.show({
-          title: '导出失败',
-          message: result.error || '未知错误',
+          title: StringLoader.get('dialog.exportFailed', '导出失败'),
+          message: result.error || StringLoader.get('dialog.unknownError', '未知错误'),
           showCancel: false,
-          confirmText: '确定'
+          confirmText: StringLoader.get('modal.ok', '确定')
         });
       }
     } catch (e) {
@@ -464,45 +439,38 @@ const App = (function() {
 
   // 处理文件夹打开
   async function handleFolderOpened(folderPath) {
-    // 清除待处理的防抖保存定时器，防止旧文件夹的延迟保存将数据写入新文件夹
-    if (_saveTimer) {
-      clearTimeout(_saveTimer);
-      _saveTimer = null;
-    }
-
-    // 先保存当前数据
-    if (_currentFolder && _currentFolder !== folderPath) {
+    // 先保存当前数据（如果有未保存的更改）
+    if (_currentFolder && _currentFolder !== folderPath && _isDirty) {
       await autoSave();
     }
 
     _currentFolder = folderPath;
     FileManager.setCurrentFolder(folderPath);
     Toolbar.setFolderPath(folderPath);
+    _isDirty = false;
     updateStatusFolderPath(folderPath);
     updateSaveStatus(true);
+    updateStatusTaskCount();
 
     // 尝试加载数据
     const data = await FileManager.loadData(folderPath);
     if (data && data.tasks && data.tasks.length > 0) {
       Sidebar.setTasks(data.tasks, data.activeTaskId);
     } else {
-      // 无数据，显示空状态
       Sidebar.setTasks([], null);
       updateEmptyState(true);
     }
   }
 
-  // 更新空状态文案：hasFolder=true 表示已打开文件夹
   function updateEmptyState(hasFolder) {
     const emptyText = document.querySelector('.empty-state-text');
     if (emptyText) {
       emptyText.textContent = hasFolder
-        ? '暂无任务，点击左侧 + 新建一个提示词任务'
-        : '请先通过"文件 → 打开文件夹"选择一个工作目录';
+        ? StringLoader.get('content.emptyStateNoTask', '暂无任务，点击左侧 + 新建一个提示词任务')
+        : StringLoader.get('content.emptyStateNoFolder', '请先通过"文件 → 打开文件夹"选择一个工作目录');
     }
   }
 
-  // 处理打开文件夹按钮
   async function handleOpenFolder() {
     const folderPath = await FileManager.openFolder();
     if (folderPath) {
@@ -510,22 +478,19 @@ const App = (function() {
     }
   }
 
-  // 创建任务前检查是否已打开工作文件夹
   function checkFolderBeforeAddTask() {
     if (_currentFolder) {
       return true;
     }
-    // 未打开文件夹，弹出引导对话框
     showNoFolderDialog();
     return false;
   }
 
-  // 显示"请先打开文件夹"引导对话框
   function showNoFolderDialog() {
     Modal.show({
-      title: '提示',
-      message: '请先打开一个工作文件夹，数据将保存在该文件夹中',
-      confirmText: '打开文件夹',
+      title: StringLoader.get('modal.hint', '提示'),
+      message: StringLoader.get('sidebar.noFolderPrompt', '请先打开一个工作文件夹，数据将保存在该文件夹中'),
+      confirmText: StringLoader.get('sidebar.openFolderAction', '打开文件夹'),
       showCancel: true,
       onConfirm: async () => {
         await handleOpenFolder();
@@ -535,21 +500,26 @@ const App = (function() {
 
   // 任务切换
   function handleTaskChange(task) {
-    // 仅当确实有任务在编辑中才保存，避免加载数据时用空输入覆盖有效字段
     if (Content.hasActiveTask()) {
       saveCurrentTaskFields();
     }
-    // 切换到新任务
     Content.switchToTask(task);
-    // 更新状态栏
     updateStatusTaskName(task ? task.name : '');
     updateStatusCardName('');
   }
 
   // 任务删除
   function handleTaskDelete(taskId) {
-    // 自动保存
-    autoSave();
+    updateStatusTaskCount();
+    markDirty();
+  }
+
+  // 标记有未保存的更改
+  function markDirty() {
+    if (!_isDirty) {
+      _isDirty = true;
+      updateSaveStatus(false);
+    }
   }
 
   // 恢复当前任务布局为默认
@@ -559,7 +529,7 @@ const App = (function() {
       return;
     }
     Content.resetCurrentTaskLayout();
-    autoSave();
+    markDirty();
   }
 
   // 全局恢复所有任务布局为默认
@@ -569,15 +539,14 @@ const App = (function() {
       return;
     }
     Sidebar.resetAllLayouts();
-    // 如果当前有活动任务，重新渲染以清除卡片高度
     const activeTask = Sidebar.getActiveTask();
     if (activeTask) {
       Content.switchToTask(activeTask);
     }
-    autoSave();
+    markDirty();
   }
 
-  // 保存当前任务的字段数据和布局数据
+  // 保存当前任务的字段数据、布局数据、隐藏字段和标签
   function saveCurrentTaskFields() {
     const taskId = Content.getCurrentTaskId();
     if (taskId) {
@@ -585,11 +554,16 @@ const App = (function() {
       Sidebar.updateTaskFields(taskId, fields);
       const layout = Content.getLayoutData();
       Sidebar.updateTaskLayout(taskId, layout);
+      const hiddenFields = Content.getHiddenFields();
+      Sidebar.updateTaskHiddenFields(taskId, hiddenFields);
+      const fieldLabels = Content.getFieldLabels();
+      Sidebar.updateTaskFieldLabels(taskId, fieldLabels);
     }
   }
 
-  // 自动保存
+  // 保存数据到文件（仅 Ctrl+S 和退出时调用）
   async function autoSave() {
+    if (!_currentFolder) return;
     saveCurrentTaskFields();
     const tasks = Sidebar.getTasks();
     const activeTask = Sidebar.getActiveTask();
@@ -599,23 +573,16 @@ const App = (function() {
     };
     const result = await FileManager.saveData(data);
     if (result) {
+      _isDirty = false;
       updateSaveStatus(true);
     }
   }
 
-  // 防抖保存：用户输入后 800ms 自动保存，避免频繁写入
-  function debounceSave() {
-    if (!_currentFolder) return;
-    updateSaveStatus(false);
-    if (_saveTimer) clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(() => {
-      autoSave();
-    }, 800);
-  }
-
   // 关闭前保存
   async function handleSaveBeforeClose() {
-    await autoSave();
+    if (_isDirty) {
+      await autoSave();
+    }
     window.electronAPI.saveComplete();
   }
 
@@ -662,16 +629,8 @@ const App = (function() {
     }
   }
 
-  // 定期自动保存（每30秒）
-  setInterval(() => {
-    if (_currentFolder) {
-      autoSave();
-    }
-  }, 30000);
-
   // ========== 状态栏管理 ==========
 
-  // 初始化状态栏
   function initStatusBar() {
     const folderPathEl = document.getElementById('statusFolderPath');
     folderPathEl.addEventListener('click', () => {
@@ -679,7 +638,7 @@ const App = (function() {
       if (path) {
         navigator.clipboard.writeText(path).then(() => {
           const original = folderPathEl.textContent;
-          folderPathEl.textContent = '已复制路径!';
+          folderPathEl.textContent = StringLoader.get('status.copiedPath', '已复制路径!');
           setTimeout(() => {
             folderPathEl.textContent = original;
           }, 1500);
@@ -698,24 +657,30 @@ const App = (function() {
     if (!el) return;
     if (saved) {
       el.className = 'status-save-indicator saved';
-      el.title = '已保存';
+      el.title = StringLoader.get('status.saved', '已保存');
     } else {
       el.className = 'status-save-indicator unsaved';
-      el.title = '未保存';
+      el.title = StringLoader.get('status.unsaved', '未保存（Ctrl+S 保存）');
     }
   }
 
   function updateStatusTaskName(taskName) {
     const el = document.getElementById('statusTaskName');
-    if (el) el.textContent = taskName ? '任务：' + taskName : '';
+    if (el) el.textContent = taskName ? StringLoader.get('status.taskPrefix', '任务：') + taskName : '';
   }
 
   function updateStatusCardName(cardName) {
     const el = document.getElementById('statusCardName');
-    if (el) el.textContent = cardName ? '卡片：' + cardName : '';
+    if (el) el.textContent = cardName ? StringLoader.get('status.cardPrefix', '卡片：') + cardName : '';
   }
 
-  // 暴露给 Content 模块调用，用于更新当前聚焦的卡片
+  function updateStatusTaskCount() {
+    const el = document.getElementById('statusTaskCount');
+    if (!el) return;
+    const tasks = Sidebar.getTasks();
+    el.textContent = tasks.length > 0 ? StringLoader.get('status.taskCount', '共 {count} 个任务').replace('{count}', tasks.length) : '';
+  }
+
   function notifyCardFocused(cardLabel) {
     updateStatusCardName(cardLabel);
   }

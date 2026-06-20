@@ -475,6 +475,11 @@ body {
   max-width: 200px;
 }
 
+.status-task-count {
+  color: var(--accent);
+  font-weight: 500;
+}
+
 .status-card-name {
   max-width: 200px;
 }
@@ -580,6 +585,42 @@ body {
   gap: 0.4rem;
 }
 
+/* 卡片操作按钮组 */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.card-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.4rem;
+  transition: all 0.15s;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+}
+
+.card-action-btn:hover {
+  z-index: 2;
+}
+
+.card-rename-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--accent);
+}
+
+.card-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+
 .clear-field-btn {
   background: transparent;
   border: none;
@@ -588,13 +629,16 @@ body {
   cursor: pointer;
   padding: 0.15rem 0.5rem;
   border-radius: 0.5rem;
-  transition: all 0.2s;
+  transition: all 0.15s;
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .clear-field-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(239, 68, 68, 0.15);
   color: var(--danger);
+  z-index: 2;
 }
 
 .field-card textarea {

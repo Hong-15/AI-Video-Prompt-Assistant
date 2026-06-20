@@ -173,8 +173,12 @@
     "language": "语言",
     "languageDesc": "选择界面显示语言",
     "langChinese": "中文",
+    "langEnglish": "English",
     "saveBtn": "保存设置",
-    "closeBtn": "关闭"
+    "closeBtn": "关闭",
+    "restartTitle": "语言变更",
+    "restartMsg": "语言设置已更改，需要重启应用才能生效。是否立即重启？",
+    "restartConfirm": "立即重启"
   },
   "createProject": {
     "title": "创建新项目",

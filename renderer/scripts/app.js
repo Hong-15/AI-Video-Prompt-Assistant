@@ -544,6 +544,7 @@ const App = (function() {
   };
 
   let _currentCloseBehavior = 'exit';
+  let _currentLanguage = 'zh-CN'; // 当前语言
 
   async function showMoreSettings() {
     // 加载当前设置
@@ -552,6 +553,14 @@ const App = (function() {
       _currentCloseBehavior = settings.closeBehavior || 'exit';
     } catch (e) {
       _currentCloseBehavior = 'exit';
+    }
+
+    // 加载当前语言
+    try {
+      const langConfig = await window.electronAPI.getLanguageConfig();
+      _currentLanguage = (langConfig && langConfig.language) ? langConfig.language : 'zh-CN';
+    } catch (e) {
+      _currentLanguage = 'zh-CN';
     }
 
     const overlay = document.createElement('div');
@@ -810,7 +819,10 @@ const App = (function() {
     langOptionEn.value = 'en';
     langOptionEn.textContent = StringLoader.get('moreSettings.langEnglish', 'English');
     langSelect.appendChild(langOptionEn);
-    langSelect.disabled = false;
+    langSelect.value = _currentLanguage;
+    langSelect.addEventListener('change', () => {
+      _currentLanguage = langSelect.value;
+    });
     panelLanguage.appendChild(langSelect);
 
     content.appendChild(panelLanguage);
@@ -831,9 +843,27 @@ const App = (function() {
       '<p><strong>' + StringLoader.get('about.appName', 'AI提示词助手') + '</strong></p>' +
       '<p>' + StringLoader.get('about.version', '版本 1.0.0') + '</p>' +
       '<p style="margin-top:0.8rem;">' + StringLoader.get('about.description', '一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。') + '</p>' +
-      '<p style="margin-top:0.8rem;">' + StringLoader.get('about.officialSite', '官方地址') + '：<a href="' + officialUrl + '" target="_blank">' + officialUrl + '</a></p>' +
+      '<p style="margin-top:0.8rem;">' + StringLoader.get('about.officialSite', '官方地址') + '：<span class="more-settings-copy-link" id="aboutOfficialUrl">' + officialUrl + '</span></p>' +
       '<p style="margin-top:0.8rem;color:var(--text-muted);">' + StringLoader.get('about.copyright', 'Copyright 2026 AI Prompt Helper') + '</p>';
     panelAbout.appendChild(aboutText);
+
+    // 官方地址点击复制
+    setTimeout(() => {
+      const urlEl = document.getElementById('aboutOfficialUrl');
+      if (urlEl) {
+        urlEl.addEventListener('click', () => {
+          navigator.clipboard.writeText(officialUrl).then(() => {
+            const original = urlEl.textContent;
+            urlEl.textContent = StringLoader.get('status.copiedPath', '已复制!');
+            urlEl.style.color = 'var(--accent)';
+            setTimeout(() => {
+              urlEl.textContent = original;
+              urlEl.style.color = '';
+            }, 1500);
+          }).catch(() => {});
+        });
+      }
+    }, 0);
 
     content.appendChild(panelAbout);
 
@@ -848,12 +878,39 @@ const App = (function() {
     saveBtn.className = 'modal-btn modal-btn-confirm';
     saveBtn.textContent = StringLoader.get('moreSettings.saveBtn', '保存设置');
     saveBtn.addEventListener('click', async () => {
+      // 检测语言是否变更
+      let langChanged = false;
+      let originalLang = 'zh-CN';
+      try {
+        const langConfig = await window.electronAPI.getLanguageConfig();
+        originalLang = (langConfig && langConfig.language) ? langConfig.language : 'zh-CN';
+      } catch (e) {}
+      langChanged = (_currentLanguage !== originalLang);
+
       try {
         await window.electronAPI.saveSettings({ closeBehavior: _currentCloseBehavior });
+        if (langChanged) {
+          await window.electronAPI.saveLanguage(_currentLanguage);
+        }
       } catch (e) {
         console.error('保存设置失败:', e);
       }
+
       overlay.remove();
+
+      // 语言变更后提示重启
+      if (langChanged) {
+        Modal.show({
+          title: StringLoader.get('moreSettings.restartTitle', '语言变更'),
+          message: StringLoader.get('moreSettings.restartMsg', '语言设置已更改，需要重启应用才能生效。是否立即重启？'),
+          confirmText: StringLoader.get('moreSettings.restartConfirm', '立即重启'),
+          cancelText: StringLoader.get('modal.cancel', '取消'),
+          showCancel: true,
+          onConfirm: () => {
+            window.electronAPI.restartApp();
+          }
+        });
+      }
     });
     actions.appendChild(saveBtn);
 

@@ -173,8 +173,12 @@
     "language": "Language",
     "languageDesc": "Select interface display language",
     "langChinese": "Chinese",
+    "langEnglish": "English",
     "saveBtn": "Save Settings",
-    "closeBtn": "Close"
+    "closeBtn": "Close",
+    "restartTitle": "Language Changed",
+    "restartMsg": "Language settings have been changed. A restart is required to take effect. Restart now?",
+    "restartConfirm": "Restart Now"
   },
   "createProject": {
     "title": "Create New Project",

@@ -1463,6 +1463,19 @@ html[data-theme="light"] .shortcut-key-input {
   text-decoration: underline;
 }
 
+/* 官方地址可复制链接 */
+.more-settings-copy-link {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.more-settings-copy-link:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
 /* 快捷键设置表格（在更多设置内） */
 .more-settings-shortcut-table {
   width: 100%;

@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 获取字符串资源
   getStrings: () => ipcRenderer.invoke('get-strings'),
 
+  // 获取语言配置
+  getLanguageConfig: () => ipcRenderer.invoke('get-language-config'),
+
   // 获取维度配置
   getFieldConfig: () => ipcRenderer.invoke('get-field-config'),
 
@@ -61,6 +64,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 在新窗口中打开指定文件夹
   openFolderInNewWindow: (folderPath) => ipcRenderer.send('open-folder-new-window', folderPath),
+
+  // 保存语言配置
+  saveLanguage: (lang) => ipcRenderer.invoke('save-language', lang),
+
+  // 重启应用
+  restartApp: () => ipcRenderer.send('restart-app'),
 
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {

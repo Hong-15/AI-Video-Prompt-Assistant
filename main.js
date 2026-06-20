@@ -2,18 +2,33 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage } = require
 const path = require('path');
 const fs = require('fs');
 
-// 字符串资源加载
+// 字符串资源加载（根据语言配置）
 let strings = {};
-try {
-  strings = JSON.parse(fs.readFileSync(path.join(__dirname, 'config', 'strings.json'), 'utf-8'));
-} catch (e) {
-  console.error('加载字符串资源失败:', e);
+function loadStrings() {
+  const langPath = path.join(__dirname, 'config', 'language.json');
+  let lang = 'zh-CN';
+  try {
+    if (fs.existsSync(langPath)) {
+      const langConfig = JSON.parse(fs.readFileSync(langPath, 'utf-8'));
+      lang = langConfig.language || 'zh-CN';
+    }
+  } catch (e) {
+    console.error('加载语言配置失败:', e);
+  }
+  const stringsFile = lang === 'en' ? 'strings_en.json' : 'strings.json';
+  try {
+    strings = JSON.parse(fs.readFileSync(path.join(__dirname, 'config', stringsFile), 'utf-8'));
+  } catch (e) {
+    console.error('加载字符串资源失败:', e);
+  }
 }
+loadStrings();
 
 let mainWindow = null;
 let currentFolderPath = null;
 let tray = null;
 let closeBehavior = 'exit'; // 'exit' | 'tray' | 'taskbar'
+let isRestarting = false; // 重启标志，跳过 before-quit 数据保存
 
 // 加载设置
 function loadSettings() {
@@ -266,6 +281,19 @@ function setupIPC() {
     return strings;
   });
 
+  // 获取语言配置
+  ipcMain.handle('get-language-config', () => {
+    const langPath = path.join(__dirname, 'config', 'language.json');
+    try {
+      if (fs.existsSync(langPath)) {
+        return JSON.parse(fs.readFileSync(langPath, 'utf-8'));
+      }
+    } catch (e) {
+      console.error('加载语言配置失败:', e);
+    }
+    return { language: 'zh-CN' };
+  });
+
   // 获取维度配置
   ipcMain.handle('get-field-config', () => {
     const configPath = path.join(__dirname, 'config', 'fieldConfig.json');
@@ -394,6 +422,25 @@ function setupIPC() {
     });
     newWin.show();
   });
+
+  // 保存语言配置
+  ipcMain.handle('save-language', (event, lang) => {
+    const langPath = path.join(__dirname, 'config', 'language.json');
+    try {
+      fs.writeFileSync(langPath, JSON.stringify({ language: lang }, null, 2), 'utf-8');
+      return true;
+    } catch (e) {
+      console.error('保存语言配置失败:', e);
+      return false;
+    }
+  });
+
+  // 重启应用
+  ipcMain.on('restart-app', () => {
+    isRestarting = true;
+    app.relaunch();
+    app.exit(0);
+  });
 }
 
 // 处理窗口关闭（根据设置决定行为）
@@ -468,6 +515,7 @@ app.whenReady().then(() => {
 
 // 应用退出前强制保存（兜底，防止 close 事件未触发）
 app.on('before-quit', (event) => {
+  if (isRestarting) return; // 重启时不保存，跳过
   if (currentFolderPath && mainWindow && !mainWindow.isDestroyed()) {
     event.preventDefault();
     mainWindow.webContents.send('save-before-close');

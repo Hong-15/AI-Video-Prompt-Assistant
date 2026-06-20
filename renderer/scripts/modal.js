@@ -58,7 +58,7 @@ const Modal = (function() {
     if (showCancel) {
       const cancelBtn = document.createElement('button');
       cancelBtn.className = 'modal-btn modal-btn-cancel';
-      cancelBtn.textContent = StringLoader.get('modal.cancelN', '取消 (N)');
+      cancelBtn.textContent = options.cancelText || StringLoader.get('modal.cancelN', '取消 (N)');
       cancelBtn.addEventListener('click', () => overlay.remove());
       actions.appendChild(cancelBtn);
     }

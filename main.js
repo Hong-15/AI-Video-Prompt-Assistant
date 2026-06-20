@@ -417,6 +417,11 @@ function setupIPC() {
     }
   });
 
+  // 初始化项目数据（创建 userData.json）
+  ipcMain.handle('init-project-data', async (event, folderPath, data) => {
+    return saveUserData(folderPath, data);
+  });
+
   // 在新窗口中打开指定文件夹
   ipcMain.on('open-folder-new-window', (event, folderPath) => {
     const newWin = createWindow();

@@ -95,7 +95,8 @@
     "cardRenameDuplicate": "Card name already exists, please use a different name",
     "addCustomCard": "+ Custom Card",
     "addCustomCardTitle": "Add Custom Card",
-    "defaultCustomCardName": "Custom Card"
+    "defaultCustomCardName": "Custom Card",
+    "customCardPlaceholder": "Start creating your world!"
   },
   "modal": {
     "confirm": "Confirm",
@@ -191,12 +192,20 @@
   },
   "createProject": {
     "title": "Create New Project",
+    "subtitle": "Configure project basic info to get started",
     "closeBtn": "Close",
     "folderName": "Project Folder Name",
     "namePlaceholder": "Please enter folder name",
     "parentDir": "Parent Directory",
+    "parentDirHint": "Select the parent directory for the project, or browse in the directory tree",
     "notSelected": "Not selected",
     "browseBtn": "Browse...",
+    "templateTitle": "Select Template",
+    "templateDefault": "Default Template",
+    "templateDefaultDesc": "Includes all default prompt cards, ready to use",
+    "templateEmpty": "Empty Template",
+    "templateEmptyDesc": "Only one custom card, build from scratch",
+    "templateRecommended": "Recommended",
     "openHere": "Open in This Window",
     "openNew": "Open in New Window",
     "errorNameEmpty": "Folder name cannot be empty",

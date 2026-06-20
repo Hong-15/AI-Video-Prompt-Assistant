@@ -95,7 +95,7 @@ const Content = (function() {
         key: cc.key,
         label: cc.label,
         icon: '',
-        placeholder: ''
+        placeholder: StringLoader.get('content.customCardPlaceholder', '开始创造世界吧!')
       });
     });
 

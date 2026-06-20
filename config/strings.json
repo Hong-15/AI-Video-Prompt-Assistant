@@ -94,7 +94,8 @@
     "cardRenameDuplicate": "卡片名称已存在，请使用其他名称",
     "addCustomCard": "+ 自定义卡片",
     "addCustomCardTitle": "添加自定义卡片",
-    "defaultCustomCardName": "自定义卡片"
+    "defaultCustomCardName": "自定义卡片",
+    "customCardPlaceholder": "开始创造世界吧!"
   },
   "modal": {
     "confirm": "确认",
@@ -190,12 +191,20 @@
   },
   "createProject": {
     "title": "创建新项目",
+    "subtitle": "配置项目的基本信息以开始创建",
     "closeBtn": "关闭",
     "folderName": "项目文件夹名称",
     "namePlaceholder": "请输入文件夹名称",
     "parentDir": "父级目录",
+    "parentDirHint": "选择项目存放的父级目录，或点击浏览在目录树中选择",
     "notSelected": "未选择",
     "browseBtn": "浏览...",
+    "templateTitle": "选择模板",
+    "templateDefault": "默认模板",
+    "templateDefaultDesc": "包含所有默认提示词卡片，开箱即用",
+    "templateEmpty": "空模板",
+    "templateEmptyDesc": "仅包含一张自定义卡片，从零开始构建",
+    "templateRecommended": "推荐",
     "openHere": "此窗口打开",
     "openNew": "新窗口打开",
     "errorNameEmpty": "文件夹名称不能为空",

@@ -62,6 +62,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 创建项目目录
   createProjectDir: (parentDir, folderName) => ipcRenderer.invoke('create-project-dir', parentDir, folderName),
 
+  // 初始化项目数据
+  initProjectData: (folderPath, data) => ipcRenderer.invoke('init-project-data', folderPath, data),
+
   // 在新窗口中打开指定文件夹
   openFolderInNewWindow: (folderPath) => ipcRenderer.send('open-folder-new-window', folderPath),
 

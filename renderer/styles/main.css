@@ -18,7 +18,7 @@
   --sidebar-width: 260px;
   --sidebar-min-width: 200px;
   --sidebar-max-width: 400px;
-  --toolbar-height: 50px;
+  --toolbar-height: 45px;
   --transition-speed: 0.25s;
 }
 
@@ -279,8 +279,8 @@ body {
 }
 
 .add-task-btn {
-  width: 36px;
-  height: 36px;
+  width: 31px;
+  height: 31px;
   border-radius: 50%;
   background: rgba(99, 102, 241, 0.2);
   border: 1px solid rgba(99, 102, 241, 0.3);

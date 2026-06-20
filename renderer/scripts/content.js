@@ -714,7 +714,13 @@ const Content = (function() {
         visibleKeys.splice(draggedIdx, 1);
         visibleKeys.splice(targetIdx, 0, cardKey);
         _cardOrder = visibleKeys;
+
+        // 先保存当前卡片高度到 Sidebar，再更新 cardOrder，最后重新渲染
+        // 避免 refreshCurrentTask 从 Sidebar 读到旧的 layout 数据导致高度归零
+        const currentLayout = getLayoutData();
+        Sidebar.updateTaskLayout(_currentTaskId, currentLayout);
         Sidebar.updateTaskCardOrder(_currentTaskId, [..._cardOrder]);
+
         refreshCurrentTask();
         if (_onInputChange) _onInputChange();
       }

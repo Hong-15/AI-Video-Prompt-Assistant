@@ -9,7 +9,7 @@
     "openFolderThis": "此窗口打开",
     "openFolderNew": "新窗口打开",
     "newWindow": "新建窗口",
-    "createProject": "创建新项目",
+    "createProject": "新建项目",
     "export": "项目任务导出",
     "exportMD": "导出为 Markdown",
     "exportTXT": "导出为 文本文件",
@@ -61,7 +61,12 @@
     "taskCount": "共 {count} 个任务",
     "contextMenu": {
       "reorder": "重构帧位置",
-      "rename": "重命名"
+      "rename": "重命名",
+      "newTask": "新建任务",
+      "insertAboveEmpty": "在上方插入空模板任务",
+      "insertAboveDefault": "在上方插入默认模板任务",
+      "insertBelowEmpty": "在下方插入空模板任务",
+      "insertBelowDefault": "在下方插入默认模板任务"
     }
   },
   "content": {
@@ -190,7 +195,7 @@
     "restartConfirm": "立即重启"
   },
   "createProject": {
-    "title": "创建新项目",
+    "title": "新建项目",
     "subtitle": "配置项目的基本信息以开始创建",
     "closeBtn": "关闭",
     "folderName": "项目文件夹名称",

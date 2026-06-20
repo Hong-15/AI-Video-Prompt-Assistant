@@ -25,7 +25,8 @@ const App = (function() {
     Sidebar.init({
       onTaskChange: handleTaskChange,
       onTaskDelete: handleTaskDelete,
-      beforeAddTask: checkFolderBeforeAddTask
+      beforeAddTask: checkFolderBeforeAddTask,
+      onInsertTask: handleInsertTask
     });
 
     // 5. 初始化工具栏
@@ -410,6 +411,43 @@ const App = (function() {
     updateStatusTaskName(task ? task.name : '');
     updateStatusCardName('');
     updateStatusTaskCount();
+  }
+
+  // 插入模板任务（右键菜单新建任务子菜单）
+  async function handleInsertTask(task, template) {
+    // 先保存当前任务数据
+    if (Content.hasActiveTask()) {
+      saveCurrentTaskFields();
+    }
+
+    const fieldConfig = Content.getFieldConfig() || [];
+    const allFieldKeys = fieldConfig.filter(f => f.key).map(f => f.key);
+
+    if (template === 'empty') {
+      // 空模板：隐藏所有固定卡片，创建一张自定义卡片
+      const customKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      const customCardName = StringLoader.get('content.defaultCustomCardName', '自定义卡片');
+
+      task.hiddenFields = [...allFieldKeys];
+      task.fieldLabels = {};
+      task.customCards = [{ key: customKey, label: customCardName }];
+      task.cardOrder = [customKey];
+      task.layout = {};
+    } else {
+      // 默认模板：所有固定卡片可见，无自定义卡片
+      task.hiddenFields = [];
+      task.fieldLabels = {};
+      task.customCards = [];
+      task.cardOrder = [];
+      task.layout = {};
+    }
+
+    // 切换到新任务
+    Content.switchToTask(task);
+    updateStatusTaskName(task.name);
+    updateStatusCardName('');
+    updateStatusTaskCount();
+    markDirty();
   }
 
   // 任务删除
@@ -1100,7 +1138,7 @@ const App = (function() {
     let _selectedTemplate = 'default';
 
     // 更新模态窗口中的文本（使用字符串资源）
-    document.getElementById('createProjectTitle').textContent = StringLoader.get('createProject.title', '创建新项目');
+    document.getElementById('createProjectTitle').textContent = StringLoader.get('createProject.title', '新建项目');
     document.getElementById('createProjectSubtitle').textContent = StringLoader.get('createProject.subtitle', '配置项目的基本信息以开始创建');
     closeBtn.title = StringLoader.get('createProject.closeBtn', '关闭');
     document.getElementById('createProjectDirLabel').textContent = StringLoader.get('createProject.parentDir', '父级目录');

@@ -955,6 +955,35 @@ body {
   background: rgba(99, 102, 241, 0.2);
 }
 
+.context-menu-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 8px;
+}
+
+.context-menu-has-submenu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.context-menu-submenu-arrow {
+  font-size: 10px;
+  margin-left: 8px;
+  opacity: 0.6;
+}
+
+.context-submenu {
+  position: absolute;
+  background: #1a1a2e;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 4px 0;
+  min-width: 200px;
+  z-index: 1002;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
 /* ========== 响应式 ========== */
 @media (max-width: 900px) {
   .sidebar {
@@ -1106,6 +1135,11 @@ html[data-theme="light"] .modal-input {
 }
 
 html[data-theme="light"] .context-menu {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .context-submenu {
   background: #ffffff;
   border-color: rgba(0, 0, 0, 0.1);
 }

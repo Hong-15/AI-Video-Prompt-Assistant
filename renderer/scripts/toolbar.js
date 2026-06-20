@@ -276,7 +276,7 @@ const Toolbar = (function() {
     }
 
     const elCreateProject = document.getElementById('menuCreateProject');
-    if (elCreateProject) elCreateProject.textContent = StringLoader.get('menu.createProject', '创建新项目');
+    if (elCreateProject) elCreateProject.textContent = StringLoader.get('menu.createProject', '新建项目');
 
     // 布局菜单项
     const elResetCurrent = document.getElementById('menuResetCurrentLayout');

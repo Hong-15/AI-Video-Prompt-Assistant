@@ -810,6 +810,7 @@ const Content = (function() {
     copyPreview: handleCopy,
     addCustomCard: handleAddCustomCard,
     hasActiveTask: () => _currentTaskId !== null,
-    getCurrentTaskId: () => _currentTaskId
+    getCurrentTaskId: () => _currentTaskId,
+    getFieldConfig: () => _fieldConfig
   };
 })();

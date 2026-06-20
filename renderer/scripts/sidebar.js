@@ -7,13 +7,17 @@ const Sidebar = (function() {
   let _onTaskChange = null;
   let _onTaskDelete = null;
   let _beforeAddTask = null;
+  let _onInsertTask = null;
   let _contextMenu = null;
+  let _contextSubmenu = null;
+  let _submenuTimer = null;
 
   // 初始化侧边栏
   function init(callbacks) {
     _onTaskChange = callbacks.onTaskChange;
     _onTaskDelete = callbacks.onTaskDelete;
     _beforeAddTask = callbacks.beforeAddTask || null;
+    _onInsertTask = callbacks.onInsertTask || null;
 
     // 新建任务按钮
     const addBtn = document.getElementById('addTaskBtn');
@@ -66,6 +70,33 @@ const Sidebar = (function() {
     _tasks.push(task);
     _activeTaskId = task.id;
     render();
+    if (_onTaskChange) _onTaskChange(task);
+    return task;
+  }
+
+  // 在指定任务的上方或下方插入模板任务
+  function insertTask(relativeToTaskId, position, template) {
+    const relativeIndex = _tasks.findIndex(t => t.id === relativeToTaskId);
+    if (relativeIndex === -1) return null;
+
+    const taskName = generateTaskName();
+    const insertIndex = position === 'above' ? relativeIndex : relativeIndex + 1;
+    const task = {
+      id: generateId(),
+      name: taskName,
+      order: insertIndex,
+      fields: {}
+    };
+
+    _tasks.splice(insertIndex, 0, task);
+    // 更新所有任务的 order
+    _tasks.forEach((t, i) => { t.order = i; });
+
+    _activeTaskId = task.id;
+    render();
+
+    // 通知应用层，传递模板类型和任务数据
+    if (_onInsertTask) _onInsertTask(task, template);
     if (_onTaskChange) _onTaskChange(task);
     return task;
   }
@@ -352,16 +383,90 @@ const Sidebar = (function() {
       showRenameDialog(task);
     });
 
+    // 分隔线
+    const separator = document.createElement('div');
+    separator.className = 'context-menu-separator';
+
+    // 新建任务 → 子菜单
+    const newTaskItem = document.createElement('button');
+    newTaskItem.className = 'context-menu-item context-menu-has-submenu';
+    newTaskItem.textContent = StringLoader.get('sidebar.contextMenu.newTask', '新建任务');
+    newTaskItem.innerHTML = newTaskItem.textContent + '<span class="context-menu-submenu-arrow">▶</span>';
+
+    // 子菜单
+    _contextSubmenu = document.createElement('div');
+    _contextSubmenu.className = 'context-submenu';
+    _contextSubmenu.style.display = 'none';
+
+    const submenuItems = [
+      { key: 'insertAboveEmpty', template: 'empty', position: 'above' },
+      { key: 'insertAboveDefault', template: 'default', position: 'above' },
+      { key: 'insertBelowEmpty', template: 'empty', position: 'below' },
+      { key: 'insertBelowDefault', template: 'default', position: 'below' }
+    ];
+
+    submenuItems.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'context-menu-item';
+      btn.textContent = StringLoader.get('sidebar.contextMenu.' + item.key);
+      btn.addEventListener('click', () => {
+        hideContextMenu();
+        insertTask(task.id, item.position, item.template);
+      });
+      _contextSubmenu.appendChild(btn);
+    });
+
+    // 分隔线
+    const separator2 = document.createElement('div');
+    separator2.className = 'context-menu-separator';
+
     _contextMenu.appendChild(reorderItem);
     _contextMenu.appendChild(renameItem);
+    _contextMenu.appendChild(separator);
+    _contextMenu.appendChild(newTaskItem);
+    _contextMenu.appendChild(separator2);
+    _contextMenu.appendChild(_contextSubmenu);
     document.body.appendChild(_contextMenu);
+
+    // 子菜单 mouseenter/mouseleave
+    newTaskItem.addEventListener('mouseenter', () => {
+      if (_submenuTimer) clearTimeout(_submenuTimer);
+      if (_contextSubmenu) {
+        const rect = newTaskItem.getBoundingClientRect();
+        const menuRect = _contextMenu.getBoundingClientRect();
+        _contextSubmenu.style.top = (rect.top - menuRect.top) + 'px';
+        _contextSubmenu.style.left = (menuRect.width - 4) + 'px';
+        _contextSubmenu.style.display = 'block';
+      }
+    });
+
+    newTaskItem.addEventListener('mouseleave', () => {
+      _submenuTimer = setTimeout(() => {
+        if (_contextSubmenu) {
+          _contextSubmenu.style.display = 'none';
+        }
+      }, 200);
+    });
+
+    _contextSubmenu.addEventListener('mouseenter', () => {
+      if (_submenuTimer) clearTimeout(_submenuTimer);
+    });
+
+    _contextSubmenu.addEventListener('mouseleave', () => {
+      _contextSubmenu.style.display = 'none';
+    });
   }
 
   function hideContextMenu() {
+    if (_submenuTimer) {
+      clearTimeout(_submenuTimer);
+      _submenuTimer = null;
+    }
     if (_contextMenu) {
       _contextMenu.remove();
       _contextMenu = null;
     }
+    _contextSubmenu = null;
   }
 
   // 简易 Toast 提示
@@ -387,6 +492,7 @@ const Sidebar = (function() {
   return {
     init,
     addTask,
+    insertTask,
     deleteTask,
     renameTask,
     reorderTask,

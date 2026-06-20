@@ -10,7 +10,7 @@
     "openFolderThis": "Open in This Window",
     "openFolderNew": "Open in New Window",
     "newWindow": "New Window",
-    "createProject": "Create New Project",
+    "createProject": "New Project",
     "export": "Export Project Tasks",
     "exportMD": "Export as Markdown",
     "exportTXT": "Export as Text File",
@@ -62,7 +62,12 @@
     "taskCount": "{count} task(s)",
     "contextMenu": {
       "reorder": "Reorder",
-      "rename": "Rename"
+      "rename": "Rename",
+      "newTask": "New Task",
+      "insertAboveEmpty": "Insert Empty Template Above",
+      "insertAboveDefault": "Insert Default Template Above",
+      "insertBelowEmpty": "Insert Empty Template Below",
+      "insertBelowDefault": "Insert Default Template Below"
     }
   },
   "content": {
@@ -191,7 +196,7 @@
     "restartConfirm": "Restart Now"
   },
   "createProject": {
-    "title": "Create New Project",
+    "title": "New Project",
     "subtitle": "Configure project basic info to get started",
     "closeBtn": "Close",
     "folderName": "Project Folder Name",

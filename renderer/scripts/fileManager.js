@@ -5,10 +5,11 @@ const FileManager = (function() {
   let _currentFolder = null;
 
   // 打开文件夹对话框
+  // 注意：不在此处设置 _currentFolder，因为调用方 handleFolderOpened
+  // 在保存旧数据之后才会通过 setCurrentFolder 更新，避免旧数据写入新文件夹
   async function openFolder() {
     const folderPath = await window.electronAPI.openFolder();
     if (folderPath) {
-      _currentFolder = folderPath;
       return folderPath;
     }
     return null;

@@ -227,7 +227,15 @@ body {
   padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
+}
+
+.sidebar-add-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .add-task-btn {

@@ -461,6 +461,12 @@ const App = (function() {
 
   // 处理文件夹打开
   async function handleFolderOpened(folderPath) {
+    // 清除待处理的防抖保存定时器，防止旧文件夹的延迟保存将数据写入新文件夹
+    if (_saveTimer) {
+      clearTimeout(_saveTimer);
+      _saveTimer = null;
+    }
+
     // 先保存当前数据
     if (_currentFolder && _currentFolder !== folderPath) {
       await autoSave();

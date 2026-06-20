@@ -302,10 +302,23 @@ const Content = (function() {
     const label = maxNum > 0 ? defaultName + (maxNum + 1) : defaultName;
 
     _customCards.push({ key, label });
-    // 自定义卡片添加到 cardOrder 末尾
-    if (!_cardOrder.includes(key)) {
-      _cardOrder.push(key);
-    }
+
+    // 构建完整的 cardOrder：已有卡片 key 在前，新自定义卡片 key 在最后
+    const newOrder = [];
+    // 先收集所有已有卡片 key（固定 + 已有自定义）
+    _fieldConfig.forEach(field => {
+      if (!_hiddenFields.includes(field.key)) {
+        newOrder.push(field.key);
+      }
+    });
+    _customCards.forEach(cc => {
+      if (cc.key !== key) {
+        newOrder.push(cc.key);
+      }
+    });
+    // 新自定义卡片 key 放在最后
+    newOrder.push(key);
+    _cardOrder = newOrder;
 
     // 先保存到任务数据，再重新渲染（避免 switchToTask 覆盖内存中的修改）
     Sidebar.updateTaskCustomCards(_currentTaskId, [..._customCards]);

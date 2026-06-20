@@ -391,7 +391,6 @@ const Sidebar = (function() {
     const newTaskItem = document.createElement('button');
     newTaskItem.className = 'context-menu-item context-menu-has-submenu';
     newTaskItem.textContent = StringLoader.get('sidebar.contextMenu.newTask', '新建任务');
-    newTaskItem.innerHTML = newTaskItem.textContent + '<span class="context-menu-submenu-arrow">▶</span>';
 
     // 子菜单
     _contextSubmenu = document.createElement('div');

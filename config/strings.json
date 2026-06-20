@@ -9,6 +9,7 @@
     "openFolderThis": "此窗口打开",
     "openFolderNew": "新窗口打开",
     "newWindow": "新建窗口",
+    "createProject": "创建新项目",
     "export": "项目任务导出",
     "exportMD": "导出为 Markdown",
     "exportTXT": "导出为 文本文件",
@@ -166,5 +167,20 @@
     "closeTaskbarDesc": "点击关闭按钮时隐藏到系统任务栏",
     "saveBtn": "保存设置",
     "closeBtn": "关闭"
+  },
+  "createProject": {
+    "title": "创建新项目",
+    "closeBtn": "关闭",
+    "folderName": "项目文件夹名称",
+    "namePlaceholder": "请输入文件夹名称",
+    "parentDir": "父级目录",
+    "notSelected": "未选择",
+    "browseBtn": "浏览...",
+    "openHere": "此窗口打开",
+    "openNew": "新窗口打开",
+    "errorNameEmpty": "文件夹名称不能为空",
+    "errorNameInvalid": "文件夹名称包含非法字符：< > : \" / \\ | ? *",
+    "errorNameDuplicate": "同名目录已存在，请更换文件夹名称",
+    "errorDirEmpty": "请选择父级目录"
   }
 }

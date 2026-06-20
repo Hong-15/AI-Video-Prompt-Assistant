@@ -1394,3 +1394,211 @@ html[data-theme="light"] .more-settings-option {
 html[data-theme="light"] .more-settings-option:hover {
   background: rgba(99, 102, 241, 0.05);
 }
+
+/* ========== 创建新项目模态窗口 ========== */
+.create-project-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.create-project-box {
+  width: 480px;
+  max-width: 90vw;
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.create-project-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.create-project-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.create-project-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.create-project-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+
+.create-project-content {
+  padding: 1.5rem;
+}
+
+.create-project-field {
+  margin-bottom: 1.2rem;
+}
+
+.create-project-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.create-project-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.6rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.create-project-input:focus {
+  border-color: var(--accent);
+}
+
+.create-project-input::placeholder {
+  color: var(--text-muted);
+}
+
+.create-project-dir-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.create-project-dir-path {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.6rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.create-project-dir-path.selected {
+  color: var(--text-primary);
+}
+
+.create-project-browse-btn {
+  padding: 0.6rem 1rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 0.6rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.create-project-browse-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+.create-project-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+
+.create-project-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.create-project-btn {
+  padding: 0.6rem 1.4rem;
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.create-project-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.create-project-btn-primary:hover {
+  background: #7c7ff6;
+}
+
+.create-project-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.create-project-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+
+/* 浅色主题适配 */
+html[data-theme="light"] .create-project-box {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .create-project-input {
+  background: #f0f0f3;
+  border-color: #d4d4d8;
+  color: #1a1a2e;
+}
+
+html[data-theme="light"] .create-project-input:focus {
+  border-color: var(--accent);
+}
+
+html[data-theme="light"] .create-project-dir-path {
+  background: #f0f0f3;
+  border-color: #d4d4d8;
+}
+
+html[data-theme="light"] .create-project-btn-secondary {
+  background: #f0f0f3;
+  border-color: #d4d4d8;
+  color: #4a4a6a;
+}
+
+html[data-theme="light"] .create-project-btn-secondary:hover {
+  background: #e4e4e7;
+  color: #1a1a2e;
+}

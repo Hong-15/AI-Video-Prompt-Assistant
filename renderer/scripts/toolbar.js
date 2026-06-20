@@ -11,6 +11,7 @@ const Toolbar = (function() {
   let _onShortcutSettings = null;
   let _onAbout = null;
   let _onMoreSettings = null;
+  let _onCreateProject = null;
   let _dropdowns = [];
   let _submenus = [];         // 子菜单引用
   let _activeSubmenu = null;  // 当前打开的子菜单
@@ -27,6 +28,7 @@ const Toolbar = (function() {
     _onShortcutSettings = callbacks.onShortcutSettings || null;
     _onAbout = callbacks.onAbout || null;
     _onMoreSettings = callbacks.onMoreSettings || null;
+    _onCreateProject = callbacks.onCreateProject || null;
 
     // 从字符串资源更新工具栏文本
     updateToolbarText();
@@ -86,6 +88,12 @@ const Toolbar = (function() {
       hideAllDropdowns();
       hideAllSubmenus();
       if (_onExport) _onExport('txt');
+    });
+
+    // 创建新项目
+    document.getElementById('menuCreateProject').addEventListener('click', () => {
+      hideAllDropdowns();
+      if (_onCreateProject) _onCreateProject();
     });
 
     // ========== 布局菜单 ==========
@@ -278,6 +286,9 @@ const Toolbar = (function() {
     if (elTutorial) {
       elTutorial.textContent = StringLoader.get('menu.tutorial', '教学') + '（' + StringLoader.get('menu.tutorialPlaceholder', '暂未开放') + '）';
     }
+
+    const elCreateProject = document.getElementById('menuCreateProject');
+    if (elCreateProject) elCreateProject.textContent = StringLoader.get('menu.createProject', '创建新项目');
 
     // 布局菜单项
     const elResetCurrent = document.getElementById('menuResetCurrentLayout');

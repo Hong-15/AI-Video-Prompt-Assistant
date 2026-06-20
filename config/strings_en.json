@@ -9,6 +9,7 @@
     "openFolderThis": "Open in This Window",
     "openFolderNew": "Open in New Window",
     "newWindow": "New Window",
+    "createProject": "Create New Project",
     "export": "Export Project Tasks",
     "exportMD": "Export as Markdown",
     "exportTXT": "Export as Text File",
@@ -166,5 +167,20 @@
     "closeTaskbarDesc": "Hide to system taskbar when clicking the close button",
     "saveBtn": "Save Settings",
     "closeBtn": "Close"
+  },
+  "createProject": {
+    "title": "Create New Project",
+    "closeBtn": "Close",
+    "folderName": "Project Folder Name",
+    "namePlaceholder": "Please enter folder name",
+    "parentDir": "Parent Directory",
+    "notSelected": "Not selected",
+    "browseBtn": "Browse...",
+    "openHere": "Open in This Window",
+    "openNew": "Open in New Window",
+    "errorNameEmpty": "Folder name cannot be empty",
+    "errorNameInvalid": "Folder name contains invalid characters: < > : \" / \\ | ? *",
+    "errorNameDuplicate": "A directory with the same name already exists, please choose a different name",
+    "errorDirEmpty": "Please select a parent directory"
   }
 }

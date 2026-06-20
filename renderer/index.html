@@ -17,6 +17,8 @@
           <button id="menuOpenFolder" class="dropdown-item">打开文件夹</button>
           <button id="menuNewWindow" class="dropdown-item">新建窗口</button>
           <div class="dropdown-separator"></div>
+          <button id="menuCreateProject" class="dropdown-item">创建新项目</button>
+          <div class="dropdown-separator"></div>
           <button id="menuExport" class="dropdown-item dropdown-has-submenu">项目任务导出</button>
           <div id="menuExportSubmenu" class="dropdown-submenu" style="display:none;">
             <button id="menuExportMD" class="dropdown-item">导出为 Markdown</button>
@@ -118,6 +120,35 @@
       <span id="statusTaskName" class="status-item status-task-name"></span>
       <span class="status-separator">|</span>
       <span id="statusCardName" class="status-item status-card-name"></span>
+    </div>
+  </div>
+
+  <!-- 创建新项目全模态窗口 -->
+  <div id="createProjectOverlay" class="create-project-overlay" style="display:none;">
+    <div class="create-project-box">
+      <div class="create-project-header">
+        <span class="create-project-title">创建新项目</span>
+        <button id="createProjectCloseBtn" class="create-project-close-btn" title="关闭">✕</button>
+      </div>
+      <div class="create-project-content">
+        <div class="create-project-field">
+          <label class="create-project-label" for="projectFolderName">项目文件夹名称</label>
+          <input type="text" id="projectFolderName" class="create-project-input" placeholder="请输入文件夹名称" maxlength="100">
+          <span id="projectNameError" class="create-project-error" style="display:none;"></span>
+        </div>
+        <div class="create-project-field">
+          <label class="create-project-label">父级目录</label>
+          <div class="create-project-dir-row">
+            <span id="projectParentDir" class="create-project-dir-path">未选择</span>
+            <button id="selectParentDirBtn" class="create-project-browse-btn">浏览...</button>
+          </div>
+          <span id="projectDirError" class="create-project-error" style="display:none;"></span>
+        </div>
+      </div>
+      <div class="create-project-actions">
+        <button id="createProjectOpenHere" class="create-project-btn create-project-btn-primary">此窗口打开</button>
+        <button id="createProjectOpenNew" class="create-project-btn create-project-btn-secondary">新窗口打开</button>
+      </div>
     </div>
   </div>
 

@@ -53,6 +53,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 保存设置
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
 
+  // 选择目录（用于创建项目时选择父级目录）
+  selectDirectory: () => ipcRenderer.invoke('select-directory'),
+
+  // 创建项目目录
+  createProjectDir: (parentDir, folderName) => ipcRenderer.invoke('create-project-dir', parentDir, folderName),
+
+  // 在新窗口中打开指定文件夹
+  openFolderInNewWindow: (folderPath) => ipcRenderer.send('open-folder-new-window', folderPath),
+
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {
     ipcRenderer.on('folder-opened', (event, folderPath) => callback(folderPath));

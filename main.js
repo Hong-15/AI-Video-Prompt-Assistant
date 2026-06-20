@@ -358,6 +358,42 @@ function setupIPC() {
   ipcMain.handle('save-settings', (event, settings) => {
     return saveSettings(settings);
   });
+
+  // 选择目录对话框（用于创建项目时选择父级目录）
+  ipcMain.handle('select-directory', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: '选择父级目录',
+      properties: ['openDirectory']
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  });
+
+  // 创建项目目录
+  ipcMain.handle('create-project-dir', async (event, parentDir, folderName) => {
+    const fullPath = path.join(parentDir, folderName);
+    try {
+      if (fs.existsSync(fullPath)) {
+        return { success: false, errorCode: 'DUPLICATE', error: '同名目录已存在，请更换文件夹名称' };
+      }
+      fs.mkdirSync(fullPath, { recursive: true });
+      return { success: true, path: fullPath };
+    } catch (e) {
+      return { success: false, errorCode: 'ERROR', error: e.message };
+    }
+  });
+
+  // 在新窗口中打开指定文件夹
+  ipcMain.on('open-folder-new-window', (event, folderPath) => {
+    const newWin = createWindow();
+    currentFolderPath = folderPath;
+    newWin.once('ready-to-show', () => {
+      newWin.webContents.send('folder-opened', folderPath);
+    });
+    newWin.show();
+  });
 }
 
 // 处理窗口关闭（根据设置决定行为）

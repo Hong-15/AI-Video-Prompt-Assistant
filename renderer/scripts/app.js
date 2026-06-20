@@ -38,7 +38,8 @@ const App = (function() {
       onThemeChange: handleThemeChange,
       onShortcutSettings: showShortcutSettings,
       onAbout: showAboutDialog,
-      onMoreSettings: showMoreSettings
+      onMoreSettings: showMoreSettings,
+      onCreateProject: showCreateProjectModal
     });
 
     // 6. 初始化侧边栏拖动调整大小
@@ -507,6 +508,7 @@ const App = (function() {
     Content.switchToTask(task);
     updateStatusTaskName(task ? task.name : '');
     updateStatusCardName('');
+    updateStatusTaskCount();
   }
 
   // 任务删除
@@ -820,6 +822,146 @@ const App = (function() {
     });
 
     document.body.appendChild(overlay);
+  }
+
+  // ========== 创建新项目模态窗口 ==========
+
+  function showCreateProjectModal() {
+    const overlay = document.getElementById('createProjectOverlay');
+    const nameInput = document.getElementById('projectFolderName');
+    const dirPathEl = document.getElementById('projectParentDir');
+    const nameError = document.getElementById('projectNameError');
+    const dirError = document.getElementById('projectDirError');
+    const closeBtn = document.getElementById('createProjectCloseBtn');
+    const browseBtn = document.getElementById('selectParentDirBtn');
+    const openHereBtn = document.getElementById('createProjectOpenHere');
+    const openNewBtn = document.getElementById('createProjectOpenNew');
+
+    let _selectedParentDir = null;
+
+    // 更新模态窗口中的文本（使用字符串资源）
+    const titleEl = overlay.querySelector('.create-project-title');
+    if (titleEl) titleEl.textContent = StringLoader.get('createProject.title', '创建新项目');
+    closeBtn.title = StringLoader.get('createProject.closeBtn', '关闭');
+
+    const labelName = overlay.querySelector('.create-project-label');
+    if (labelName) labelName.textContent = StringLoader.get('createProject.folderName', '项目文件夹名称');
+
+    nameInput.placeholder = StringLoader.get('createProject.namePlaceholder', '请输入文件夹名称');
+
+    const dirLabel = overlay.querySelectorAll('.create-project-label')[1];
+    if (dirLabel) dirLabel.textContent = StringLoader.get('createProject.parentDir', '父级目录');
+
+    browseBtn.textContent = StringLoader.get('createProject.browseBtn', '浏览...');
+    openHereBtn.textContent = StringLoader.get('createProject.openHere', '此窗口打开');
+    openNewBtn.textContent = StringLoader.get('createProject.openNew', '新窗口打开');
+
+    // 重置状态
+    nameInput.value = '';
+    _selectedParentDir = null;
+    dirPathEl.textContent = StringLoader.get('createProject.notSelected', '未选择');
+    dirPathEl.classList.remove('selected');
+    nameError.style.display = 'none';
+    dirError.style.display = 'none';
+
+    // 显示模态窗口
+    overlay.style.display = 'flex';
+
+    // 关闭模态窗口
+    function closeModal() {
+      overlay.style.display = 'none';
+    }
+
+    // 关闭按钮
+    closeBtn.onclick = closeModal;
+
+    // 点击遮罩关闭
+    overlay.onclick = (e) => {
+      if (e.target === overlay) closeModal();
+    };
+
+    // 浏览按钮：选择父级目录
+    browseBtn.onclick = async () => {
+      const dir = await window.electronAPI.selectDirectory();
+      if (dir) {
+        _selectedParentDir = dir;
+        dirPathEl.textContent = dir;
+        dirPathEl.classList.add('selected');
+        dirError.style.display = 'none';
+      }
+    };
+
+    // 校验文件夹名称
+    function validateFolderName(name) {
+      if (!name || !name.trim()) {
+        return StringLoader.get('createProject.errorNameEmpty', '文件夹名称不能为空');
+      }
+      // 检查非法字符
+      const invalidChars = /[<>:"/\\|?*]/;
+      if (invalidChars.test(name)) {
+        return StringLoader.get('createProject.errorNameInvalid', '文件夹名称包含非法字符：< > : " / \\ | ? *');
+      }
+      return null;
+    }
+
+    // 校验父级目录
+    function validateParentDir() {
+      if (!_selectedParentDir) {
+        return StringLoader.get('createProject.errorDirEmpty', '请选择父级目录');
+      }
+      return null;
+    }
+
+    // 执行创建项目
+    async function doCreateProject(openInNewWindow) {
+      const folderName = nameInput.value.trim();
+
+      // 校验
+      const nameErr = validateFolderName(folderName);
+      if (nameErr) {
+        nameError.textContent = nameErr;
+        nameError.style.display = 'block';
+        return;
+      }
+      nameError.style.display = 'none';
+
+      const dirErr = validateParentDir();
+      if (dirErr) {
+        dirError.textContent = dirErr;
+        dirError.style.display = 'block';
+        return;
+      }
+      dirError.style.display = 'none';
+
+      // 创建目录
+      const result = await window.electronAPI.createProjectDir(_selectedParentDir, folderName);
+      if (!result.success) {
+        if (result.errorCode === 'DUPLICATE') {
+          nameError.textContent = StringLoader.get('createProject.errorNameDuplicate', '同名目录已存在，请更换文件夹名称');
+        } else {
+          nameError.textContent = result.error || StringLoader.get('createProject.errorNameDuplicate', '同名目录已存在，请更换文件夹名称');
+        }
+        nameError.style.display = 'block';
+        return;
+      }
+
+      // 关闭模态窗口
+      closeModal();
+
+      if (openInNewWindow) {
+        // 在新窗口中打开
+        window.electronAPI.openFolderInNewWindow(result.path);
+      } else {
+        // 在当前窗口中打开
+        await handleFolderOpened(result.path);
+      }
+    }
+
+    // 此窗口打开
+    openHereBtn.onclick = () => doCreateProject(false);
+
+    // 新窗口打开
+    openNewBtn.onclick = () => doCreateProject(true);
   }
 
   return { init, notifyCardFocused };

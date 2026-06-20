@@ -30,6 +30,8 @@
     "themeDefault": "默认",
     "themeSystem": "跟随系统",
     "shortcutSettings": "快捷键设置",
+    "moreSettings": "更多设置",
+    "about": "关于",
     "winMinimize": "最小化",
     "winMaximize": "最大化",
     "winClose": "关闭"
@@ -85,7 +87,11 @@
     "cardDeleteConfirmMsg": "确认删除卡片\"{name}\"吗？删除后可通过\"恢复默认布局\"恢复。",
     "cardRenameConfirmTitle": "重命名卡片",
     "cardRenameConfirmMsg": "请输入卡片\"{name}\"的新名称：",
-    "cardNewNamePlaceholder": "请输入新名称"
+    "cardNewNamePlaceholder": "请输入新名称",
+    "cardRenameDuplicate": "卡片名称已存在，请使用其他名称",
+    "addCustomCard": "+ 自定义卡片",
+    "addCustomCardTitle": "添加自定义卡片",
+    "defaultCustomCardName": "自定义卡片"
   },
   "modal": {
     "confirm": "确认",
@@ -137,5 +143,27 @@
     "saveSuccess": "数据保存成功",
     "saveFailed": "数据保存失败",
     "noFolder": "请先打开一个工作文件夹"
+  },
+  "about": {
+    "title": "关于",
+    "appName": "AI提示词助手",
+    "version": "版本 1.0.0",
+    "description": "一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。",
+    "officialSite": "官方地址",
+    "officialUrl": "https://gitee.com/spaceHong/AI-Video-Prompt-Assistant",
+    "copyright": "Copyright 2026 AI Prompt Helper"
+  },
+  "moreSettings": {
+    "title": "更多设置",
+    "closeBehavior": "关闭行为",
+    "closeBehaviorDesc": "设置点击右上角 X 按钮时的行为",
+    "closeExit": "退出程序",
+    "closeExitDesc": "点击关闭按钮时直接退出程序",
+    "closeTray": "隐藏到托盘区",
+    "closeTrayDesc": "点击关闭按钮时最小化到系统托盘",
+    "closeTaskbar": "隐藏到系统任务栏",
+    "closeTaskbarDesc": "点击关闭按钮时隐藏到系统任务栏",
+    "saveBtn": "保存设置",
+    "closeBtn": "关闭"
   }
 }

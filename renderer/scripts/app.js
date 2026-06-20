@@ -36,7 +36,9 @@ const App = (function() {
       onResetAllLayout: handleResetAllLayout,
       onExport: handleExport,
       onThemeChange: handleThemeChange,
-      onShortcutSettings: showShortcutSettings
+      onShortcutSettings: showShortcutSettings,
+      onAbout: showAboutDialog,
+      onMoreSettings: showMoreSettings
     });
 
     // 6. 初始化侧边栏拖动调整大小
@@ -446,7 +448,6 @@ const App = (function() {
 
     _currentFolder = folderPath;
     FileManager.setCurrentFolder(folderPath);
-    Toolbar.setFolderPath(folderPath);
     _isDirty = false;
     updateStatusFolderPath(folderPath);
     updateSaveStatus(true);
@@ -546,7 +547,7 @@ const App = (function() {
     markDirty();
   }
 
-  // 保存当前任务的字段数据、布局数据、隐藏字段和标签
+  // 保存当前任务的字段数据、布局数据、隐藏字段和标签、自定义卡片
   function saveCurrentTaskFields() {
     const taskId = Content.getCurrentTaskId();
     if (taskId) {
@@ -558,6 +559,10 @@ const App = (function() {
       Sidebar.updateTaskHiddenFields(taskId, hiddenFields);
       const fieldLabels = Content.getFieldLabels();
       Sidebar.updateTaskFieldLabels(taskId, fieldLabels);
+      const customCards = Content.getCustomCards();
+      Sidebar.updateTaskCustomCards(taskId, customCards);
+      const cardOrder = Content.getCardOrder();
+      Sidebar.updateTaskCardOrder(taskId, cardOrder);
     }
   }
 
@@ -683,6 +688,138 @@ const App = (function() {
 
   function notifyCardFocused(cardLabel) {
     updateStatusCardName(cardLabel);
+  }
+
+  // ========== 关于对话框 ==========
+
+  function showAboutDialog() {
+    const officialUrl = StringLoader.get('about.officialUrl', 'https://gitee.com/spaceHong/AI-Video-Prompt-Assistant');
+    Modal.show({
+      title: StringLoader.get('about.title', '关于'),
+      message: StringLoader.get('about.appName', 'AI提示词助手') + '\n' +
+        StringLoader.get('about.version', '版本 1.0.0') + '\n\n' +
+        StringLoader.get('about.description', '一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。') + '\n\n' +
+        StringLoader.get('about.officialSite', '官方地址') + '：' + officialUrl + '\n' +
+        StringLoader.get('about.copyright', 'Copyright 2026 AI Prompt Helper'),
+      showCancel: false,
+      confirmText: StringLoader.get('modal.ok', '确定')
+    });
+  }
+
+  // ========== 更多设置弹窗 ==========
+
+  let _currentCloseBehavior = 'exit';
+
+  async function showMoreSettings() {
+    // 加载当前设置
+    try {
+      const settings = await window.electronAPI.getSettings();
+      _currentCloseBehavior = settings.closeBehavior || 'exit';
+    } catch (e) {
+      _currentCloseBehavior = 'exit';
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'more-settings-overlay';
+
+    const box = document.createElement('div');
+    box.className = 'more-settings-box';
+
+    // 标题栏
+    const header = document.createElement('div');
+    header.className = 'more-settings-header';
+    const title = document.createElement('span');
+    title.className = 'more-settings-title';
+    title.textContent = StringLoader.get('moreSettings.title', '更多设置');
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'more-settings-close-btn';
+    closeBtn.textContent = '✕';
+    closeBtn.title = StringLoader.get('moreSettings.closeBtn', '关闭');
+    closeBtn.addEventListener('click', () => overlay.remove());
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    box.appendChild(header);
+
+    // 内容区域
+    const content = document.createElement('div');
+    content.className = 'more-settings-content';
+
+    // 关闭行为设置
+    const section = document.createElement('div');
+    section.className = 'more-settings-section';
+
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.textContent = StringLoader.get('moreSettings.closeBehavior', '关闭行为');
+    section.appendChild(sectionTitle);
+
+    const sectionDesc = document.createElement('p');
+    sectionDesc.className = 'more-settings-desc';
+    sectionDesc.textContent = StringLoader.get('moreSettings.closeBehaviorDesc', '设置点击右上角 X 按钮时的行为');
+    section.appendChild(sectionDesc);
+
+    const options = [
+      { value: 'exit', label: 'moreSettings.closeExit', desc: 'moreSettings.closeExitDesc', defaultLabel: '退出程序', defaultDesc: '点击关闭按钮时直接退出程序' },
+      { value: 'tray', label: 'moreSettings.closeTray', desc: 'moreSettings.closeTrayDesc', defaultLabel: '隐藏到托盘区', defaultDesc: '点击关闭按钮时最小化到系统托盘' },
+      { value: 'taskbar', label: 'moreSettings.closeTaskbar', desc: 'moreSettings.closeTaskbarDesc', defaultLabel: '隐藏到系统任务栏', defaultDesc: '点击关闭按钮时隐藏到系统任务栏' }
+    ];
+
+    options.forEach(opt => {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'more-settings-option';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'closeBehavior';
+      radio.value = opt.value;
+      radio.checked = _currentCloseBehavior === opt.value;
+      radio.addEventListener('change', () => {
+        _currentCloseBehavior = opt.value;
+      });
+
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'more-settings-option-label';
+      const labelStrong = document.createElement('strong');
+      labelStrong.textContent = StringLoader.get(opt.label, opt.defaultLabel);
+      labelDiv.appendChild(labelStrong);
+
+      const labelDesc = document.createElement('span');
+      labelDesc.className = 'more-settings-option-desc';
+      labelDesc.textContent = StringLoader.get(opt.desc, opt.defaultDesc);
+      labelDiv.appendChild(labelDesc);
+
+      optDiv.appendChild(radio);
+      optDiv.appendChild(labelDiv);
+      section.appendChild(optDiv);
+    });
+
+    content.appendChild(section);
+    box.appendChild(content);
+
+    // 底部按钮
+    const actions = document.createElement('div');
+    actions.className = 'more-settings-actions';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'modal-btn modal-btn-confirm';
+    saveBtn.textContent = StringLoader.get('moreSettings.saveBtn', '保存设置');
+    saveBtn.addEventListener('click', async () => {
+      try {
+        await window.electronAPI.saveSettings({ closeBehavior: _currentCloseBehavior });
+      } catch (e) {
+        console.error('保存设置失败:', e);
+      }
+      overlay.remove();
+    });
+    actions.appendChild(saveBtn);
+
+    box.appendChild(actions);
+    overlay.appendChild(box);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    document.body.appendChild(overlay);
   }
 
   return { init, notifyCardFocused };

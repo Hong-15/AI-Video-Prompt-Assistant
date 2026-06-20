@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -12,6 +12,33 @@ try {
 
 let mainWindow = null;
 let currentFolderPath = null;
+let tray = null;
+let closeBehavior = 'exit'; // 'exit' | 'tray' | 'taskbar'
+
+// 加载设置
+function loadSettings() {
+  const settingsPath = path.join(__dirname, 'config', 'settings.json');
+  try {
+    if (fs.existsSync(settingsPath)) {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      closeBehavior = settings.closeBehavior || 'exit';
+    }
+  } catch (e) {
+    console.error('加载设置失败:', e);
+  }
+}
+
+// 保存设置
+function saveSettings(settings) {
+  const settingsPath = path.join(__dirname, 'config', 'settings.json');
+  try {
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+    return true;
+  } catch (e) {
+    console.error('保存设置失败:', e);
+    return false;
+  }
+}
 
 function createWindow(parentFolderPath) {
   const win = new BrowserWindow({
@@ -184,7 +211,9 @@ function setupIPC() {
     }
   });
   ipcMain.on('win-close', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      handleWindowClose();
+    }
   });
 
   // 渲染进程请求打开文件夹
@@ -307,9 +336,90 @@ function setupIPC() {
       return false;
     }
   });
+
+  // 获取设置（关闭行为等）
+  ipcMain.handle('get-settings', () => {
+    const settingsPath = path.join(__dirname, 'config', 'settings.json');
+    try {
+      if (fs.existsSync(settingsPath)) {
+        return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
+      }
+    } catch (e) {
+      console.error('加载设置失败:', e);
+    }
+    return { closeBehavior: 'exit' };
+  });
+
+  // 保存设置
+  ipcMain.handle('save-settings', (event, settings) => {
+    return saveSettings(settings);
+  });
+}
+
+// 处理窗口关闭（根据设置决定行为）
+function handleWindowClose() {
+  if (closeBehavior === 'tray') {
+    // 隐藏到托盘
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.hide();
+      if (!tray) createTray();
+    }
+  } else if (closeBehavior === 'taskbar') {
+    // 隐藏到任务栏（最小化）
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.minimize();
+    }
+  } else {
+    // 默认退出
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.close();
+    }
+  }
+}
+
+// 创建系统托盘
+function createTray() {
+  if (tray) return;
+
+  // 创建透明图标
+  const icon = nativeImage.createEmpty();
+  tray = new Tray(icon.resize({ width: 16, height: 16 }));
+  tray.setToolTip(strings.app?.windowTitle || 'AI提示词助手');
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: strings.toolbar?.about || '显示窗口',
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: strings.menu?.quit || '退出',
+      click: () => {
+        closeBehavior = 'exit';
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.close();
+        }
+        app.quit();
+      }
+    }
+  ]);
+  tray.setContextMenu(contextMenu);
+
+  tray.on('double-click', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 }
 
 app.whenReady().then(() => {
+  loadSettings();
   buildMenu();
   setupIPC();
   mainWindow = createWindow();

@@ -9,6 +9,8 @@ const Toolbar = (function() {
   let _onExport = null;
   let _onThemeChange = null;
   let _onShortcutSettings = null;
+  let _onAbout = null;
+  let _onMoreSettings = null;
   let _dropdowns = [];
   let _submenus = [];         // 子菜单引用
   let _activeSubmenu = null;  // 当前打开的子菜单
@@ -23,6 +25,8 @@ const Toolbar = (function() {
     _onExport = callbacks.onExport || null;
     _onThemeChange = callbacks.onThemeChange || null;
     _onShortcutSettings = callbacks.onShortcutSettings || null;
+    _onAbout = callbacks.onAbout || null;
+    _onMoreSettings = callbacks.onMoreSettings || null;
 
     // 从字符串资源更新工具栏文本
     updateToolbarText();
@@ -150,6 +154,18 @@ const Toolbar = (function() {
       if (_onShortcutSettings) _onShortcutSettings();
     });
 
+    // 更多设置
+    document.getElementById('menuMoreSettings').addEventListener('click', () => {
+      hideAllDropdowns();
+      if (_onMoreSettings) _onMoreSettings();
+    });
+
+    // 关于
+    document.getElementById('menuAbout').addEventListener('click', () => {
+      hideAllDropdowns();
+      if (_onAbout) _onAbout();
+    });
+
     // ========== 侧边栏切换 ==========
     const toggleBtn = document.getElementById('toggleSidebarBtn');
     toggleBtn.addEventListener('click', () => {
@@ -219,10 +235,9 @@ const Toolbar = (function() {
     _activeSubmenu = null;
   }
 
-  // 更新文件夹路径显示
+  // 更新文件夹路径显示（已移除顶部路径显示，保留空函数以兼容）
   function setFolderPath(path) {
-    const el = document.getElementById('folderPath');
-    el.textContent = path || '';
+    // 路径已移至底部状态栏，此处不再显示
   }
 
   // 从 StringLoader 更新工具栏中所有静态文本
@@ -290,6 +305,12 @@ const Toolbar = (function() {
     const elShortcut = document.getElementById('menuShortcutSettings');
     if (elShortcut) elShortcut.textContent = StringLoader.get('toolbar.shortcutSettings', '快捷键设置');
 
+    const elMoreSettings = document.getElementById('menuMoreSettings');
+    if (elMoreSettings) elMoreSettings.textContent = StringLoader.get('toolbar.moreSettings', '更多设置');
+
+    const elAbout = document.getElementById('menuAbout');
+    if (elAbout) elAbout.textContent = StringLoader.get('toolbar.about', '关于');
+
     // 窗口控制按钮
     const winMinBtn = document.getElementById('winMinimizeBtn');
     if (winMinBtn) winMinBtn.title = StringLoader.get('toolbar.winMinimize', '最小化');
@@ -299,10 +320,6 @@ const Toolbar = (function() {
 
     const winCloseBtn = document.getElementById('winCloseBtn');
     if (winCloseBtn) winCloseBtn.title = StringLoader.get('toolbar.winClose', '关闭');
-
-    // 工作区标题
-    const title = document.getElementById('workspaceTitle');
-    if (title) title.textContent = StringLoader.get('app.title', 'AI提示词助手');
 
     // 输出区域标签
     const outputLabel = document.querySelector('.output-label');
@@ -329,6 +346,13 @@ const Toolbar = (function() {
 
     const statusFolder = document.getElementById('statusFolderPath');
     if (statusFolder) statusFolder.title = StringLoader.get('status.clickToCopy', '点击复制路径');
+
+    // 自定义卡片按钮
+    const addCustomCardBtn = document.getElementById('addCustomCardBtn');
+    if (addCustomCardBtn) {
+      addCustomCardBtn.textContent = StringLoader.get('content.addCustomCard', '+ 自定义卡片');
+      addCustomCardBtn.title = StringLoader.get('content.addCustomCardTitle', '添加自定义卡片');
+    }
   }
 
   return { init, setFolderPath };

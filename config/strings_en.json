@@ -30,6 +30,8 @@
     "themeDefault": "Default",
     "themeSystem": "Follow System",
     "shortcutSettings": "Shortcut Settings",
+    "moreSettings": "More Settings",
+    "about": "About",
     "winMinimize": "Minimize",
     "winMaximize": "Maximize",
     "winClose": "Close"
@@ -85,7 +87,11 @@
     "cardDeleteConfirmMsg": "Are you sure you want to delete card \"{name}\"? You can restore it via \"Reset Default Layout\".",
     "cardRenameConfirmTitle": "Rename Card",
     "cardRenameConfirmMsg": "Please enter a new name for card \"{name}\":",
-    "cardNewNamePlaceholder": "Please enter a new name"
+    "cardNewNamePlaceholder": "Please enter a new name",
+    "cardRenameDuplicate": "Card name already exists, please use a different name",
+    "addCustomCard": "+ Custom Card",
+    "addCustomCardTitle": "Add Custom Card",
+    "defaultCustomCardName": "Custom Card"
   },
   "modal": {
     "confirm": "Confirm",
@@ -137,5 +143,27 @@
     "saveSuccess": "Data saved successfully",
     "saveFailed": "Data save failed",
     "noFolder": "Please open a working folder first"
+  },
+  "about": {
+    "title": "About",
+    "appName": "AI Prompt Helper",
+    "version": "Version 1.0.0",
+    "description": "An efficient AI prompt management tool supporting multi-task management, custom cards, prompt combination and export.",
+    "officialSite": "Official Site",
+    "officialUrl": "https://gitee.com/spaceHong/AI-Video-Prompt-Assistant",
+    "copyright": "Copyright 2026 AI Prompt Helper"
+  },
+  "moreSettings": {
+    "title": "More Settings",
+    "closeBehavior": "Close Behavior",
+    "closeBehaviorDesc": "Configure what happens when clicking the X button",
+    "closeExit": "Exit Program",
+    "closeExitDesc": "Exit the program when clicking the close button",
+    "closeTray": "Minimize to Tray",
+    "closeTrayDesc": "Minimize to system tray when clicking the close button",
+    "closeTaskbar": "Hide to Taskbar",
+    "closeTaskbarDesc": "Hide to system taskbar when clicking the close button",
+    "saveBtn": "Save Settings",
+    "closeBtn": "Close"
   }
 }

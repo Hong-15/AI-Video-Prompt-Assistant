@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-  <!-- 顶部工具栏（单行：菜单 + 标题 + 文件夹路径 + 设置 + 窗口控制） -->
+  <!-- 顶部工具栏（单行：菜单 + 设置 + 窗口控制） -->
   <div id="toolbar" class="toolbar">
     <div class="toolbar-left">
       <button id="toggleSidebarBtn" class="toolbar-btn toggle-btn" title="展开/隐藏左侧任务栏">[|]</button>
@@ -33,10 +33,6 @@
           <button id="menuResetAllLayout" class="dropdown-item">全局任务工作台布局恢复默认</button>
         </div>
       </div>
-      <h1 id="workspaceTitle" class="toolbar-title">AI提示词助手</h1>
-    </div>
-    <div class="toolbar-center">
-      <span id="folderPath" class="folder-path"></span>
     </div>
     <div class="toolbar-right">
       <div class="toolbar-menu">
@@ -51,6 +47,9 @@
           </div>
           <div class="dropdown-separator"></div>
           <button id="menuShortcutSettings" class="dropdown-item">快捷键设置</button>
+          <div class="dropdown-separator"></div>
+          <button id="menuMoreSettings" class="dropdown-item">更多设置</button>
+          <button id="menuAbout" class="dropdown-item">关于</button>
         </div>
       </div>
       <div class="window-controls">
@@ -89,6 +88,9 @@
 
       <!-- 提示词工作台 -->
       <div id="workspace" class="workspace" style="display:none;">
+        <div class="workspace-header">
+          <button id="addCustomCardBtn" class="add-custom-card-btn" title="添加自定义卡片">+ 自定义卡片</button>
+        </div>
         <div id="inputGrid" class="input-grid"></div>
         <div class="output-area">
           <div class="output-header">

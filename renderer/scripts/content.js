@@ -9,6 +9,8 @@ const Content = (function() {
   let _cards = [];           // 当前渲染的卡片 DOM 引用
   let _hiddenFields = [];    // 当前任务隐藏的字段
   let _fieldLabels = {};     // 当前任务重命名的字段标签
+  let _customCards = [];     // 当前任务的自定义卡片 [{key, label}]
+  let _cardOrder = [];       // 当前任务的卡片渲染顺序（包含固定卡片和自定义卡片）
 
   // 初始化内容区域
   async function init(callbacks) {
@@ -30,6 +32,12 @@ const Content = (function() {
     const clearBtn = document.getElementById('clearBtn');
     clearBtn.addEventListener('click', handleClear);
 
+    // 自定义卡片按钮
+    const addCustomCardBtn = document.getElementById('addCustomCardBtn');
+    if (addCustomCardBtn) {
+      addCustomCardBtn.addEventListener('click', handleAddCustomCard);
+    }
+
     // 窗口大小变化时重新布局瀑布流
     window.addEventListener('resize', debounce(layoutMasonry, 150));
   }
@@ -39,127 +47,173 @@ const Content = (function() {
   // layoutData:  { fieldKey: height } 卡片高度（持久化用）
   // hiddenFields: 隐藏的字段 key 列表
   // fieldLabels:  重命名的字段标签 { fieldKey: newLabel }
-  function renderInputs(fieldsData, layoutData, hiddenFields, fieldLabels) {
+  // customCards:  自定义卡片 [{key, label}]
+  // cardOrder:    卡片渲染顺序
+  function renderInputs(fieldsData, layoutData, hiddenFields, fieldLabels, customCards, cardOrder) {
     const grid = document.getElementById('inputGrid');
     grid.innerHTML = '';
     _inputElements = {};
     _cards = [];
     _hiddenFields = hiddenFields || [];
     _fieldLabels = fieldLabels || {};
+    _customCards = customCards || [];
+    _cardOrder = cardOrder || [];
 
+    // 构建卡片数据列表：固定卡片 + 自定义卡片
+    const allCards = [];
+
+    // 固定卡片
     _fieldConfig.forEach(field => {
-      // 跳过隐藏的字段
       if (_hiddenFields.includes(field.key)) return;
-
-      const displayLabel = _fieldLabels[field.key] || field.label;
-
-      const card = document.createElement('div');
-      card.className = 'field-card';
-      card.dataset.fieldKey = field.key;
-
-      const label = document.createElement('label');
-      const labelText = document.createElement('span');
-      labelText.className = 'label-text';
-      labelText.textContent = `${field.icon} ${displayLabel}`;
-
-      // 操作按钮组
-      const cardActions = document.createElement('div');
-      cardActions.className = 'card-actions';
-
-      const renameBtn = document.createElement('button');
-      renameBtn.className = 'card-action-btn card-rename-btn';
-      renameBtn.textContent = StringLoader.get('content.cardRename', '重命名');
-      renameBtn.title = StringLoader.get('content.cardRenameTitle', '重命名此卡片');
-      renameBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showRenameCardDialog(field);
+      allCards.push({
+        type: 'fixed',
+        key: field.key,
+        label: _fieldLabels[field.key] || field.label,
+        icon: field.icon,
+        placeholder: field.placeholder
       });
+    });
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'card-action-btn card-delete-btn';
-      deleteBtn.textContent = StringLoader.get('content.cardDelete', '删除');
-      deleteBtn.title = StringLoader.get('content.cardDeleteTitle', '删除此卡片');
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showDeleteCardDialog(field);
+    // 自定义卡片（始终排在最后）
+    _customCards.forEach(cc => {
+      allCards.push({
+        type: 'custom',
+        key: cc.key,
+        label: cc.label,
+        icon: '',
+        placeholder: ''
       });
+    });
 
-      const clearFieldBtn = document.createElement('button');
-      clearFieldBtn.className = 'clear-field-btn';
-      clearFieldBtn.textContent = StringLoader.get('content.clearField', '清空');
-      clearFieldBtn.title = StringLoader.get('content.clearFieldTitle', '清空此栏');
+    // 如果有 cardOrder，按 cardOrder 排序；否则固定卡片在前，自定义卡片在后
+    if (_cardOrder.length > 0) {
+      allCards.sort((a, b) => {
+        const idxA = _cardOrder.indexOf(a.key);
+        const idxB = _cardOrder.indexOf(b.key);
+        if (idxA === -1 && idxB === -1) return 0;
+        if (idxA === -1) return 1;
+        if (idxB === -1) return -1;
+        return idxA - idxB;
+      });
+    }
 
-      cardActions.appendChild(renameBtn);
-      cardActions.appendChild(deleteBtn);
-      cardActions.appendChild(clearFieldBtn);
-
-      label.appendChild(labelText);
-      label.appendChild(cardActions);
-
-      const textarea = document.createElement('textarea');
-      textarea.dataset.fieldKey = field.key;
-      textarea.placeholder = field.placeholder;
-
-      if (fieldsData && fieldsData[field.key]) {
-        textarea.value = fieldsData[field.key];
-      }
-
-      const resizeHandle = document.createElement('div');
-      resizeHandle.className = 'card-resize-handle';
-      resizeHandle.title = StringLoader.get('content.resizeHandleTitle', '拖动调整高度');
-
-      card.appendChild(label);
-      card.appendChild(textarea);
-      card.appendChild(resizeHandle);
+    allCards.forEach(cardDef => {
+      const card = createCardElement(cardDef, fieldsData, layoutData);
       grid.appendChild(card);
-
-      _inputElements[field.key] = textarea;
       _cards.push(card);
-
-      // 恢复之前保存的卡片高度
-      if (layoutData && layoutData[field.key]) {
-        card.style.height = layoutData[field.key] + 'px';
-      }
-
-      textarea.addEventListener('input', () => {
-        updatePrompt();
-        if (_onInputChange) _onInputChange();
-      });
-
-      // 聚焦时更新状态栏显示当前卡片
-      textarea.addEventListener('focus', () => {
-        if (typeof App !== 'undefined' && App.notifyCardFocused) {
-          App.notifyCardFocused(displayLabel);
-        }
-      });
-
-      clearFieldBtn.addEventListener('click', () => {
-        textarea.value = '';
-        updatePrompt();
-        if (_onInputChange) _onInputChange();
-      });
-
-      initCardResize(card, textarea, resizeHandle);
     });
 
     updatePrompt();
     requestAnimationFrame(() => layoutMasonry());
   }
 
+  // 创建单个卡片元素
+  function createCardElement(cardDef, fieldsData, layoutData) {
+    const card = document.createElement('div');
+    card.className = 'field-card';
+    card.dataset.fieldKey = cardDef.key;
+    card.dataset.cardType = cardDef.type;
+
+    const label = document.createElement('label');
+    const labelText = document.createElement('span');
+    labelText.className = 'label-text';
+    labelText.textContent = cardDef.icon ? `${cardDef.icon} ${cardDef.label}` : cardDef.label;
+
+    // 操作按钮组
+    const cardActions = document.createElement('div');
+    cardActions.className = 'card-actions';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'card-action-btn card-rename-btn';
+    renameBtn.textContent = StringLoader.get('content.cardRename', '重命名');
+    renameBtn.title = StringLoader.get('content.cardRenameTitle', '重命名此卡片');
+    renameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showRenameCardDialog(cardDef);
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'card-action-btn card-delete-btn';
+    deleteBtn.textContent = StringLoader.get('content.cardDelete', '删除');
+    deleteBtn.title = StringLoader.get('content.cardDeleteTitle', '删除此卡片');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showDeleteCardDialog(cardDef);
+    });
+
+    const clearFieldBtn = document.createElement('button');
+    clearFieldBtn.className = 'clear-field-btn';
+    clearFieldBtn.textContent = StringLoader.get('content.clearField', '清空');
+    clearFieldBtn.title = StringLoader.get('content.clearFieldTitle', '清空此栏');
+
+    cardActions.appendChild(renameBtn);
+    cardActions.appendChild(deleteBtn);
+    cardActions.appendChild(clearFieldBtn);
+
+    label.appendChild(labelText);
+    label.appendChild(cardActions);
+
+    const textarea = document.createElement('textarea');
+    textarea.dataset.fieldKey = cardDef.key;
+    textarea.placeholder = cardDef.placeholder;
+
+    if (fieldsData && fieldsData[cardDef.key]) {
+      textarea.value = fieldsData[cardDef.key];
+    }
+
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'card-resize-handle';
+    resizeHandle.title = StringLoader.get('content.resizeHandleTitle', '拖动调整高度');
+
+    card.appendChild(label);
+    card.appendChild(textarea);
+    card.appendChild(resizeHandle);
+
+    _inputElements[cardDef.key] = textarea;
+
+    // 恢复之前保存的卡片高度
+    if (layoutData && layoutData[cardDef.key]) {
+      card.style.height = layoutData[cardDef.key] + 'px';
+    }
+
+    textarea.addEventListener('input', () => {
+      updatePrompt();
+      if (_onInputChange) _onInputChange();
+    });
+
+    // 聚焦时更新状态栏显示当前卡片
+    textarea.addEventListener('focus', () => {
+      if (typeof App !== 'undefined' && App.notifyCardFocused) {
+        App.notifyCardFocused(cardDef.label);
+      }
+    });
+
+    clearFieldBtn.addEventListener('click', () => {
+      textarea.value = '';
+      updatePrompt();
+      if (_onInputChange) _onInputChange();
+    });
+
+    initCardResize(card, textarea, resizeHandle);
+
+    return card;
+  }
+
   // 显示删除卡片确认对话框
-  function showDeleteCardDialog(field) {
-    const displayLabel = _fieldLabels[field.key] || field.label;
+  function showDeleteCardDialog(cardDef) {
+    const displayLabel = cardDef.label;
     const msg = StringLoader.get('content.cardDeleteConfirmMsg', '确认删除卡片"{name}"吗？').replace('{name}', displayLabel);
     Modal.confirm(
       StringLoader.get('content.cardDeleteConfirmTitle', '删除卡片'),
       msg,
       () => {
-        hideCard(field.key);
-        // 重新渲染
-        const activeTask = Sidebar.getActiveTask();
-        if (activeTask) {
-          switchToTask(activeTask);
+        if (cardDef.type === 'custom') {
+          deleteCustomCard(cardDef.key);
+        } else {
+          hideCard(cardDef.key);
         }
+        // 重新渲染
+        refreshCurrentTask();
         if (_onInputChange) _onInputChange();
       },
       { confirmText: StringLoader.get('content.cardDelete', '删除'), confirmClass: 'modal-btn-danger' }
@@ -167,20 +221,27 @@ const Content = (function() {
   }
 
   // 显示重命名卡片对话框
-  function showRenameCardDialog(field) {
-    const displayLabel = _fieldLabels[field.key] || field.label;
+  function showRenameCardDialog(cardDef) {
+    const displayLabel = cardDef.label;
     const msg = StringLoader.get('content.cardRenameConfirmMsg', '请输入卡片"{name}"的新名称：').replace('{name}', displayLabel);
     Modal.prompt(
       StringLoader.get('content.cardRenameConfirmTitle', '重命名卡片'),
       msg,
       (newName) => {
         if (newName && newName.trim()) {
-          renameCardLabel(field.key, newName.trim());
-          // 重新渲染
-          const activeTask = Sidebar.getActiveTask();
-          if (activeTask) {
-            switchToTask(activeTask);
+          const trimmed = newName.trim();
+          // 检查当前任务中是否重名
+          if (!checkCardNameUnique(trimmed, cardDef.key)) {
+            showToast(StringLoader.get('content.cardRenameDuplicate', '卡片名称已存在，请使用其他名称'));
+            return false;
           }
+          if (cardDef.type === 'custom') {
+            renameCustomCard(cardDef.key, trimmed);
+          } else {
+            renameCardLabel(cardDef.key, trimmed);
+          }
+          // 重新渲染
+          refreshCurrentTask();
           if (_onInputChange) _onInputChange();
         }
       },
@@ -198,6 +259,8 @@ const Content = (function() {
   // 重命名卡片标签
   function renameCardLabel(fieldKey, newLabel) {
     _fieldLabels[fieldKey] = newLabel;
+    // 先保存到任务数据
+    Sidebar.updateTaskFieldLabels(_currentTaskId, { ..._fieldLabels });
   }
 
   // 获取隐藏字段列表
@@ -208,6 +271,110 @@ const Content = (function() {
   // 获取字段标签映射
   function getFieldLabels() {
     return _fieldLabels;
+  }
+
+  // 获取自定义卡片列表
+  function getCustomCards() {
+    return _customCards;
+  }
+
+  // 获取卡片顺序
+  function getCardOrder() {
+    return _cardOrder;
+  }
+
+  // 添加自定义卡片
+  function handleAddCustomCard() {
+    // 生成唯一 key
+    const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    // 生成递增名称：自定义卡片, 自定义卡片2, 自定义卡片3...
+    const defaultName = StringLoader.get('content.defaultCustomCardName', '自定义卡片');
+    let maxNum = 0;
+    _customCards.forEach(cc => {
+      if (cc.label === defaultName) {
+        maxNum = Math.max(maxNum, 1);
+      } else if (cc.label.startsWith(defaultName)) {
+        const suffix = cc.label.slice(defaultName.length);
+        const num = parseInt(suffix, 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+    const label = maxNum > 0 ? defaultName + (maxNum + 1) : defaultName;
+
+    _customCards.push({ key, label });
+    // 自定义卡片添加到 cardOrder 末尾
+    if (!_cardOrder.includes(key)) {
+      _cardOrder.push(key);
+    }
+
+    // 先保存到任务数据，再重新渲染（避免 switchToTask 覆盖内存中的修改）
+    Sidebar.updateTaskCustomCards(_currentTaskId, [..._customCards]);
+    Sidebar.updateTaskCardOrder(_currentTaskId, [..._cardOrder]);
+
+    refreshCurrentTask();
+    if (_onInputChange) _onInputChange();
+  }
+
+  // 删除自定义卡片
+  function deleteCustomCard(key) {
+    _customCards = _customCards.filter(cc => cc.key !== key);
+    _cardOrder = _cardOrder.filter(k => k !== key);
+    // 先保存到任务数据
+    Sidebar.updateTaskCustomCards(_currentTaskId, [..._customCards]);
+    Sidebar.updateTaskCardOrder(_currentTaskId, [..._cardOrder]);
+  }
+
+  // 重命名自定义卡片
+  function renameCustomCard(key, newLabel) {
+    const cc = _customCards.find(c => c.key === key);
+    if (cc) {
+      cc.label = newLabel;
+    }
+    // 先保存到任务数据
+    Sidebar.updateTaskCustomCards(_currentTaskId, [..._customCards]);
+  }
+
+  // 检查卡片名称在当前任务中是否唯一
+  function checkCardNameUnique(name, excludeKey) {
+    // 检查固定卡片
+    for (const field of _fieldConfig) {
+      if (_hiddenFields.includes(field.key)) continue;
+      const label = _fieldLabels[field.key] || field.label;
+      if (label === name && field.key !== excludeKey) return false;
+    }
+    // 检查自定义卡片
+    for (const cc of _customCards) {
+      if (cc.label === name && cc.key !== excludeKey) return false;
+    }
+    return true;
+  }
+
+  // 重新渲染当前任务
+  function refreshCurrentTask() {
+    const activeTask = Sidebar.getActiveTask();
+    if (activeTask) {
+      switchToTask(activeTask);
+    }
+  }
+
+  // 简易 Toast 提示
+  function showToast(message) {
+    const existing = document.querySelector('.sidebar-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'sidebar-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('sidebar-toast-visible');
+    }, 10);
+
+    setTimeout(() => {
+      toast.classList.remove('sidebar-toast-visible');
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
   }
 
   // 瀑布流布局：将卡片排列到最短列
@@ -319,6 +486,15 @@ const Content = (function() {
       parts.push(`${displayLabel}：${val}`);
     });
 
+    // 自定义卡片
+    _customCards.forEach(cc => {
+      const textarea = _inputElements[cc.key];
+      if (!textarea) return;
+      const val = textarea.value.trim();
+      if (val === '') return;
+      parts.push(`${cc.label}：${val}`);
+    });
+
     promptBox.textContent = parts.join('\n');
   }
 
@@ -372,7 +548,9 @@ const Content = (function() {
       _currentTaskId = task.id;
       emptyState.style.display = 'none';
       workspace.style.display = 'block';
-      renderInputs(task.fields || {}, task.layout || {}, task.hiddenFields || [], task.fieldLabels || {});
+      _customCards = task.customCards || [];
+      _cardOrder = task.cardOrder || [];
+      renderInputs(task.fields || {}, task.layout || {}, task.hiddenFields || [], task.fieldLabels || {}, _customCards, _cardOrder);
     } else {
       _currentTaskId = null;
       emptyState.style.display = 'flex';
@@ -387,11 +565,10 @@ const Content = (function() {
     });
     _hiddenFields = [];
     _fieldLabels = {};
+    _customCards = [];
+    _cardOrder = [];
     // 重新渲染以显示所有卡片
-    const activeTask = Sidebar.getActiveTask();
-    if (activeTask) {
-      switchToTask(activeTask);
-    }
+    refreshCurrentTask();
     layoutMasonry();
     if (_onInputChange) _onInputChange();
   }
@@ -399,6 +576,7 @@ const Content = (function() {
   return {
     init, switchToTask, getFieldsData, getLayoutData, updatePrompt,
     resetCurrentTaskLayout, getHiddenFields, getFieldLabels,
+    getCustomCards, getCardOrder,
     hasActiveTask: () => _currentTaskId !== null,
     getCurrentTaskId: () => _currentTaskId
   };

@@ -1166,3 +1166,171 @@ html[data-theme="light"] .shortcut-key-input {
   border-color: #d4d4d8;
   color: #1a1a2e;
 }
+
+/* ========== 工作区头部（自定义卡片按钮） ========== */
+.workspace-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 8px 8px 0;
+  margin-bottom: 4px;
+}
+
+.add-custom-card-btn {
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: var(--accent-purple);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.add-custom-card-btn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #c4b5fd;
+}
+
+/* ========== 更多设置弹窗 ========== */
+.more-settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.more-settings-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.2s ease;
+}
+
+.more-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.more-settings-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.more-settings-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.more-settings-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+}
+
+.more-settings-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.more-settings-section h3 {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 0.3rem;
+}
+
+.more-settings-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.more-settings-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.15s;
+}
+
+.more-settings-option:hover {
+  border-color: var(--border-active);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.more-settings-option input[type="radio"] {
+  margin-top: 0.2rem;
+  accent-color: var(--border-active);
+  cursor: pointer;
+}
+
+.more-settings-option-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.more-settings-option-label strong {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.more-settings-option-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.more-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 浅色主题适配 */
+html[data-theme="light"] .more-settings-box {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .more-settings-option {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .more-settings-option:hover {
+  background: rgba(99, 102, 241, 0.05);
+}

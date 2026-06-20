@@ -47,6 +47,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 保存主题配置
   saveThemeConfig: (config) => ipcRenderer.invoke('save-theme-config', config),
 
+  // 获取设置（关闭行为等）
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+
+  // 保存设置
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {
     ipcRenderer.on('folder-opened', (event, folderPath) => callback(folderPath));

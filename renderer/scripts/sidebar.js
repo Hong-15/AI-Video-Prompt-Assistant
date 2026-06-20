@@ -180,6 +180,22 @@ const Sidebar = (function() {
     }
   }
 
+  // 更新任务自定义卡片
+  function updateTaskCustomCards(taskId, customCards) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.customCards = customCards;
+    }
+  }
+
+  // 更新任务卡片顺序
+  function updateTaskCardOrder(taskId, cardOrder) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.cardOrder = cardOrder;
+    }
+  }
+
   // 重置所有任务的布局为默认
   function resetAllLayouts() {
     _tasks.forEach(task => {
@@ -375,6 +391,8 @@ const Sidebar = (function() {
     updateTaskLayout,
     updateTaskHiddenFields,
     updateTaskFieldLabels,
+    updateTaskCustomCards,
+    updateTaskCardOrder,
     resetAllLayouts,
     setActiveTask,
     showDeleteConfirm,

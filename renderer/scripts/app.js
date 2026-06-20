@@ -901,32 +901,64 @@ const App = (function() {
 
     const aboutText = document.createElement('div');
     aboutText.className = 'more-settings-about-text';
-    const officialUrl = StringLoader.get('about.officialUrl', 'https://gitee.com/spaceHong/AI-Video-Prompt-Assistant');
     aboutText.innerHTML =
       '<p><strong>' + StringLoader.get('about.appName', 'AI提示词助手') + '</strong></p>' +
       '<p>' + StringLoader.get('about.version', '版本 1.0.0') + '</p>' +
       '<p style="margin-top:0.8rem;">' + StringLoader.get('about.description', '一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。') + '</p>' +
-      '<p style="margin-top:0.8rem;">' + StringLoader.get('about.officialSite', '官方地址') + '：<span class="more-settings-copy-link" id="aboutOfficialUrl">' + officialUrl + '</span></p>' +
       '<p style="margin-top:0.8rem;color:var(--text-muted);">' + StringLoader.get('about.copyright', 'Copyright 2026 AI Prompt Helper') + '</p>';
     panelAbout.appendChild(aboutText);
 
-    // 官方地址点击复制
-    setTimeout(() => {
-      const urlEl = document.getElementById('aboutOfficialUrl');
-      if (urlEl) {
-        urlEl.addEventListener('click', () => {
-          navigator.clipboard.writeText(officialUrl).then(() => {
-            const original = urlEl.textContent;
-            urlEl.textContent = StringLoader.get('status.copiedPath', '已复制!');
-            urlEl.style.color = 'var(--accent)';
+    // 官方地址列表（从配置加载）
+    const urlsContainer = document.createElement('div');
+    urlsContainer.style.marginTop = '1rem';
+    const urlsTitle = document.createElement('p');
+    urlsTitle.style.marginBottom = '0.4rem';
+    urlsTitle.textContent = StringLoader.get('about.officialUrls', '官方地址');
+    urlsContainer.appendChild(urlsTitle);
+    const urlsList = document.createElement('div');
+    urlsList.className = 'more-settings-urls-list';
+    urlsContainer.appendChild(urlsList);
+    panelAbout.appendChild(urlsContainer);
+
+    // 异步加载URL配置
+    const labelMap = {
+      official: StringLoader.get('urls.official', '官网'),
+      repository: StringLoader.get('urls.repository', '仓库'),
+      documentation: StringLoader.get('urls.documentation', '文档'),
+      issues: StringLoader.get('urls.issues', '问题反馈')
+    };
+    window.electronAPI.getUrlsConfig().then(urlsConfig => {
+      const urlEntries = Object.entries(urlsConfig);
+      if (urlEntries.length === 0) {
+        urlsList.innerHTML = '<span style="color:var(--text-muted);">—</span>';
+        return;
+      }
+      urlEntries.forEach(([key, url]) => {
+        const urlItem = document.createElement('div');
+        urlItem.className = 'more-settings-url-item';
+        const label = document.createElement('span');
+        label.className = 'more-settings-url-label';
+        label.textContent = (labelMap[key] || key) + ': ';
+        const link = document.createElement('span');
+        link.className = 'more-settings-copy-link';
+        link.textContent = url;
+        link.title = StringLoader.get('about.clickToCopy', '点击复制地址');
+        link.addEventListener('click', () => {
+          navigator.clipboard.writeText(url).then(() => {
+            const original = link.textContent;
+            link.textContent = StringLoader.get('status.copiedPath', '已复制!');
+            link.style.color = 'var(--accent)';
             setTimeout(() => {
-              urlEl.textContent = original;
-              urlEl.style.color = '';
+              link.textContent = original;
+              link.style.color = '';
             }, 1500);
           }).catch(() => {});
         });
-      }
-    }, 0);
+        urlItem.appendChild(label);
+        urlItem.appendChild(link);
+        urlsList.appendChild(urlItem);
+      });
+    }).catch(() => {});
 
     content.appendChild(panelAbout);
 
@@ -936,6 +968,22 @@ const App = (function() {
     // 底部操作栏
     const actions = document.createElement('div');
     actions.className = 'more-settings-actions';
+
+    // 帮助按钮（左侧 ? 图标）
+    const helpBtn = document.createElement('button');
+    helpBtn.className = 'more-settings-help-btn';
+    helpBtn.textContent = '?';
+    helpBtn.title = StringLoader.get('about.helpTitle', '官方帮助（点击在浏览器中打开）');
+    helpBtn.addEventListener('click', async () => {
+      try {
+        const urlsConfig = await window.electronAPI.getUrlsConfig();
+        const officialUrl = urlsConfig.official || Object.values(urlsConfig)[0] || 'https://gitee.com/spaceHong/AI-Video-Prompt-Assistant';
+        window.electronAPI.openExternalUrl(officialUrl);
+      } catch (e) {
+        window.electronAPI.openExternalUrl('https://gitee.com/spaceHong/AI-Video-Prompt-Assistant');
+      }
+    });
+    actions.appendChild(helpBtn);
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'modal-btn modal-btn-confirm';

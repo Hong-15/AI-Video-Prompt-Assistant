@@ -71,6 +71,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 重启应用
   restartApp: () => ipcRenderer.send('restart-app'),
 
+  // 获取官方地址配置
+  getUrlsConfig: () => ipcRenderer.invoke('get-urls-config'),
+
+  // 在系统浏览器中打开URL
+  openExternalUrl: (url) => ipcRenderer.send('open-external-url', url),
+
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {
     ipcRenderer.on('folder-opened', (event, folderPath) => callback(folderPath));

@@ -73,6 +73,7 @@
     "clearAll": "清空所有输入",
     "clearField": "清空",
     "clearFieldTitle": "清空此栏",
+    "clearFieldConfirm": "确认清空卡片\"{name}\"的内容吗？",
     "clearConfirm": "确认清空所有提示词维度输入吗？此操作不可恢复。",
     "clearConfirmBtn": "清空",
     "resizeHandleTitle": "拖动调整高度",
@@ -151,8 +152,16 @@
     "version": "版本 1.0.0",
     "description": "一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。",
     "officialSite": "官方地址",
-    "officialUrl": "https://gitee.com/spaceHong/AI-Video-Prompt-Assistant",
+    "officialUrls": "官方地址",
+    "clickToCopy": "点击复制地址",
+    "helpTitle": "官方帮助（点击在浏览器中打开）",
     "copyright": "Copyright 2026 AI Prompt Helper"
+  },
+  "urls": {
+    "official": "官网",
+    "repository": "仓库",
+    "documentation": "文档",
+    "issues": "问题反馈"
   },
   "moreSettings": {
     "title": "更多设置",

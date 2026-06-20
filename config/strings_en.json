@@ -73,6 +73,7 @@
     "clearAll": "Clear All Inputs",
     "clearField": "Clear",
     "clearFieldTitle": "Clear this field",
+    "clearFieldConfirm": "Confirm to clear the content of \"{name}\"?",
     "clearConfirm": "Are you sure you want to clear all prompt dimension inputs? This action cannot be undone.",
     "clearConfirmBtn": "Clear",
     "resizeHandleTitle": "Drag to resize",
@@ -151,8 +152,16 @@
     "version": "Version 1.0.0",
     "description": "An efficient AI prompt management tool supporting multi-task management, custom cards, prompt combination and export.",
     "officialSite": "Official Site",
-    "officialUrl": "https://gitee.com/spaceHong/AI-Video-Prompt-Assistant",
+    "officialUrls": "Official URLs",
+    "clickToCopy": "Click to copy URL",
+    "helpTitle": "Help (Click to open in browser)",
     "copyright": "Copyright 2026 AI Prompt Helper"
+  },
+  "urls": {
+    "official": "Official",
+    "repository": "Repository",
+    "documentation": "Documentation",
+    "issues": "Issues"
   },
   "moreSettings": {
     "title": "More Settings",

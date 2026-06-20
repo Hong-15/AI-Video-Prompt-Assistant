@@ -445,6 +445,26 @@ function setupIPC() {
     app.relaunch();
     app.exit(0);
   });
+
+  // 获取官方地址配置
+  ipcMain.handle('get-urls-config', () => {
+    const urlsPath = path.join(__dirname, 'config', 'urls.json');
+    try {
+      if (fs.existsSync(urlsPath)) {
+        return JSON.parse(fs.readFileSync(urlsPath, 'utf-8'));
+      }
+    } catch (e) {
+      console.error('加载URL配置失败:', e);
+    }
+    return {};
+  });
+
+  // 在系统浏览器中打开URL
+  ipcMain.on('open-external-url', (event, url) => {
+    if (url) {
+      shell.openExternal(url);
+    }
+  });
 }
 
 // 处理窗口关闭（根据设置决定行为）

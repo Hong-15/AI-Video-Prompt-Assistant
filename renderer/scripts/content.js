@@ -196,9 +196,18 @@ const Content = (function() {
     });
 
     clearFieldBtn.addEventListener('click', () => {
-      textarea.value = '';
-      updatePrompt();
-      if (_onInputChange) _onInputChange();
+      const cardLabel = cardDef.label;
+      const msg = StringLoader.get('content.clearFieldConfirm', '确认清空卡片"{name}"的内容吗？').replace('{name}', cardLabel);
+      Modal.confirm(
+        StringLoader.get('content.clearFieldTitle', '清空此栏'),
+        msg,
+        () => {
+          textarea.value = '';
+          updatePrompt();
+          if (_onInputChange) _onInputChange();
+        },
+        { confirmText: StringLoader.get('content.clearField', '清空'), confirmClass: 'modal-btn-danger' }
+      );
     });
 
     initCardResize(card, textarea, resizeHandle);

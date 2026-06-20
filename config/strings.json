@@ -132,12 +132,11 @@
   },
   "shortcuts": {
     "title": "快捷键设置",
-    "restoreDefault": "恢复默认设置",
+    "enabled": "启用",
+    "clickToRecord": "点击录制快捷键",
     "function": "功能",
-    "key": "按键",
-    "ctrl": "Ctrl",
-    "shift": "Shift",
-    "alt": "Alt"
+    "key": "快捷键",
+    "restoreDefault": "恢复默认设置"
   },
   "file": {
     "loadSuccess": "数据加载成功",

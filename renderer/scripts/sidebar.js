@@ -316,7 +316,9 @@ const Sidebar = (function() {
         const num = parseInt(value, 10);
         if (isNaN(num) || num < 1 || num > _tasks.length) {
           const errorMsg = StringLoader.get('sidebar.reorderError', '请输入有效的位置序号（1-{total}）').replace('{total}', _tasks.length);
-          alert(errorMsg);
+          if (typeof Content !== 'undefined' && Content.showToast) {
+            Content.showToast(errorMsg);
+          }
           return false;
         }
         return reorderTask(task.id, num);
@@ -400,6 +402,17 @@ const Sidebar = (function() {
     resetAllLayouts,
     setActiveTask,
     showDeleteConfirm,
-    render
+    render,
+    // 切换侧边栏展开/收起
+    toggle: () => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) {
+        sidebar.classList.toggle('sidebar-collapsed');
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+          mainContent.classList.toggle('sidebar-collapsed');
+        }
+      }
+    }
   };
 })();

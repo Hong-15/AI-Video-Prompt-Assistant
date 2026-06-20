@@ -1503,9 +1503,9 @@ html[data-theme="light"] .shortcut-key-input {
   color: var(--text-primary);
 }
 
-.more-settings-shortcut-key-input {
-  width: 60px;
-  padding: 0.3rem 0.4rem;
+.more-settings-shortcut-record-input {
+  width: 140px;
+  padding: 0.3rem 0.5rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--border-color);
   border-radius: 0.3rem;
@@ -1513,20 +1513,22 @@ html[data-theme="light"] .shortcut-key-input {
   font-size: 0.82rem;
   text-align: center;
   outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
 }
 
-.more-settings-shortcut-key-input:focus {
+.more-settings-shortcut-record-input:focus {
   border-color: var(--accent);
 }
 
-.more-settings-shortcut-checkbox {
+.more-settings-checkbox {
   accent-color: var(--accent);
   cursor: pointer;
   width: 16px;
   height: 16px;
 }
 
-.more-settings-actions {
+.more-settings-lang-label {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
@@ -1554,7 +1556,7 @@ html[data-theme="light"] .more-settings-lang-select {
   border-color: #d4d4d8;
 }
 
-html[data-theme="light"] .more-settings-shortcut-key-input {
+html[data-theme="light"] .more-settings-shortcut-record-input {
   background: #f0f0f3;
   border-color: #d4d4d8;
   color: #1a1a2e;

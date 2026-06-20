@@ -132,12 +132,11 @@
   },
   "shortcuts": {
     "title": "Shortcut Settings",
-    "restoreDefault": "Restore Default",
+    "enabled": "Enabled",
+    "clickToRecord": "Click to record shortcut",
     "function": "Function",
-    "key": "Key",
-    "ctrl": "Ctrl",
-    "shift": "Shift",
-    "alt": "Alt"
+    "key": "Shortcut",
+    "restoreDefault": "Restore Default"
   },
   "file": {
     "loadSuccess": "Data loaded successfully",

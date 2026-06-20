@@ -348,5 +348,5 @@ const Toolbar = (function() {
     }
   }
 
-  return { init, setFolderPath };
+  return { init, setFolderPath, triggerOpenFolder: () => { if (_onOpenFolder) _onOpenFolder(); } };
 })();

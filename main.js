@@ -384,7 +384,11 @@ function setupIPC() {
 
   // 保存设置
   ipcMain.handle('save-settings', (event, settings) => {
-    return saveSettings(settings);
+    const result = saveSettings(settings);
+    if (result && settings.closeBehavior) {
+      closeBehavior = settings.closeBehavior;
+    }
+    return result;
   });
 
   // 选择目录对话框（用于创建项目时选择父级目录）
@@ -468,8 +472,17 @@ function handleWindowClose(win) {
 function createTray() {
   if (tray) return;
 
-  // 创建透明图标
-  const icon = nativeImage.createEmpty();
+  // 使用应用图标创建托盘图标
+  const iconPath = path.join(__dirname, 'assets', 'H.jpg');
+  let icon;
+  try {
+    icon = nativeImage.createFromPath(iconPath);
+    if (icon.isEmpty()) {
+      icon = nativeImage.createEmpty();
+    }
+  } catch (e) {
+    icon = nativeImage.createEmpty();
+  }
   tray = new Tray(icon.resize({ width: 16, height: 16 }));
   tray.setToolTip(strings.app?.windowTitle || 'AI提示词助手');
 

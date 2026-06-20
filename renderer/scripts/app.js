@@ -133,38 +133,68 @@ const App = (function() {
 
   function bindShortcutKeys() {
     const handler = (e) => {
-      const { save: saveCfg, newTask: newTaskCfg, deleteTask: deleteTaskCfg } = _shortcutCfg;
-
-      // Ctrl+S：保存所有数据
-      if (matchShortcut(e, saveCfg)) {
-        e.preventDefault();
-        autoSave();
-        return;
-      }
-
-      // Ctrl+N：新建任务（需已打开文件夹）
-      if (matchShortcut(e, newTaskCfg)) {
-        e.preventDefault();
-        if (checkFolderBeforeAddTask()) {
-          Sidebar.addTask();
+      // 遍历所有快捷键配置
+      for (const [action, cfg] of Object.entries(_shortcutCfg)) {
+        if (!cfg || !cfg.enabled) continue;
+        if (matchShortcut(e, cfg)) {
+          e.preventDefault();
+          dispatchShortcut(action);
+          return;
         }
-        return;
-      }
-
-      // Ctrl+D：删除当前任务（需已打开文件夹）
-      if (matchShortcut(e, deleteTaskCfg)) {
-        e.preventDefault();
-        if (!_currentFolder) return;
-        const activeTask = Sidebar.getActiveTask();
-        if (activeTask) {
-          Sidebar.showDeleteConfirm(activeTask);
-        }
-        return;
       }
     };
 
     document.addEventListener('keydown', handler);
     _shortcutKeys.handler = handler;
+  }
+
+  function dispatchShortcut(action) {
+    switch (action) {
+      case 'save':
+        autoSave();
+        break;
+      case 'newTask':
+        if (checkFolderBeforeAddTask()) {
+          Sidebar.addTask();
+        }
+        break;
+      case 'deleteTask':
+        if (!_currentFolder) return;
+        const activeTask = Sidebar.getActiveTask();
+        if (activeTask) {
+          Sidebar.showDeleteConfirm(activeTask);
+        }
+        break;
+      case 'clearAll':
+        if (Content.clearAllInputs) Content.clearAllInputs();
+        break;
+      case 'copyPreview':
+        if (Content.copyPreview) Content.copyPreview();
+        break;
+      case 'addCustomCard':
+        if (Content.addCustomCard) Content.addCustomCard();
+        break;
+      case 'toggleSidebar':
+        if (Sidebar.toggle) Sidebar.toggle();
+        break;
+      case 'focusNextInput':
+        if (Content.focusNextInput) Content.focusNextInput();
+        break;
+      case 'focusPrevInput':
+        if (Content.focusPrevInput) Content.focusPrevInput();
+        break;
+      case 'openFolder':
+        Toolbar.triggerOpenFolder();
+        break;
+      case 'exportMD':
+        handleExport('md');
+        break;
+      case 'exportTXT':
+        handleExport('txt');
+        break;
+      default:
+        console.warn('未知快捷键操作:', action);
+    }
   }
 
   function rebindShortcutKeys() {
@@ -538,9 +568,18 @@ const App = (function() {
   // ========== 更多设置弹窗（左侧菜单 + 右侧内容） ==========
 
   const DEFAULT_SHORTCUTS = {
-    save: { key: "s", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.save', '保存所有数据') },
-    newTask: { key: "n", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.newTask', '新建任务') },
-    deleteTask: { key: "d", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.deleteTask', '删除当前任务') }
+    save: { key: "s", ctrl: true, shift: false, alt: false, enabled: true, description: "保存所有数据" },
+    newTask: { key: "n", ctrl: true, shift: false, alt: false, enabled: false, description: "新建任务" },
+    deleteTask: { key: "d", ctrl: true, shift: false, alt: false, enabled: false, description: "删除当前任务" },
+    clearAll: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "清空所有输入" },
+    copyPreview: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "复制预览内容" },
+    addCustomCard: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "添加自定义卡片" },
+    toggleSidebar: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "展开/隐藏侧边栏" },
+    focusNextInput: { key: "ArrowDown", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个输入框" },
+    focusPrevInput: { key: "ArrowUp", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个输入框" },
+    openFolder: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "打开文件夹" },
+    exportMD: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为 Markdown" },
+    exportTXT: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为文本文件" }
   };
 
   let _currentCloseBehavior = 'exit';
@@ -675,19 +714,31 @@ const App = (function() {
 
     const shortcutDesc = document.createElement('p');
     shortcutDesc.className = 'more-settings-desc';
-    shortcutDesc.textContent = StringLoader.get('moreSettings.shortcutsDesc', '自定义键盘快捷键');
+    shortcutDesc.textContent = StringLoader.get('moreSettings.shortcutsDesc', '点击快捷键输入框，按下组合键录制');
     panelShortcuts.appendChild(shortcutDesc);
 
     const table = document.createElement('table');
     table.className = 'more-settings-shortcut-table';
 
     const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>' + StringLoader.get('shortcuts.function', '功能') + '</th><th>' + StringLoader.get('shortcuts.key', '按键') + '</th><th>' + StringLoader.get('shortcuts.ctrl', 'Ctrl') + '</th><th>' + StringLoader.get('shortcuts.shift', 'Shift') + '</th><th>' + StringLoader.get('shortcuts.alt', 'Alt') + '</th></tr>';
+    thead.innerHTML = '<tr><th>' + StringLoader.get('shortcuts.function', '功能') + '</th><th>' + StringLoader.get('shortcuts.key', '快捷键') + '</th><th>' + StringLoader.get('shortcuts.enabled', '启用') + '</th></tr>';
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
     const shortcutKeys = Object.keys(_shortcutCfg);
     const shortcutInputs = {};
+
+    // 快捷键显示文本
+    function shortcutToDisplay(cfg) {
+      if (!cfg.key) return '—';
+      const parts = [];
+      if (cfg.ctrl) parts.push('Ctrl');
+      if (cfg.shift) parts.push('Shift');
+      if (cfg.alt) parts.push('Alt');
+      const keyDisplay = cfg.key === ' ' ? 'Space' : (cfg.key.length === 1 ? cfg.key.toUpperCase() : cfg.key);
+      parts.push(keyDisplay);
+      return parts.join('+');
+    }
 
     shortcutKeys.forEach(key => {
       const cfg = _shortcutCfg[key];
@@ -700,45 +751,60 @@ const App = (function() {
       tr.appendChild(tdDesc);
 
       const tdKey = document.createElement('td');
-      const keyInput = document.createElement('input');
-      keyInput.className = 'more-settings-shortcut-key-input';
-      keyInput.type = 'text';
-      keyInput.maxLength = 20;
-      keyInput.value = cfg.key || '';
-      keyInput.addEventListener('keydown', (e) => {
-        e.preventDefault();
-        if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
-        keyInput.value = e.key.length === 1 ? e.key : e.key;
+      const recordingInput = document.createElement('input');
+      recordingInput.className = 'more-settings-shortcut-record-input';
+      recordingInput.type = 'text';
+      recordingInput.readOnly = true;
+      recordingInput.value = shortcutToDisplay(cfg);
+      recordingInput.placeholder = StringLoader.get('shortcuts.clickToRecord', '点击录制快捷键');
+      recordingInput.style.cursor = 'pointer';
+
+      // 录制快捷键
+      recordingInput.addEventListener('click', () => {
+        recordingInput.value = '...';
+        recordingInput.style.background = 'var(--bg-hover)';
+        const onKeyDown = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+          const newCfg = {
+            key: e.key,
+            ctrl: e.ctrlKey,
+            shift: e.shiftKey,
+            alt: e.altKey,
+            enabled: cfg.enabled,
+            description: cfg.description
+          };
+          shortcutInputs[key].cfg = newCfg;
+          recordingInput.value = shortcutToDisplay(newCfg);
+          recordingInput.style.background = '';
+          document.removeEventListener('keydown', onKeyDown, true);
+        };
+        document.addEventListener('keydown', onKeyDown, true);
+        // 点其他地方取消录制
+        const cancelRecord = (e) => {
+          if (e.target !== recordingInput) {
+            recordingInput.value = shortcutToDisplay(cfg);
+            recordingInput.style.background = '';
+            document.removeEventListener('keydown', onKeyDown, true);
+            document.removeEventListener('click', cancelRecord, true);
+          }
+        };
+        setTimeout(() => document.addEventListener('click', cancelRecord, true), 0);
       });
-      tdKey.appendChild(keyInput);
+      tdKey.appendChild(recordingInput);
       tr.appendChild(tdKey);
 
-      const tdCtrl = document.createElement('td');
-      const ctrlCheck = document.createElement('input');
-      ctrlCheck.type = 'checkbox';
-      ctrlCheck.className = 'more-settings-shortcut-checkbox';
-      ctrlCheck.checked = cfg.ctrl || false;
-      tdCtrl.appendChild(ctrlCheck);
-      tr.appendChild(tdCtrl);
-
-      const tdShift = document.createElement('td');
-      const shiftCheck = document.createElement('input');
-      shiftCheck.type = 'checkbox';
-      shiftCheck.className = 'more-settings-shortcut-checkbox';
-      shiftCheck.checked = cfg.shift || false;
-      tdShift.appendChild(shiftCheck);
-      tr.appendChild(tdShift);
-
-      const tdAlt = document.createElement('td');
-      const altCheck = document.createElement('input');
-      altCheck.type = 'checkbox';
-      altCheck.className = 'more-settings-shortcut-checkbox';
-      altCheck.checked = cfg.alt || false;
-      tdAlt.appendChild(altCheck);
-      tr.appendChild(tdAlt);
+      const tdEnabled = document.createElement('td');
+      const enabledCheck = document.createElement('input');
+      enabledCheck.type = 'checkbox';
+      enabledCheck.className = 'more-settings-checkbox';
+      enabledCheck.checked = cfg.enabled || false;
+      tdEnabled.appendChild(enabledCheck);
+      tr.appendChild(tdEnabled);
 
       tbody.appendChild(tr);
-      shortcutInputs[key] = { keyInput, ctrlCheck, shiftCheck, altCheck };
+      shortcutInputs[key] = { recordingInput, enabledCheck, cfg: { ...cfg } };
     });
 
     table.appendChild(tbody);
@@ -756,10 +822,9 @@ const App = (function() {
         const def = DEFAULT_SHORTCUTS[key];
         const inp = shortcutInputs[key];
         if (inp) {
-          inp.keyInput.value = def.key;
-          inp.ctrlCheck.checked = def.ctrl;
-          inp.shiftCheck.checked = def.shift;
-          inp.altCheck.checked = def.alt;
+          inp.cfg = { ...def };
+          inp.recordingInput.value = shortcutToDisplay(def);
+          inp.enabledCheck.checked = def.enabled;
         }
       });
     });
@@ -774,10 +839,8 @@ const App = (function() {
         const inp = shortcutInputs[key];
         if (inp) {
           newCfg[key] = {
-            key: inp.keyInput.value || _shortcutCfg[key].key,
-            ctrl: inp.ctrlCheck.checked,
-            shift: inp.shiftCheck.checked,
-            alt: inp.altCheck.checked,
+            ...inp.cfg,
+            enabled: inp.enabledCheck.checked,
             description: _shortcutCfg[key].description
           };
         }

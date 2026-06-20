@@ -538,7 +538,7 @@ const Content = (function() {
   function handleCopy() {
     const text = document.getElementById('promptBox').textContent;
     if (!text.trim()) {
-      alert(StringLoader.get('content.emptyAlert', '请先填写至少一个维度'));
+      showToast(StringLoader.get('content.emptyAlert', '请先填写至少一个维度'));
       return;
     }
     navigator.clipboard.writeText(text).then(() => {
@@ -546,7 +546,7 @@ const Content = (function() {
       btn.innerHTML = StringLoader.get('content.copied', '已复制');
       setTimeout(() => { btn.innerHTML = StringLoader.get('content.copy', '复制'); }, 2000);
     }).catch(() => {
-      alert(StringLoader.get('content.copyFailed', '复制失败，请手动复制'));
+      showToast(StringLoader.get('content.copyFailed', '复制失败，请手动复制'));
     });
   }
 
@@ -737,10 +737,56 @@ const Content = (function() {
     _dragState = null;
   }
 
+  // 聚焦下一个输入框
+  function focusNextInput() {
+    const allTextareas = getVisibleTextareas();
+    if (allTextareas.length === 0) return;
+    const activeEl = document.activeElement;
+    const currentIdx = allTextareas.indexOf(activeEl);
+    if (currentIdx === -1) {
+      allTextareas[0].focus();
+      return;
+    }
+    if (currentIdx < allTextareas.length - 1) {
+      allTextareas[currentIdx + 1].focus();
+    }
+  }
+
+  // 聚焦上一个输入框
+  function focusPrevInput() {
+    const allTextareas = getVisibleTextareas();
+    if (allTextareas.length === 0) return;
+    const activeEl = document.activeElement;
+    const currentIdx = allTextareas.indexOf(activeEl);
+    if (currentIdx === -1) {
+      allTextareas[allTextareas.length - 1].focus();
+      return;
+    }
+    if (currentIdx > 0) {
+      allTextareas[currentIdx - 1].focus();
+    }
+  }
+
+  // 获取所有可见的输入框
+  function getVisibleTextareas() {
+    const allTextareas = [];
+    _cards.forEach(card => {
+      const ta = card.querySelector('textarea');
+      if (ta && !card.classList.contains('dragging')) {
+        allTextareas.push(ta);
+      }
+    });
+    return allTextareas;
+  }
+
   return {
     init, switchToTask, getFieldsData, getLayoutData, updatePrompt,
     resetCurrentTaskLayout, getHiddenFields, getFieldLabels,
-    getCustomCards, getCardOrder,
+    getCustomCards, getCardOrder, showToast,
+    focusNextInput, focusPrevInput,
+    clearAllInputs: handleClear,
+    copyPreview: handleCopy,
+    addCustomCard: handleAddCustomCard,
     hasActiveTask: () => _currentTaskId !== null,
     getCurrentTaskId: () => _currentTaskId
   };

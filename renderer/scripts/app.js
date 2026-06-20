@@ -46,11 +46,14 @@ const App = (function() {
     // 7. 初始化状态栏
     initStatusBar();
 
-    // 8. 监听主进程事件
+    // 8. 设置当前语言
+    _currentLanguage = StringLoader.get('language', 'zh-CN');
+
+    // 9. 监听主进程事件
     window.electronAPI.onFolderOpened(handleFolderOpened);
     window.electronAPI.onSaveBeforeClose(handleSaveBeforeClose);
 
-    // 9. 检查是否有已打开的文件夹
+    // 10. 检查是否有已打开的文件夹
     const existingFolder = await window.electronAPI.getCurrentFolder();
     if (existingFolder) {
       await handleFolderOpened(existingFolder);
@@ -239,6 +242,21 @@ const App = (function() {
       return;
     }
 
+    // 加载字段配置，构建本地化标签映射
+    let fieldLabelMap = {};
+    try {
+      const fieldConfig = await window.electronAPI.getFieldConfig();
+      const isEnglish = _currentLanguage === 'en';
+      fieldConfig.forEach(f => {
+        fieldLabelMap[f.key] = isEnglish && f.labelEn ? f.labelEn : f.label;
+      });
+    } catch (e) {}
+
+    // 获取字段显示标签
+    function getFieldDisplayLabel(fieldKey) {
+      return fieldLabelMap[fieldKey] || fieldKey;
+    }
+
     let content = '';
     const ext = format === 'md' ? 'md' : 'txt';
 
@@ -253,7 +271,7 @@ const App = (function() {
           Object.keys(task.fields).forEach(fieldKey => {
             const val = task.fields[fieldKey];
             if (val && val.trim()) {
-              content += `**${fieldKey}**：${val}\n\n`;
+              content += `**${getFieldDisplayLabel(fieldKey)}**：${val}\n\n`;
             }
           });
         }
@@ -272,7 +290,7 @@ const App = (function() {
           Object.keys(task.fields).forEach(fieldKey => {
             const val = task.fields[fieldKey];
             if (val && val.trim()) {
-              content += `${fieldKey}：${val}\n`;
+              content += `${getFieldDisplayLabel(fieldKey)}：${val}\n`;
             }
           });
         }
@@ -280,9 +298,19 @@ const App = (function() {
       });
     }
 
+    // 生成唯一文件名（时间戳 + UUID短码）
+    const now = new Date();
+    const ts = now.getFullYear()
+      + String(now.getMonth() + 1).padStart(2, '0')
+      + String(now.getDate()).padStart(2, '0')
+      + '_' + String(now.getHours()).padStart(2, '0')
+      + String(now.getMinutes()).padStart(2, '0')
+      + String(now.getSeconds()).padStart(2, '0');
+    const defaultName = StringLoader.get('dialog.exportFileName', '项目任务导出') + '_' + ts + '.' + ext;
+
     try {
       const result = await window.electronAPI.exportFile({
-        defaultName: StringLoader.get('dialog.exportFileName', '项目任务导出') + '_' + new Date().toISOString().slice(0, 10) + '.' + ext,
+        defaultName: defaultName,
         filters: [
           format === 'md'
             ? { name: StringLoader.get('dialog.markdownFile', 'Markdown 文件'), extensions: ['md'] }
@@ -1192,7 +1220,7 @@ const App = (function() {
     openNewBtn.onclick = () => doCreateProject(true);
   }
 
-  return { init, notifyCardFocused };
+  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage };
 })();
 
 // 启动应用

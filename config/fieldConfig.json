@@ -3,60 +3,80 @@
     "key": "subject",
     "icon": "🎯",
     "label": "主体特征",
-    "placeholder": "例如：身着液态铠甲的机械武士，半透明全息影像..."
+    "labelEn": "Subject",
+    "placeholder": "例如：身着液态铠甲的机械武士，半透明全息影像...",
+    "placeholderEn": "e.g. A mechanical warrior in liquid armor, translucent hologram..."
   },
   {
     "key": "scene",
     "icon": "🏞️",
     "label": "场景环境",
-    "placeholder": "例如：赛博朋克雨夜街道，霓虹灯闪烁的深巷..."
+    "labelEn": "Scene",
+    "placeholder": "例如：赛博朋克雨夜街道，霓虹灯闪烁的深巷...",
+    "placeholderEn": "e.g. Cyberpunk rainy night street, neon-lit alley..."
   },
   {
     "key": "lighting",
     "icon": "💡",
     "label": "光影色彩",
-    "placeholder": "例如：逆光剪影，青橙色对比，体积光穿过烟雾..."
+    "labelEn": "Lighting",
+    "placeholder": "例如：逆光剪影，青橙色对比，体积光穿过烟雾...",
+    "placeholderEn": "e.g. Backlit silhouette, teal-orange contrast, volumetric light through smoke..."
   },
   {
     "key": "style",
     "icon": "🎨",
     "label": "艺术风格",
-    "placeholder": "例如：电影写实，8K，吉卜力美学，35mm胶片颗粒..."
+    "labelEn": "Style",
+    "placeholder": "例如：电影写实，8K，吉卜力美学，35mm胶片颗粒...",
+    "placeholderEn": "e.g. Cinematic realism, 8K, Ghibli aesthetic, 35mm film grain..."
   },
   {
     "key": "shotScale",
     "icon": "📷",
     "label": "镜头景别",
-    "placeholder": "例如：极致特写，低角度仰拍，过肩镜头..."
+    "labelEn": "Shot Scale",
+    "placeholder": "例如：极致特写，低角度仰拍，过肩镜头...",
+    "placeholderEn": "e.g. Extreme close-up, low angle shot, over-the-shoulder..."
   },
   {
     "key": "cameraMove",
     "icon": "🎥",
     "label": "镜头运动",
-    "placeholder": "例如：缓慢环绕主体，手持晃动感，摇臂上升..."
+    "labelEn": "Camera Movement",
+    "placeholder": "例如：缓慢环绕主体，手持晃动感，摇臂上升...",
+    "placeholderEn": "e.g. Slow orbit around subject, handheld shake, crane up..."
   },
   {
     "key": "time",
     "icon": "⏱️",
     "label": "时间节奏",
-    "placeholder": "例如：慢动作240fps，延时摄影，子弹时间..."
+    "labelEn": "Time & Rhythm",
+    "placeholder": "例如：慢动作240fps，延时摄影，子弹时间...",
+    "placeholderEn": "e.g. Slow motion 240fps, time-lapse, bullet time..."
   },
   {
     "key": "action",
     "icon": "⚡",
     "label": "动态事件",
-    "placeholder": "例如：花瓣随风飘落，玻璃破碎后凝滞，转身回眸..."
+    "labelEn": "Action",
+    "placeholder": "例如：花瓣随风飘落，玻璃破碎后凝滞，转身回眸...",
+    "placeholderEn": "e.g. Petals falling in wind, shattered glass frozen, turning glance..."
   },
   {
     "key": "tech",
     "icon": "📐",
     "label": "技术参数",
-    "placeholder": "例如：宽银幕21:9，浅景深，锐利对焦，稳定画面..."
+    "labelEn": "Technical",
+    "placeholder": "例如：宽银幕21:9，浅景深，锐利对焦，稳定画面...",
+    "placeholderEn": "e.g. Widescreen 21:9, shallow depth of field, sharp focus, stabilized..."
   },
   {
     "key": "negative",
     "icon": "🚫",
     "label": "负面排除",
-    "placeholder": "例如：模糊，畸形手指，水印，闪烁，低画质..."
+    "labelEn": "Negative",
+    "placeholder": "例如：模糊，畸形手指，水印，闪烁，低画质...",
+    "placeholderEn": "e.g. Blur, deformed fingers, watermark, flickering, low quality..."
   }
 ]

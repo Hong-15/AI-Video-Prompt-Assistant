@@ -1,4 +1,5 @@
 {
+  "language": "en",
   "app": {
     "title": "AI Prompt Helper",
     "windowTitle": "AI Prompt Helper"
@@ -182,7 +183,7 @@
     "languageDesc": "Select interface display language",
     "langChinese": "Chinese",
     "langEnglish": "English",
-    "saveBtn": "Save Settings",
+    "saveBtn": "Apply",
     "closeBtn": "Close",
     "restartTitle": "Language Changed",
     "restartMsg": "Language settings have been changed. A restart is required to take effect. Restart now?",

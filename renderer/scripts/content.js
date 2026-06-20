@@ -50,6 +50,19 @@ const Content = (function() {
   // fieldLabels:  重命名的字段标签 { fieldKey: newLabel }
   // customCards:  自定义卡片 [{key, label}]
   // cardOrder:    卡片渲染顺序
+  // 获取字段的本地化标签
+  function getFieldLocalizedLabel(field) {
+    if (_fieldLabels[field.key]) return _fieldLabels[field.key];
+    const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
+    return isEnglish && field.labelEn ? field.labelEn : field.label;
+  }
+
+  // 获取字段的本地化占位符
+  function getFieldLocalizedPlaceholder(field) {
+    const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
+    return isEnglish && field.placeholderEn ? field.placeholderEn : field.placeholder;
+  }
+
   function renderInputs(fieldsData, layoutData, hiddenFields, fieldLabels, customCards, cardOrder) {
     const grid = document.getElementById('inputGrid');
     grid.innerHTML = '';
@@ -69,9 +82,9 @@ const Content = (function() {
       allCards.push({
         type: 'fixed',
         key: field.key,
-        label: _fieldLabels[field.key] || field.label,
+        label: getFieldLocalizedLabel(field),
         icon: field.icon,
-        placeholder: field.placeholder
+        placeholder: getFieldLocalizedPlaceholder(field)
       });
     });
 
@@ -518,7 +531,7 @@ const Content = (function() {
       if (!textarea) return;
       const val = textarea.value.trim();
       if (val === '') return;
-      const displayLabel = _fieldLabels[field.key] || field.label;
+      const displayLabel = getFieldLocalizedLabel(field);
       parts.push(`${displayLabel}：${val}`);
     });
 

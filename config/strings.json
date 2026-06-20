@@ -182,7 +182,7 @@
     "languageDesc": "选择界面显示语言",
     "langChinese": "中文",
     "langEnglish": "English",
-    "saveBtn": "保存设置",
+    "saveBtn": "应用",
     "closeBtn": "关闭",
     "restartTitle": "语言变更",
     "restartMsg": "语言设置已更改，需要重启应用才能生效。是否立即重启？",

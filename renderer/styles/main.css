@@ -1481,9 +1481,15 @@ html[data-theme="light"] .shortcut-key-input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 0.6rem 1.5rem;
   border-top: 1px solid var(--border-color);
   gap: 12px;
+}
+
+.more-settings-actions .modal-btn {
+  padding: 5px 14px;
+  font-size: 12px;
+  border-radius: 6px;
 }
 
 /* 帮助按钮 */

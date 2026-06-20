@@ -156,22 +156,10 @@ const Toolbar = (function() {
       if (_onThemeChange) _onThemeChange('system');
     });
 
-    // 快捷键设置
-    document.getElementById('menuShortcutSettings').addEventListener('click', () => {
-      hideAllDropdowns();
-      if (_onShortcutSettings) _onShortcutSettings();
-    });
-
     // 更多设置
     document.getElementById('menuMoreSettings').addEventListener('click', () => {
       hideAllDropdowns();
       if (_onMoreSettings) _onMoreSettings();
-    });
-
-    // 关于
-    document.getElementById('menuAbout').addEventListener('click', () => {
-      hideAllDropdowns();
-      if (_onAbout) _onAbout();
     });
 
     // ========== 侧边栏切换 ==========
@@ -313,14 +301,8 @@ const Toolbar = (function() {
     const elThemeSystem = document.getElementById('menuThemeSystem');
     if (elThemeSystem) elThemeSystem.textContent = StringLoader.get('toolbar.themeSystem', '跟随系统');
 
-    const elShortcut = document.getElementById('menuShortcutSettings');
-    if (elShortcut) elShortcut.textContent = StringLoader.get('toolbar.shortcutSettings', '快捷键设置');
-
     const elMoreSettings = document.getElementById('menuMoreSettings');
     if (elMoreSettings) elMoreSettings.textContent = StringLoader.get('toolbar.moreSettings', '更多设置');
-
-    const elAbout = document.getElementById('menuAbout');
-    if (elAbout) elAbout.textContent = StringLoader.get('toolbar.about', '关于');
 
     // 窗口控制按钮
     const winMinBtn = document.getElementById('winMinimizeBtn');

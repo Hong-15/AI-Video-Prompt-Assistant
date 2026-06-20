@@ -157,6 +157,10 @@
   },
   "moreSettings": {
     "title": "更多设置",
+    "menuCloseBehavior": "关闭行为",
+    "menuShortcuts": "快捷键设置",
+    "menuLanguage": "语言",
+    "menuAbout": "关于",
     "closeBehavior": "关闭行为",
     "closeBehaviorDesc": "设置点击右上角 X 按钮时的行为",
     "closeExit": "退出程序",
@@ -165,6 +169,10 @@
     "closeTrayDesc": "点击关闭按钮时最小化到系统托盘",
     "closeTaskbar": "隐藏到系统任务栏",
     "closeTaskbarDesc": "点击关闭按钮时隐藏到系统任务栏",
+    "shortcutsDesc": "自定义键盘快捷键",
+    "language": "语言",
+    "languageDesc": "选择界面显示语言",
+    "langChinese": "中文",
     "saveBtn": "保存设置",
     "closeBtn": "关闭"
   },

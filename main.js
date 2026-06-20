@@ -47,7 +47,7 @@ function createWindow(parentFolderPath) {
     minWidth: 900,
     minHeight: 600,
     title: strings.app?.windowTitle || 'AI提示词助手',
-    icon: path.join(__dirname, 'assets', 'transparent.png'),
+    icon: path.join(__dirname, 'assets', 'H.jpg'),
     backgroundColor: '#0b0b1a',
     frame: false,
     autoHideMenuBar: true,

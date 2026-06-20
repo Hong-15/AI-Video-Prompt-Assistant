@@ -36,8 +36,6 @@ const App = (function() {
       onResetAllLayout: handleResetAllLayout,
       onExport: handleExport,
       onThemeChange: handleThemeChange,
-      onShortcutSettings: showShortcutSettings,
-      onAbout: showAboutDialog,
       onMoreSettings: showMoreSettings,
       onCreateProject: showCreateProjectModal
     });
@@ -187,161 +185,6 @@ const App = (function() {
     if (cfg.alt && !e.altKey) return false;
     if (!cfg.alt && e.altKey) return false;
     return true;
-  }
-
-  // ========== 快捷键设置弹窗 ==========
-
-  const DEFAULT_SHORTCUTS = {
-    save: { key: "s", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.save', '保存所有数据') },
-    newTask: { key: "n", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.newTask', '新建任务') },
-    deleteTask: { key: "d", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.deleteTask', '删除当前任务') }
-  };
-
-  function showShortcutSettings() {
-    const overlay = document.createElement('div');
-    overlay.className = 'shortcut-settings-overlay';
-
-    const box = document.createElement('div');
-    box.className = 'shortcut-settings-box';
-
-    const title = document.createElement('div');
-    title.className = 'shortcut-settings-title';
-    title.textContent = StringLoader.get('shortcuts.title', '快捷键设置');
-    box.appendChild(title);
-
-    const table = document.createElement('table');
-    table.className = 'shortcut-settings-table';
-
-    const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>' + StringLoader.get('shortcuts.function', '功能') + '</th><th>' + StringLoader.get('shortcuts.key', '按键') + '</th><th>' + StringLoader.get('shortcuts.ctrl', 'Ctrl') + '</th><th>' + StringLoader.get('shortcuts.shift', 'Shift') + '</th><th>' + StringLoader.get('shortcuts.alt', 'Alt') + '</th></tr>';
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    const shortcutKeys = Object.keys(_shortcutCfg);
-    const inputs = {};
-
-    shortcutKeys.forEach(key => {
-      const cfg = _shortcutCfg[key];
-      if (!cfg) return;
-      const tr = document.createElement('tr');
-
-      const tdDesc = document.createElement('td');
-      tdDesc.className = 'shortcut-desc';
-      tdDesc.textContent = cfg.description || key;
-      tr.appendChild(tdDesc);
-
-      const tdKey = document.createElement('td');
-      const keyInput = document.createElement('input');
-      keyInput.className = 'shortcut-key-input';
-      keyInput.type = 'text';
-      keyInput.maxLength = 20;
-      keyInput.value = cfg.key || '';
-      keyInput.addEventListener('keydown', (e) => {
-        e.preventDefault();
-        if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
-        keyInput.value = e.key.length === 1 ? e.key : e.key;
-      });
-      tdKey.appendChild(keyInput);
-      tr.appendChild(tdKey);
-
-      const tdCtrl = document.createElement('td');
-      const ctrlCheck = document.createElement('input');
-      ctrlCheck.type = 'checkbox';
-      ctrlCheck.className = 'shortcut-checkbox';
-      ctrlCheck.checked = cfg.ctrl || false;
-      tdCtrl.appendChild(ctrlCheck);
-      tr.appendChild(tdCtrl);
-
-      const tdShift = document.createElement('td');
-      const shiftCheck = document.createElement('input');
-      shiftCheck.type = 'checkbox';
-      shiftCheck.className = 'shortcut-checkbox';
-      shiftCheck.checked = cfg.shift || false;
-      tdShift.appendChild(shiftCheck);
-      tr.appendChild(tdShift);
-
-      const tdAlt = document.createElement('td');
-      const altCheck = document.createElement('input');
-      altCheck.type = 'checkbox';
-      altCheck.className = 'shortcut-checkbox';
-      altCheck.checked = cfg.alt || false;
-      tdAlt.appendChild(altCheck);
-      tr.appendChild(tdAlt);
-
-      tbody.appendChild(tr);
-      inputs[key] = { keyInput, ctrlCheck, shiftCheck, altCheck };
-    });
-
-    table.appendChild(tbody);
-    box.appendChild(table);
-
-    const actions = document.createElement('div');
-    actions.className = 'shortcut-settings-actions';
-
-    const resetBtn = document.createElement('button');
-    resetBtn.className = 'modal-btn modal-btn-cancel';
-    resetBtn.textContent = StringLoader.get('shortcuts.restoreDefault', '恢复默认设置');
-    resetBtn.addEventListener('click', () => {
-      Object.keys(DEFAULT_SHORTCUTS).forEach(key => {
-        const def = DEFAULT_SHORTCUTS[key];
-        const inp = inputs[key];
-        if (inp) {
-          inp.keyInput.value = def.key;
-          inp.ctrlCheck.checked = def.ctrl;
-          inp.shiftCheck.checked = def.shift;
-          inp.altCheck.checked = def.alt;
-        }
-      });
-    });
-    actions.appendChild(resetBtn);
-
-    const actionsRight = document.createElement('div');
-    actionsRight.className = 'shortcut-settings-actions-right';
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'modal-btn modal-btn-cancel';
-    cancelBtn.textContent = StringLoader.get('modal.cancel', '取消');
-    cancelBtn.addEventListener('click', () => overlay.remove());
-    actionsRight.appendChild(cancelBtn);
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'modal-btn modal-btn-confirm';
-    saveBtn.textContent = StringLoader.get('modal.save', '保存');
-    saveBtn.addEventListener('click', async () => {
-      const newCfg = {};
-      shortcutKeys.forEach(key => {
-        const inp = inputs[key];
-        if (inp) {
-          newCfg[key] = {
-            key: inp.keyInput.value || _shortcutCfg[key].key,
-            ctrl: inp.ctrlCheck.checked,
-            shift: inp.shiftCheck.checked,
-            alt: inp.altCheck.checked,
-            description: _shortcutCfg[key].description
-          };
-        }
-      });
-
-      try {
-        await window.electronAPI.saveShortcutsConfig(newCfg);
-        _shortcutCfg = newCfg;
-        rebindShortcutKeys();
-        overlay.remove();
-      } catch (e) {
-        console.error('保存快捷键配置失败:', e);
-      }
-    });
-    actionsRight.appendChild(saveBtn);
-    actions.appendChild(actionsRight);
-    box.appendChild(actions);
-
-    overlay.appendChild(box);
-
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove();
-    });
-
-    document.body.appendChild(overlay);
   }
 
   // ========== 导出功能 ==========
@@ -692,23 +535,13 @@ const App = (function() {
     updateStatusCardName(cardLabel);
   }
 
-  // ========== 关于对话框 ==========
+  // ========== 更多设置弹窗（左侧菜单 + 右侧内容） ==========
 
-  function showAboutDialog() {
-    const officialUrl = StringLoader.get('about.officialUrl', 'https://gitee.com/spaceHong/AI-Video-Prompt-Assistant');
-    Modal.show({
-      title: StringLoader.get('about.title', '关于'),
-      message: StringLoader.get('about.appName', 'AI提示词助手') + '\n' +
-        StringLoader.get('about.version', '版本 1.0.0') + '\n\n' +
-        StringLoader.get('about.description', '一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。') + '\n\n' +
-        StringLoader.get('about.officialSite', '官方地址') + '：' + officialUrl + '\n' +
-        StringLoader.get('about.copyright', 'Copyright 2026 AI Prompt Helper'),
-      showCancel: false,
-      confirmText: StringLoader.get('modal.ok', '确定')
-    });
-  }
-
-  // ========== 更多设置弹窗 ==========
+  const DEFAULT_SHORTCUTS = {
+    save: { key: "s", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.save', '保存所有数据') },
+    newTask: { key: "n", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.newTask', '新建任务') },
+    deleteTask: { key: "d", ctrl: true, shift: false, alt: false, description: StringLoader.get('shortcuts.deleteTask', '删除当前任务') }
+  };
 
   let _currentCloseBehavior = 'exit';
 
@@ -742,30 +575,58 @@ const App = (function() {
     header.appendChild(closeBtn);
     box.appendChild(header);
 
-    // 内容区域
+    // 主体：左侧菜单 + 右侧内容
+    const body = document.createElement('div');
+    body.className = 'more-settings-body';
+
+    // 左侧菜单
+    const sidebar = document.createElement('div');
+    sidebar.className = 'more-settings-sidebar';
+
+    const menuItems = [
+      { id: 'closeBehavior', label: 'moreSettings.menuCloseBehavior', defaultLabel: '关闭行为' },
+      { id: 'shortcuts', label: 'moreSettings.menuShortcuts', defaultLabel: '快捷键设置' },
+      { id: 'language', label: 'moreSettings.menuLanguage', defaultLabel: '语言' },
+      { id: 'about', label: 'moreSettings.menuAbout', defaultLabel: '关于' }
+    ];
+
+    const menuButtons = {};
+    menuItems.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'more-settings-menu-item';
+      btn.textContent = StringLoader.get(item.label, item.defaultLabel);
+      btn.addEventListener('click', () => switchPanel(item.id));
+      sidebar.appendChild(btn);
+      menuButtons[item.id] = btn;
+    });
+
+    body.appendChild(sidebar);
+
+    // 右侧内容区域
     const content = document.createElement('div');
     content.className = 'more-settings-content';
 
-    // 关闭行为设置
-    const section = document.createElement('div');
-    section.className = 'more-settings-section';
+    // ===== 面板1：关闭行为 =====
+    const panelCloseBehavior = document.createElement('div');
+    panelCloseBehavior.className = 'more-settings-panel';
+    panelCloseBehavior.id = 'panelCloseBehavior';
 
     const sectionTitle = document.createElement('h3');
     sectionTitle.textContent = StringLoader.get('moreSettings.closeBehavior', '关闭行为');
-    section.appendChild(sectionTitle);
+    panelCloseBehavior.appendChild(sectionTitle);
 
     const sectionDesc = document.createElement('p');
     sectionDesc.className = 'more-settings-desc';
     sectionDesc.textContent = StringLoader.get('moreSettings.closeBehaviorDesc', '设置点击右上角 X 按钮时的行为');
-    section.appendChild(sectionDesc);
+    panelCloseBehavior.appendChild(sectionDesc);
 
-    const options = [
+    const closeOptions = [
       { value: 'exit', label: 'moreSettings.closeExit', desc: 'moreSettings.closeExitDesc', defaultLabel: '退出程序', defaultDesc: '点击关闭按钮时直接退出程序' },
       { value: 'tray', label: 'moreSettings.closeTray', desc: 'moreSettings.closeTrayDesc', defaultLabel: '隐藏到托盘区', defaultDesc: '点击关闭按钮时最小化到系统托盘' },
       { value: 'taskbar', label: 'moreSettings.closeTaskbar', desc: 'moreSettings.closeTaskbarDesc', defaultLabel: '隐藏到系统任务栏', defaultDesc: '点击关闭按钮时隐藏到系统任务栏' }
     ];
 
-    options.forEach(opt => {
+    closeOptions.forEach(opt => {
       const optDiv = document.createElement('div');
       optDiv.className = 'more-settings-option';
 
@@ -774,9 +635,7 @@ const App = (function() {
       radio.name = 'closeBehavior';
       radio.value = opt.value;
       radio.checked = _currentCloseBehavior === opt.value;
-      radio.addEventListener('change', () => {
-        _currentCloseBehavior = opt.value;
-      });
+      radio.addEventListener('change', () => { _currentCloseBehavior = opt.value; });
 
       const labelDiv = document.createElement('div');
       labelDiv.className = 'more-settings-option-label';
@@ -791,13 +650,197 @@ const App = (function() {
 
       optDiv.appendChild(radio);
       optDiv.appendChild(labelDiv);
-      section.appendChild(optDiv);
+      panelCloseBehavior.appendChild(optDiv);
     });
 
-    content.appendChild(section);
-    box.appendChild(content);
+    content.appendChild(panelCloseBehavior);
 
-    // 底部按钮
+    // ===== 面板2：快捷键设置 =====
+    const panelShortcuts = document.createElement('div');
+    panelShortcuts.className = 'more-settings-panel';
+    panelShortcuts.id = 'panelShortcuts';
+
+    const shortcutTitle = document.createElement('h3');
+    shortcutTitle.textContent = StringLoader.get('shortcuts.title', '快捷键设置');
+    panelShortcuts.appendChild(shortcutTitle);
+
+    const shortcutDesc = document.createElement('p');
+    shortcutDesc.className = 'more-settings-desc';
+    shortcutDesc.textContent = StringLoader.get('moreSettings.shortcutsDesc', '自定义键盘快捷键');
+    panelShortcuts.appendChild(shortcutDesc);
+
+    const table = document.createElement('table');
+    table.className = 'more-settings-shortcut-table';
+
+    const thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>' + StringLoader.get('shortcuts.function', '功能') + '</th><th>' + StringLoader.get('shortcuts.key', '按键') + '</th><th>' + StringLoader.get('shortcuts.ctrl', 'Ctrl') + '</th><th>' + StringLoader.get('shortcuts.shift', 'Shift') + '</th><th>' + StringLoader.get('shortcuts.alt', 'Alt') + '</th></tr>';
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const shortcutKeys = Object.keys(_shortcutCfg);
+    const shortcutInputs = {};
+
+    shortcutKeys.forEach(key => {
+      const cfg = _shortcutCfg[key];
+      if (!cfg) return;
+      const tr = document.createElement('tr');
+
+      const tdDesc = document.createElement('td');
+      tdDesc.className = 'more-settings-shortcut-desc';
+      tdDesc.textContent = cfg.description || key;
+      tr.appendChild(tdDesc);
+
+      const tdKey = document.createElement('td');
+      const keyInput = document.createElement('input');
+      keyInput.className = 'more-settings-shortcut-key-input';
+      keyInput.type = 'text';
+      keyInput.maxLength = 20;
+      keyInput.value = cfg.key || '';
+      keyInput.addEventListener('keydown', (e) => {
+        e.preventDefault();
+        if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+        keyInput.value = e.key.length === 1 ? e.key : e.key;
+      });
+      tdKey.appendChild(keyInput);
+      tr.appendChild(tdKey);
+
+      const tdCtrl = document.createElement('td');
+      const ctrlCheck = document.createElement('input');
+      ctrlCheck.type = 'checkbox';
+      ctrlCheck.className = 'more-settings-shortcut-checkbox';
+      ctrlCheck.checked = cfg.ctrl || false;
+      tdCtrl.appendChild(ctrlCheck);
+      tr.appendChild(tdCtrl);
+
+      const tdShift = document.createElement('td');
+      const shiftCheck = document.createElement('input');
+      shiftCheck.type = 'checkbox';
+      shiftCheck.className = 'more-settings-shortcut-checkbox';
+      shiftCheck.checked = cfg.shift || false;
+      tdShift.appendChild(shiftCheck);
+      tr.appendChild(tdShift);
+
+      const tdAlt = document.createElement('td');
+      const altCheck = document.createElement('input');
+      altCheck.type = 'checkbox';
+      altCheck.className = 'more-settings-shortcut-checkbox';
+      altCheck.checked = cfg.alt || false;
+      tdAlt.appendChild(altCheck);
+      tr.appendChild(tdAlt);
+
+      tbody.appendChild(tr);
+      shortcutInputs[key] = { keyInput, ctrlCheck, shiftCheck, altCheck };
+    });
+
+    table.appendChild(tbody);
+    panelShortcuts.appendChild(table);
+
+    const shortcutActions = document.createElement('div');
+    shortcutActions.style.display = 'flex';
+    shortcutActions.style.gap = '8px';
+
+    const resetShortcutBtn = document.createElement('button');
+    resetShortcutBtn.className = 'modal-btn modal-btn-cancel';
+    resetShortcutBtn.textContent = StringLoader.get('shortcuts.restoreDefault', '恢复默认设置');
+    resetShortcutBtn.addEventListener('click', () => {
+      Object.keys(DEFAULT_SHORTCUTS).forEach(key => {
+        const def = DEFAULT_SHORTCUTS[key];
+        const inp = shortcutInputs[key];
+        if (inp) {
+          inp.keyInput.value = def.key;
+          inp.ctrlCheck.checked = def.ctrl;
+          inp.shiftCheck.checked = def.shift;
+          inp.altCheck.checked = def.alt;
+        }
+      });
+    });
+    shortcutActions.appendChild(resetShortcutBtn);
+
+    const saveShortcutBtn = document.createElement('button');
+    saveShortcutBtn.className = 'modal-btn modal-btn-confirm';
+    saveShortcutBtn.textContent = StringLoader.get('modal.save', '保存');
+    saveShortcutBtn.addEventListener('click', async () => {
+      const newCfg = {};
+      shortcutKeys.forEach(key => {
+        const inp = shortcutInputs[key];
+        if (inp) {
+          newCfg[key] = {
+            key: inp.keyInput.value || _shortcutCfg[key].key,
+            ctrl: inp.ctrlCheck.checked,
+            shift: inp.shiftCheck.checked,
+            alt: inp.altCheck.checked,
+            description: _shortcutCfg[key].description
+          };
+        }
+      });
+      try {
+        await window.electronAPI.saveShortcutsConfig(newCfg);
+        _shortcutCfg = newCfg;
+        rebindShortcutKeys();
+      } catch (e) {
+        console.error('保存快捷键配置失败:', e);
+      }
+    });
+    shortcutActions.appendChild(saveShortcutBtn);
+    panelShortcuts.appendChild(shortcutActions);
+
+    content.appendChild(panelShortcuts);
+
+    // ===== 面板3：语言 =====
+    const panelLanguage = document.createElement('div');
+    panelLanguage.className = 'more-settings-panel';
+    panelLanguage.id = 'panelLanguage';
+
+    const langTitle = document.createElement('h3');
+    langTitle.textContent = StringLoader.get('moreSettings.language', '语言');
+    panelLanguage.appendChild(langTitle);
+
+    const langDesc = document.createElement('p');
+    langDesc.className = 'more-settings-desc';
+    langDesc.textContent = StringLoader.get('moreSettings.languageDesc', '选择界面显示语言');
+    panelLanguage.appendChild(langDesc);
+
+    const langSelect = document.createElement('select');
+    langSelect.className = 'more-settings-lang-select';
+    const langOptionZh = document.createElement('option');
+    langOptionZh.value = 'zh-CN';
+    langOptionZh.textContent = StringLoader.get('moreSettings.langChinese', '中文');
+    langSelect.appendChild(langOptionZh);
+    const langOptionEn = document.createElement('option');
+    langOptionEn.value = 'en';
+    langOptionEn.textContent = StringLoader.get('moreSettings.langEnglish', 'English');
+    langSelect.appendChild(langOptionEn);
+    langSelect.disabled = false;
+    panelLanguage.appendChild(langSelect);
+
+    content.appendChild(panelLanguage);
+
+    // ===== 面板4：关于 =====
+    const panelAbout = document.createElement('div');
+    panelAbout.className = 'more-settings-panel';
+    panelAbout.id = 'panelAbout';
+
+    const aboutTitle = document.createElement('h3');
+    aboutTitle.textContent = StringLoader.get('about.title', '关于');
+    panelAbout.appendChild(aboutTitle);
+
+    const aboutText = document.createElement('div');
+    aboutText.className = 'more-settings-about-text';
+    const officialUrl = StringLoader.get('about.officialUrl', 'https://gitee.com/spaceHong/AI-Video-Prompt-Assistant');
+    aboutText.innerHTML =
+      '<p><strong>' + StringLoader.get('about.appName', 'AI提示词助手') + '</strong></p>' +
+      '<p>' + StringLoader.get('about.version', '版本 1.0.0') + '</p>' +
+      '<p style="margin-top:0.8rem;">' + StringLoader.get('about.description', '一款高效的AI提示词管理工具，支持多任务管理、自定义卡片、提示词组合与导出。') + '</p>' +
+      '<p style="margin-top:0.8rem;">' + StringLoader.get('about.officialSite', '官方地址') + '：<a href="' + officialUrl + '" target="_blank">' + officialUrl + '</a></p>' +
+      '<p style="margin-top:0.8rem;color:var(--text-muted);">' + StringLoader.get('about.copyright', 'Copyright 2026 AI Prompt Helper') + '</p>';
+    panelAbout.appendChild(aboutText);
+
+    content.appendChild(panelAbout);
+
+    body.appendChild(content);
+    box.appendChild(body);
+
+    // 底部操作栏
     const actions = document.createElement('div');
     actions.className = 'more-settings-actions';
 
@@ -816,6 +859,23 @@ const App = (function() {
 
     box.appendChild(actions);
     overlay.appendChild(box);
+
+    // 面板切换
+    let _currentPanel = 'closeBehavior';
+    function switchPanel(panelId) {
+      _currentPanel = panelId;
+      // 更新菜单高亮
+      Object.keys(menuButtons).forEach(id => {
+        menuButtons[id].classList.toggle('active', id === panelId);
+      });
+      // 更新面板显示
+      content.querySelectorAll('.more-settings-panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'panel' + panelId.charAt(0).toUpperCase() + panelId.slice(1));
+      });
+    }
+
+    // 默认激活关闭行为
+    switchPanel('closeBehavior');
 
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.remove();

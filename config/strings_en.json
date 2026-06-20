@@ -157,6 +157,10 @@
   },
   "moreSettings": {
     "title": "More Settings",
+    "menuCloseBehavior": "Close Behavior",
+    "menuShortcuts": "Shortcut Settings",
+    "menuLanguage": "Language",
+    "menuAbout": "About",
     "closeBehavior": "Close Behavior",
     "closeBehaviorDesc": "Configure what happens when clicking the X button",
     "closeExit": "Exit Program",
@@ -165,6 +169,10 @@
     "closeTrayDesc": "Minimize to system tray when clicking the close button",
     "closeTaskbar": "Hide to Taskbar",
     "closeTaskbarDesc": "Hide to system taskbar when clicking the close button",
+    "shortcutsDesc": "Customize keyboard shortcuts",
+    "language": "Language",
+    "languageDesc": "Select interface display language",
+    "langChinese": "Chinese",
     "saveBtn": "Save Settings",
     "closeBtn": "Close"
   },

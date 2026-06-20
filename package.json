@@ -1,0 +1,15 @@
+{
+  "name": "ai-prompt-helper",
+  "version": "1.0.0",
+  "description": "AI提示词助手 - AI Prompt Helper",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox",
+    "dev": "electron . --no-sandbox --dev"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^34.5.1"
+  }
+}

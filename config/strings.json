@@ -1,0 +1,109 @@
+{
+  "app": {
+    "title": "AI提示词助手",
+    "windowTitle": "AI提示词助手"
+  },
+  "menu": {
+    "file": "文件",
+    "openFolder": "打开文件夹",
+    "openFolderThis": "此窗口打开",
+    "openFolderNew": "新窗口打开",
+    "newWindow": "新建窗口",
+    "export": "项目任务导出",
+    "exportMD": "导出为 Markdown",
+    "exportTXT": "导出为 文本文件",
+    "layout": "布局",
+    "resetCurrentLayout": "当前任务工作台布局恢复默认",
+    "resetAllLayout": "全局任务工作台布局恢复默认",
+    "quit": "退出",
+    "help": "帮助",
+    "tutorial": "教学",
+    "tutorialPlaceholder": "暂未开放"
+  },
+  "toolbar": {
+    "toggleSidebar": "[|]",
+    "toggleSidebarTitle": "展开/隐藏左侧任务栏",
+    "settings": "设置",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "暗色",
+    "themeDefault": "默认",
+    "themeSystem": "跟随系统",
+    "shortcutSettings": "快捷键设置"
+  },
+  "sidebar": {
+    "addTask": "+",
+    "addTaskTitle": "新建提示词任务",
+    "deleteConfirm": "确认删除任务",
+    "deleteTitle": "删除任务",
+    "deleteBtn": "删除",
+    "renameTitle": "重命名任务",
+    "renamePrompt": "请输入新名称：",
+    "renameDuplicate": "任务名称已存在，请使用其他名称",
+    "renameBtn": "重命名",
+    "reorderTitle": "重构帧位置",
+    "reorderPrompt": "请输入新的位置序号",
+    "reorderError": "请输入有效的位置序号",
+    "defaultTaskName": "新任务",
+    "noFolderPrompt": "请先打开一个工作文件夹，数据将保存在该文件夹中",
+    "openFolderAction": "打开文件夹",
+    "taskCount": "共 {count} 个任务",
+    "contextMenu": {
+      "reorder": "重构帧位置",
+      "rename": "重命名"
+    }
+  },
+  "content": {
+    "title": "AI提示词工作台",
+    "preview": "完整提示词预览",
+    "copy": "复制",
+    "copied": "已复制",
+    "copyFailed": "复制失败，请手动复制",
+    "clearAll": "清空所有输入",
+    "clearField": "清空",
+    "clearFieldTitle": "清空此栏",
+    "clearConfirm": "确认清空所有提示词维度输入吗？此操作不可恢复。",
+    "clearConfirmBtn": "清空",
+    "resizeHandleTitle": "拖动调整高度",
+    "emptyPlaceholder": "在上方输入框中填写描述，组合后的提示词将自动显示在这里...",
+    "emptyAlert": "请先填写至少一个维度",
+    "emptyStateNoFolder": "请先通过\"文件 → 打开文件夹\"选择一个工作目录",
+    "emptyStateNoTask": "暂无任务，点击左侧 + 新建一个提示词任务"
+  },
+  "modal": {
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "ok": "确定",
+    "hint": "提示",
+    "hintYN": "按 Y 确认，按 N 取消",
+    "hintEnterN": "按 Enter 确认，按 N 取消",
+    "confirmY": "确认 (Y)",
+    "cancelN": "取消 (N)"
+  },
+  "dialog": {
+    "selectFolder": "选择工作文件夹",
+    "exportTitle": "导出项目任务",
+    "exportSuccess": "导出成功",
+    "exportSuccessMsg": "文件已保存至：",
+    "exportFailed": "导出失败",
+    "exportEmpty": "当前没有任务数据可导出",
+    "unknownError": "未知错误"
+  },
+  "shortcuts": {
+    "title": "快捷键设置",
+    "restoreDefault": "恢复默认设置",
+    "function": "功能",
+    "key": "按键",
+    "ctrl": "Ctrl",
+    "shift": "Shift",
+    "alt": "Alt"
+  },
+  "file": {
+    "loadSuccess": "数据加载成功",
+    "loadFailed": "数据加载失败",
+    "saveSuccess": "数据保存成功",
+    "saveFailed": "数据保存失败",
+    "noFolder": "请先打开一个工作文件夹"
+  }
+}

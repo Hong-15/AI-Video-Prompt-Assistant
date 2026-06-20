@@ -1,0 +1,62 @@
+[
+  {
+    "key": "subject",
+    "icon": "🎯",
+    "label": "主体特征",
+    "placeholder": "例如：身着液态铠甲的机械武士，半透明全息影像..."
+  },
+  {
+    "key": "scene",
+    "icon": "🏞️",
+    "label": "场景环境",
+    "placeholder": "例如：赛博朋克雨夜街道，霓虹灯闪烁的深巷..."
+  },
+  {
+    "key": "lighting",
+    "icon": "💡",
+    "label": "光影色彩",
+    "placeholder": "例如：逆光剪影，青橙色对比，体积光穿过烟雾..."
+  },
+  {
+    "key": "style",
+    "icon": "🎨",
+    "label": "艺术风格",
+    "placeholder": "例如：电影写实，8K，吉卜力美学，35mm胶片颗粒..."
+  },
+  {
+    "key": "shotScale",
+    "icon": "📷",
+    "label": "镜头景别",
+    "placeholder": "例如：极致特写，低角度仰拍，过肩镜头..."
+  },
+  {
+    "key": "cameraMove",
+    "icon": "🎥",
+    "label": "镜头运动",
+    "placeholder": "例如：缓慢环绕主体，手持晃动感，摇臂上升..."
+  },
+  {
+    "key": "time",
+    "icon": "⏱️",
+    "label": "时间节奏",
+    "placeholder": "例如：慢动作240fps，延时摄影，子弹时间..."
+  },
+  {
+    "key": "action",
+    "icon": "⚡",
+    "label": "动态事件",
+    "placeholder": "例如：花瓣随风飘落，玻璃破碎后凝滞，转身回眸..."
+  },
+  {
+    "key": "tech",
+    "icon": "📐",
+    "label": "技术参数",
+    "placeholder": "例如：宽银幕21:9，浅景深，锐利对焦，稳定画面..."
+  },
+  {
+    "key": "negative",
+    "icon": "🚫",
+    "label": "负面排除",
+    "placeholder": "例如：模糊，畸形手指，水印，闪烁，低画质..."
+  }
+]

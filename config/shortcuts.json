@@ -1,0 +1,23 @@
+{
+  "save": {
+    "key": "s",
+    "ctrl": true,
+    "shift": false,
+    "alt": false,
+    "description": "保存所有数据"
+  },
+  "newTask": {
+    "key": "n",
+    "ctrl": true,
+    "shift": false,
+    "alt": false,
+    "description": "新建任务"
+  },
+  "deleteTask": {
+    "key": "d",
+    "ctrl": true,
+    "shift": false,
+    "alt": false,
+    "description": "删除当前任务"
+  }
+}

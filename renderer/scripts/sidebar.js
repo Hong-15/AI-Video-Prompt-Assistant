@@ -1,0 +1,362 @@
+// 侧边栏模块
+// 负责左侧提示词任务栏：任务列表的增删改查、右键菜单、排序
+
+const Sidebar = (function() {
+  let _tasks = [];
+  let _activeTaskId = null;
+  let _onTaskChange = null;
+  let _onTaskDelete = null;
+  let _beforeAddTask = null;
+  let _contextMenu = null;
+
+  // 初始化侧边栏
+  function init(callbacks) {
+    _onTaskChange = callbacks.onTaskChange;
+    _onTaskDelete = callbacks.onTaskDelete;
+    _beforeAddTask = callbacks.beforeAddTask || null;
+
+    // 新建任务按钮
+    const addBtn = document.getElementById('addTaskBtn');
+    addBtn.addEventListener('click', () => {
+      // 检查是否允许创建任务
+      if (_beforeAddTask && !_beforeAddTask()) {
+        return;
+      }
+      addTask();
+    });
+
+    // 全局点击关闭右键菜单
+    document.addEventListener('click', () => {
+      hideContextMenu();
+    });
+  }
+
+  // 生成唯一 ID
+  function generateId() {
+    return 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  // 自动生成不重复的任务名称：找到"新任务N"中最大的 N，+1
+  function generateTaskName() {
+    let maxNum = 0;
+    const prefix = '新任务';
+    _tasks.forEach(t => {
+      if (t.name === prefix) {
+        maxNum = Math.max(maxNum, 1);
+      } else if (t.name.startsWith(prefix)) {
+        const suffix = t.name.slice(prefix.length);
+        const num = parseInt(suffix, 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    });
+    return maxNum > 0 ? prefix + (maxNum + 1) : prefix;
+  }
+
+  // 添加新任务
+  function addTask(name) {
+    const taskName = name || generateTaskName();
+    const task = {
+      id: generateId(),
+      name: taskName,
+      order: _tasks.length,
+      fields: {}
+    };
+    _tasks.push(task);
+    _activeTaskId = task.id;
+    render();
+    if (_onTaskChange) _onTaskChange(task);
+    return task;
+  }
+
+  // 删除任务
+  function deleteTask(taskId) {
+    const index = _tasks.findIndex(t => t.id === taskId);
+    if (index === -1) return;
+
+    _tasks.splice(index, 1);
+
+    // 重新排序
+    _tasks.forEach((t, i) => { t.order = i; });
+
+    if (_activeTaskId === taskId) {
+      if (_tasks.length > 0) {
+        _activeTaskId = _tasks[Math.min(index, _tasks.length - 1)].id;
+        const newActive = _tasks.find(t => t.id === _activeTaskId);
+        if (_onTaskChange) _onTaskChange(newActive);
+      } else {
+        _activeTaskId = null;
+        if (_onTaskChange) _onTaskChange(null);
+      }
+    }
+
+    render();
+    if (_onTaskDelete) _onTaskDelete(taskId);
+  }
+
+  // 重命名任务
+  function renameTask(taskId, newName) {
+    // 检查是否与其他任务重名
+    if (_tasks.some(t => t.id !== taskId && t.name === newName)) {
+      return false;
+    }
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.name = newName;
+      render();
+      return true;
+    }
+    return false;
+  }
+
+  // 重构帧位置（重新排序）
+  function reorderTask(taskId, newOrder) {
+    const newIndex = newOrder - 1; // 用户输入从1开始
+    if (newIndex < 0 || newIndex >= _tasks.length) return false;
+
+    const task = _tasks.find(t => t.id === taskId);
+    if (!task) return false;
+
+    const oldIndex = _tasks.indexOf(task);
+    _tasks.splice(oldIndex, 1);
+    _tasks.splice(newIndex, 0, task);
+
+    // 更新所有任务的 order
+    _tasks.forEach((t, i) => { t.order = i; });
+
+    render();
+    return true;
+  }
+
+  // 获取当前活动任务
+  function getActiveTask() {
+    return _tasks.find(t => t.id === _activeTaskId) || null;
+  }
+
+  // 获取所有任务
+  function getTasks() {
+    return _tasks;
+  }
+
+  // 设置任务数据（用于加载）
+  function setTasks(tasks, activeTaskId) {
+    _tasks = tasks || [];
+    _activeTaskId = activeTaskId || (_tasks.length > 0 ? _tasks[0].id : null);
+    render();
+    const active = getActiveTask();
+    if (_onTaskChange) _onTaskChange(active);
+  }
+
+  // 更新任务字段数据
+  function updateTaskFields(taskId, fields) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.fields = fields;
+    }
+  }
+
+  // 更新任务布局数据
+  function updateTaskLayout(taskId, layout) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (task) {
+      task.layout = layout;
+    }
+  }
+
+  // 重置所有任务的布局为默认
+  function resetAllLayouts() {
+    _tasks.forEach(task => {
+      task.layout = {};
+    });
+  }
+
+  // 切换活动任务
+  function setActiveTask(taskId) {
+    if (_activeTaskId === taskId) return;
+
+    // 保存当前任务的字段数据（由 app 层处理）
+    _activeTaskId = taskId;
+    render();
+    const active = getActiveTask();
+    if (_onTaskChange) _onTaskChange(active);
+  }
+
+  // 渲染任务列表
+  function render() {
+    const taskList = document.getElementById('taskList');
+    const taskCount = document.getElementById('taskCount');
+
+    taskList.innerHTML = '';
+
+    _tasks.forEach((task, index) => {
+      const item = document.createElement('div');
+      item.className = 'task-item' + (task.id === _activeTaskId ? ' active' : '');
+      item.dataset.taskId = task.id;
+
+      const indexSpan = document.createElement('span');
+      indexSpan.className = 'task-index';
+      indexSpan.textContent = index + 1;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'task-name';
+      nameSpan.textContent = task.name;
+      nameSpan.title = task.name;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'task-delete-btn';
+      deleteBtn.textContent = '−';
+      deleteBtn.title = '删除任务';
+
+      item.appendChild(indexSpan);
+      item.appendChild(nameSpan);
+      item.appendChild(deleteBtn);
+
+      // 点击选中任务
+      item.addEventListener('click', (e) => {
+        if (e.target === deleteBtn) return;
+        setActiveTask(task.id);
+      });
+
+      // 双击重命名
+      item.addEventListener('dblclick', (e) => {
+        if (e.target === deleteBtn) return;
+        showRenameDialog(task);
+      });
+
+      // 删除按钮
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showDeleteConfirm(task);
+      });
+
+      // 右键菜单
+      item.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showContextMenu(e.clientX, e.clientY, task);
+      });
+
+      taskList.appendChild(item);
+    });
+
+    taskCount.textContent = _tasks.length > 0 ? `共 ${_tasks.length} 个任务` : '';
+  }
+
+  // 显示删除确认对话框
+  function showDeleteConfirm(task) {
+    Modal.confirm(
+      '删除任务',
+      `确认删除任务"${task.name}"吗？此操作不可恢复。`,
+      () => deleteTask(task.id),
+      { confirmText: '删除', confirmClass: 'modal-btn-danger' }
+    );
+  }
+
+  // 显示重命名对话框
+  function showRenameDialog(task) {
+    Modal.prompt(
+      '重命名任务',
+      null,
+      (newName) => {
+        if (newName && newName.trim()) {
+          const trimmed = newName.trim();
+          if (!renameTask(task.id, trimmed)) {
+            showToast('任务名称已存在，请使用其他名称');
+          }
+        }
+      },
+      { inputValue: task.name, inputPlaceholder: '请输入新名称', confirmText: '确认' }
+    );
+  }
+
+  // 显示重构帧位置对话框
+  function showReorderDialog(task) {
+    Modal.prompt(
+      '重构帧位置',
+      `当前任务"${task.name}"位于第 ${task.order + 1} 位，请输入新的位置序号（1-${_tasks.length}）：`,
+      (value) => {
+        const num = parseInt(value, 10);
+        if (isNaN(num) || num < 1 || num > _tasks.length) {
+          alert('请输入有效的位置序号（1-' + _tasks.length + '）');
+          return false;
+        }
+        return reorderTask(task.id, num);
+      },
+      { inputValue: String(task.order + 1), inputPlaceholder: '请输入位置序号', confirmText: '确认' }
+    );
+  }
+
+  // 显示右键菜单
+  function showContextMenu(x, y, task) {
+    hideContextMenu();
+
+    _contextMenu = document.createElement('div');
+    _contextMenu.className = 'context-menu';
+    _contextMenu.style.left = x + 'px';
+    _contextMenu.style.top = y + 'px';
+
+    const reorderItem = document.createElement('button');
+    reorderItem.className = 'context-menu-item';
+    reorderItem.textContent = '重构帧位置';
+    reorderItem.addEventListener('click', () => {
+      hideContextMenu();
+      showReorderDialog(task);
+    });
+
+    const renameItem = document.createElement('button');
+    renameItem.className = 'context-menu-item';
+    renameItem.textContent = '重命名';
+    renameItem.addEventListener('click', () => {
+      hideContextMenu();
+      showRenameDialog(task);
+    });
+
+    _contextMenu.appendChild(reorderItem);
+    _contextMenu.appendChild(renameItem);
+    document.body.appendChild(_contextMenu);
+  }
+
+  function hideContextMenu() {
+    if (_contextMenu) {
+      _contextMenu.remove();
+      _contextMenu = null;
+    }
+  }
+
+  // 简易 Toast 提示
+  function showToast(message) {
+    const existing = document.querySelector('.sidebar-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'sidebar-toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('sidebar-toast-visible');
+    }, 10);
+
+    setTimeout(() => {
+      toast.classList.remove('sidebar-toast-visible');
+      setTimeout(() => toast.remove(), 300);
+    }, 2000);
+  }
+
+  return {
+    init,
+    addTask,
+    deleteTask,
+    renameTask,
+    reorderTask,
+    getActiveTask,
+    getTasks,
+    setTasks,
+    updateTaskFields,
+    updateTaskLayout,
+    resetAllLayouts,
+    setActiveTask,
+    showDeleteConfirm,
+    render
+  };
+})();

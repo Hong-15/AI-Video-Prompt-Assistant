@@ -75,6 +75,7 @@
     "clearConfirm": "确认清空所有提示词维度输入吗？此操作不可恢复。",
     "clearConfirmBtn": "清空",
     "resizeHandleTitle": "拖动调整高度",
+    "dragHandleTitle": "拖动排序",
     "emptyPlaceholder": "在上方输入框中填写描述，组合后的提示词将自动显示在这里...",
     "emptyAlert": "请先填写至少一个维度",
     "emptyStateNoFolder": "请先通过\"文件 → 打开文件夹\"选择一个工作目录",

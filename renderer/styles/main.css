@@ -676,6 +676,52 @@ body {
   background: rgba(99, 102, 241, 0.2);
 }
 
+/* 卡片拖拽手柄 */
+.card-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: bold;
+  line-height: 1;
+  margin-right: 4px;
+  border-radius: 3px;
+  user-select: none;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.card-drag-handle:hover,
+.field-card:hover .card-drag-handle {
+  color: var(--accent);
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.card-drag-handle:active {
+  cursor: grabbing;
+}
+
+.field-card.dragging {
+  opacity: 0.3;
+  transition: none;
+}
+
+/* 拖拽幽灵卡片 */
+.card-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.88;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--accent);
+  transform-origin: 0 0;
+  transition: none;
+}
+
 .field-card textarea:focus {
   outline: none;
   border-color: var(--border-active);
@@ -1026,6 +1072,15 @@ html[data-theme="light"] .field-card textarea {
   background: #f0f0f3;
   border-color: #d4d4d8;
   color: #1a1a2e;
+}
+
+html[data-theme="light"] .card-drag-handle:hover,
+html[data-theme="light"] .field-card:hover .card-drag-handle {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+html[data-theme="light"] .card-drag-ghost {
+  border-color: rgba(99, 102, 241, 0.8);
 }
 
 html[data-theme="light"] .output-area {

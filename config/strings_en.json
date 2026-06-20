@@ -75,6 +75,7 @@
     "clearConfirm": "Are you sure you want to clear all prompt dimension inputs? This action cannot be undone.",
     "clearConfirmBtn": "Clear",
     "resizeHandleTitle": "Drag to resize",
+    "dragHandleTitle": "Drag to reorder",
     "emptyPlaceholder": "Fill in the input fields above, the combined prompt will be displayed here...",
     "emptyAlert": "Please fill in at least one dimension first",
     "emptyStateNoFolder": "Please select a working directory via \"File \u2192 Open Folder\"",

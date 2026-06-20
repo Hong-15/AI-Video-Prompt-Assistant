@@ -11,6 +11,7 @@ const Content = (function() {
   let _fieldLabels = {};     // 当前任务重命名的字段标签
   let _customCards = [];     // 当前任务的自定义卡片 [{key, label}]
   let _cardOrder = [];       // 当前任务的卡片渲染顺序（包含固定卡片和自定义卡片）
+  let _dragState = null;     // 拖拽状态：{ cardKey, ghost, card, offsetX, offsetY }
 
   // 初始化内容区域
   async function init(callbacks) {
@@ -115,6 +116,11 @@ const Content = (function() {
     card.dataset.cardType = cardDef.type;
 
     const label = document.createElement('label');
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'card-drag-handle';
+    dragHandle.textContent = '*';
+    dragHandle.title = StringLoader.get('content.dragHandleTitle', '拖动排序');
+
     const labelText = document.createElement('span');
     labelText.className = 'label-text';
     labelText.textContent = cardDef.icon ? `${cardDef.icon} ${cardDef.label}` : cardDef.label;
@@ -150,6 +156,7 @@ const Content = (function() {
     cardActions.appendChild(deleteBtn);
     cardActions.appendChild(clearFieldBtn);
 
+    label.appendChild(dragHandle);
     label.appendChild(labelText);
     label.appendChild(cardActions);
 
@@ -195,6 +202,13 @@ const Content = (function() {
     });
 
     initCardResize(card, textarea, resizeHandle);
+
+    // 拖拽手柄事件
+    dragHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startDrag(card, e);
+    });
 
     return card;
   }
@@ -592,6 +606,129 @@ const Content = (function() {
     refreshCurrentTask();
     layoutMasonry();
     if (_onInputChange) _onInputChange();
+  }
+
+  // ========== 拖拽排序功能 ==========
+
+  // 开始拖拽
+  function startDrag(card, e) {
+    const rect = card.getBoundingClientRect();
+    const cardKey = card.dataset.fieldKey;
+
+    // 创建拖拽幽灵卡片
+    const ghost = card.cloneNode(true);
+    ghost.className = 'field-card card-drag-ghost';
+    ghost.style.width = rect.width + 'px';
+    ghost.style.height = rect.height + 'px';
+    // 重置原卡片继承的 left/top/margin，避免与 position:fixed + transform 叠加
+    ghost.style.left = '0';
+    ghost.style.top = '0';
+    ghost.style.margin = '0';
+    ghost.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+    document.body.appendChild(ghost);
+
+    // 标记原卡片
+    card.classList.add('dragging');
+
+    _dragState = {
+      cardKey,
+      ghost,
+      card,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      cardWidth: rect.width,
+      cardHeight: rect.height
+    };
+
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('scroll', onDragScroll, true);
+  }
+
+  // 拖拽移动
+  function onDragMove(e) {
+    if (!_dragState) return;
+    const { ghost, offsetX, offsetY } = _dragState;
+    ghost.style.transform = `translate(${e.clientX - offsetX}px, ${e.clientY - offsetY}px)`;
+  }
+
+  // 滚动时保持幽灵卡片在鼠标下方（position: fixed 自动处理，此处为兼容）
+  function onDragScroll(e) {
+    // 幽灵卡片使用 position: fixed，viewport 坐标不变
+    // 鼠标光标也在同一 viewport 位置，无需额外处理
+  }
+
+  // 拖拽结束
+  function onDragEnd(e) {
+    if (!_dragState) return;
+    const { ghost, card, cardKey } = _dragState;
+
+    // 还原原卡片
+    card.classList.remove('dragging');
+
+    // 移除幽灵卡片
+    ghost.remove();
+
+    // 计算拖放目标位置
+    const dropX = e.clientX;
+    const dropY = e.clientY;
+
+    const grid = document.getElementById('inputGrid');
+    if (!grid) {
+      cleanupDrag();
+      return;
+    }
+
+    // 构建当前可见卡片的 key 顺序
+    const visibleKeys = [];
+    _fieldConfig.forEach(field => {
+      if (!_hiddenFields.includes(field.key)) {
+        visibleKeys.push(field.key);
+      }
+    });
+    _customCards.forEach(cc => {
+      visibleKeys.push(cc.key);
+    });
+
+    // 找到离拖放点最近的卡片
+    const allCards = Array.from(grid.querySelectorAll('.field-card'));
+    let targetKey = null;
+    let minDist = Infinity;
+
+    allCards.forEach(c => {
+      if (c.dataset.fieldKey === cardKey || c.classList.contains('dragging')) return;
+      const r = c.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dist = Math.sqrt((dropX - cx) ** 2 + (dropY - cy) ** 2);
+      if (dist < minDist) {
+        minDist = dist;
+        targetKey = c.dataset.fieldKey;
+      }
+    });
+
+    if (targetKey) {
+      const targetIdx = visibleKeys.indexOf(targetKey);
+      const draggedIdx = visibleKeys.indexOf(cardKey);
+      if (targetIdx !== -1 && draggedIdx !== -1 && targetIdx !== draggedIdx) {
+        visibleKeys.splice(draggedIdx, 1);
+        visibleKeys.splice(targetIdx, 0, cardKey);
+        _cardOrder = visibleKeys;
+        Sidebar.updateTaskCardOrder(_currentTaskId, [..._cardOrder]);
+        refreshCurrentTask();
+        if (_onInputChange) _onInputChange();
+      }
+    }
+
+    cleanupDrag();
+  }
+
+  // 清理拖拽状态
+  function cleanupDrag() {
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    document.removeEventListener('scroll', onDragScroll, true);
+    _dragState = null;
   }
 
   return {

@@ -257,12 +257,9 @@ function setupIPC() {
     return saveUserData(folderPath, data);
   });
 
-  // 渲染进程通知保存完成
+  // 渲染进程通知保存完成（仅记录，不销毁窗口）
   ipcMain.on('save-complete', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win && !win.isDestroyed()) {
-      win.destroy();
-    }
+    // 保存完成，不做额外操作；窗口关闭/重启由各自的调用方控制
   });
 
   // 获取当前文件夹路径
@@ -444,11 +441,20 @@ function setupIPC() {
     }
   });
 
-  // 重启应用
+  // 重启应用（先保存再重启）
   ipcMain.on('restart-app', () => {
-    isRestarting = true;
-    app.relaunch();
-    app.exit(0);
+    if (currentFolderPath && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('save-before-close');
+      setTimeout(() => {
+        isRestarting = true;
+        app.relaunch();
+        app.exit(0);
+      }, 500);
+    } else {
+      isRestarting = true;
+      app.relaunch();
+      app.exit(0);
+    }
   });
 
   // 获取官方地址配置
@@ -474,22 +480,28 @@ function setupIPC() {
 
 // 处理窗口关闭（根据设置决定行为）
 function handleWindowClose(win) {
+  // 先触发保存，再执行关闭动作
+  if (currentFolderPath && win && !win.isDestroyed()) {
+    win.webContents.send('save-before-close');
+  }
+  // 延迟执行关闭动作，给渲染进程保存时间
+  setTimeout(() => {
+    performCloseAction(win);
+  }, 500);
+}
+
+function performCloseAction(win) {
+  if (!win || win.isDestroyed()) return;
   if (closeBehavior === 'tray') {
     // 隐藏到托盘
-    if (win && !win.isDestroyed()) {
-      win.hide();
-      if (!tray) createTray();
-    }
+    win.hide();
+    if (!tray) createTray();
   } else if (closeBehavior === 'taskbar') {
     // 隐藏到任务栏（最小化）
-    if (win && !win.isDestroyed()) {
-      win.minimize();
-    }
+    win.minimize();
   } else {
     // 默认退出
-    if (win && !win.isDestroyed()) {
-      win.close();
-    }
+    win.close();
   }
 }
 

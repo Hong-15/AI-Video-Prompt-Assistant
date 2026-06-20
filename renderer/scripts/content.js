@@ -51,15 +51,13 @@ const Content = (function() {
   // customCards:  自定义卡片 [{key, label}]
   // cardOrder:    卡片渲染顺序
   // 获取字段的本地化标签
-  function getFieldLocalizedLabel(field) {
+  function getFieldLocalizedLabel(field, isEnglish) {
     if (_fieldLabels[field.key]) return _fieldLabels[field.key];
-    const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
     return isEnglish && field.labelEn ? field.labelEn : field.label;
   }
 
   // 获取字段的本地化占位符
-  function getFieldLocalizedPlaceholder(field) {
-    const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
+  function getFieldLocalizedPlaceholder(field, isEnglish) {
     return isEnglish && field.placeholderEn ? field.placeholderEn : field.placeholder;
   }
 
@@ -73,6 +71,9 @@ const Content = (function() {
     _customCards = customCards || [];
     _cardOrder = cardOrder || [];
 
+    // 缓存语言判断结果，避免循环中重复调用
+    const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
+
     // 构建卡片数据列表：固定卡片 + 自定义卡片
     const allCards = [];
 
@@ -82,9 +83,9 @@ const Content = (function() {
       allCards.push({
         type: 'fixed',
         key: field.key,
-        label: getFieldLocalizedLabel(field),
+        label: getFieldLocalizedLabel(field, isEnglish),
         icon: field.icon,
-        placeholder: getFieldLocalizedPlaceholder(field)
+        placeholder: getFieldLocalizedPlaceholder(field, isEnglish)
       });
     });
 
@@ -197,7 +198,7 @@ const Content = (function() {
     }
 
     textarea.addEventListener('input', () => {
-      updatePrompt();
+      debouncedUpdatePrompt();
       if (_onInputChange) _onInputChange();
     });
 
@@ -486,7 +487,7 @@ const Content = (function() {
       const newHeight = Math.max(120, startHeight + delta);
       card.style.height = newHeight + 'px';
       textarea.style.flex = '1';
-      layoutMasonry();
+      throttledLayoutMasonry();
     }
 
     function onMouseUp() {
@@ -520,10 +521,30 @@ const Content = (function() {
     };
   }
 
+  // 节流工具函数（使用 requestAnimationFrame）
+  function throttleRAF(fn) {
+    let scheduled = false;
+    return function() {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => {
+        fn.apply(this, arguments);
+        scheduled = false;
+      });
+    };
+  }
+
+  // 防抖版 updatePrompt（输入时延迟更新，避免高频计算）
+  const debouncedUpdatePrompt = debounce(updatePrompt, 150);
+
+  // 节流版 layoutMasonry（拖动调整大小时限制重排频率）
+  const throttledLayoutMasonry = throttleRAF(layoutMasonry);
+
   // 更新提示词预览
   function updatePrompt() {
     const promptBox = document.getElementById('promptBox');
     const parts = [];
+    const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
 
     _fieldConfig.forEach(field => {
       if (_hiddenFields.includes(field.key)) return;
@@ -531,7 +552,7 @@ const Content = (function() {
       if (!textarea) return;
       const val = textarea.value.trim();
       if (val === '') return;
-      const displayLabel = getFieldLocalizedLabel(field);
+      const displayLabel = getFieldLocalizedLabel(field, isEnglish);
       parts.push(`${displayLabel}：${val}`);
     });
 

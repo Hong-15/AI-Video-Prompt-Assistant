@@ -10,6 +10,7 @@
     "openFolderNew": "新窗口打开",
     "newWindow": "新建窗口",
     "createProject": "新建项目",
+    "closeProject": "关闭项目",
     "import": "导入项目数据",
     "export": "项目数据导出",
     "exportMD": "导出为 Markdown",
@@ -67,10 +68,10 @@
       "reorder": "重构帧位置",
       "rename": "重命名",
       "newTask": "新建任务",
-      "insertAboveEmpty": "在上方插入空模板任务",
-      "insertAboveDefault": "在上方插入默认模板任务",
-      "insertBelowEmpty": "在下方插入空模板任务",
-      "insertBelowDefault": "在下方插入默认模板任务",
+      "insertAboveEmpty": "上方插入空模板",
+      "insertAboveDefault": "上方插入默认模板",
+      "insertBelowEmpty": "下方插入空模板",
+      "insertBelowDefault": "下方插入默认模板",
       "exportTask": "导出任务"
     }
   },

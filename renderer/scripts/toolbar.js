@@ -98,6 +98,12 @@ const Toolbar = (function() {
       if (_onCreateProject) _onCreateProject();
     });
 
+    // 关闭项目
+    document.getElementById('menuCloseProject').addEventListener('click', () => {
+      hideAllDropdowns();
+      window.electronAPI.closeProject();
+    });
+
     // 导入项目数据
     document.getElementById('menuImportProject').addEventListener('click', () => {
       hideAllDropdowns();
@@ -273,6 +279,9 @@ const Toolbar = (function() {
 
     const elCreateProject = document.getElementById('menuCreateProject');
     if (elCreateProject) elCreateProject.textContent = StringLoader.get('menu.createProject', '新建项目');
+
+    const elCloseProject = document.getElementById('menuCloseProject');
+    if (elCloseProject) elCloseProject.textContent = StringLoader.get('menu.closeProject', '关闭项目');
 
     const elImportProject = document.getElementById('menuImportProject');
     if (elImportProject) elImportProject.textContent = StringLoader.get('menu.import', '导入项目数据');

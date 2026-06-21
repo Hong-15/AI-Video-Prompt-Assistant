@@ -11,6 +11,7 @@
     "openFolderNew": "Open in New Window",
     "newWindow": "New Window",
     "createProject": "New Project",
+    "closeProject": "Close Project",
     "import": "Import Project Data",
     "export": "Export Project Data",
     "exportMD": "Export as Markdown",
@@ -68,9 +69,9 @@
       "reorder": "Reorder",
       "rename": "Rename",
       "newTask": "New Task",
-      "insertAboveEmpty": "Insert Empty Template Above",
-      "insertAboveDefault": "Insert Default Template Above",
-      "insertBelowEmpty": "Insert Empty Template Below",
+      "insertAboveEmpty": "Insert Empty Above",
+      "insertAboveDefault": "Insert Default Above",
+      "insertBelowEmpty": "Insert Empty Below",
       "insertBelowDefault": "Insert Default Below",
       "exportTask": "Export Task"
     }

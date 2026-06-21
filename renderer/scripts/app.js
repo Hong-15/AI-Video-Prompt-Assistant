@@ -122,6 +122,7 @@ const App = (function() {
     // 9. 监听主进程事件
     window.electronAPI.onFolderOpened(handleFolderOpened);
     window.electronAPI.onSaveBeforeClose(handleSaveBeforeClose);
+    window.electronAPI.onProjectClosed(handleProjectClosed);
 
     // 10. 检查是否有已打开的文件夹
     const existingFolder = await window.electronAPI.getCurrentFolder();
@@ -957,6 +958,17 @@ const App = (function() {
       Sidebar.setTasks([], null);
       updateEmptyState(true);
     }
+  }
+
+  // 处理关闭项目
+  function handleProjectClosed() {
+    _currentFolder = null;
+    _isDirty = false;
+    FileManager.setCurrentFolder(null);
+    Sidebar.setTasks([], null);  // 会触发 handleTaskChange(null) 清空工作区
+    updateStatusFolderPath(null);
+    updateSaveStatus(false);
+    updateEmptyState(false);
   }
 
   function updateEmptyState(hasFolder) {

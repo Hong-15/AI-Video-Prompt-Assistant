@@ -608,6 +608,15 @@ function setupIPC() {
     }
   });
 
+  // 文件菜单：关闭项目（清除工作目录，通知渲染进程重置）
+  ipcMain.on('close-project', (event) => {
+    currentFolderPath = null;
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('project-closed');
+    }
+  });
+
   // 文件菜单：退出应用（保存后完全退出）
   ipcMain.on('quit-app', () => {
     closeBehavior = 'exit';

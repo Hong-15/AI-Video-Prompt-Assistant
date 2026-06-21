@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   winMaximize: () => ipcRenderer.send('win-maximize'),
   winClose: () => ipcRenderer.send('win-close'),
   closeCurrentWindow: () => ipcRenderer.send('close-current-window'),
+  closeProject: () => ipcRenderer.send('close-project'),
   quitApp: () => ipcRenderer.send('quit-app'),
 
   // 监听窗口最大化状态变化
@@ -111,6 +112,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {
     ipcRenderer.on('folder-opened', (event, folderPath) => callback(folderPath));
+  },
+
+  // 监听关闭项目事件
+  onProjectClosed: (callback) => {
+    ipcRenderer.on('project-closed', () => callback());
   },
 
   // 监听保存并关闭事件

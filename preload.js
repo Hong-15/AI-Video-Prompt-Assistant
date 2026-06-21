@@ -80,6 +80,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getRecentProjects: () => ipcRenderer.invoke('get-recent-projects'),
   addRecentProject: (folderPath) => ipcRenderer.invoke('add-recent-project', folderPath),
   removeRecentProject: (folderPath) => ipcRenderer.send('remove-recent-project', folderPath),
+  checkDirExists: (dirPath) => ipcRenderer.invoke('check-dir-exists', dirPath),
 
   // 在新窗口中打开指定文件夹
   openFolderInNewWindow: (folderPath) => ipcRenderer.send('open-folder-new-window', folderPath),

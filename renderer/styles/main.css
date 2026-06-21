@@ -773,6 +773,46 @@ body.window-zoom-out {
   background: var(--white5);
 }
 
+/* 目录不存在的项目 - 灰色显示 */
+.recent-project-missing {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.recent-project-missing:hover {
+  background: transparent;
+}
+
+.recent-project-missing .recent-project-name {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.recent-project-missing .recent-project-path {
+  color: var(--text-muted);
+}
+
+.recent-project-missing .recent-project-avatar {
+  opacity: 0.6;
+}
+
+/* 搜索高亮 */
+.search-highlight {
+  background: rgba(255, 200, 50, 0.3);
+  color: #ffd54f;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* 无匹配项目提示 */
+.recent-project-empty {
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
 /* ========== 空状态 ========== */
 .empty-state {
   display: flex;

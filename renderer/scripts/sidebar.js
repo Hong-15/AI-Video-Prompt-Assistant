@@ -100,8 +100,10 @@ const Sidebar = (function() {
     actions.appendChild(newBtn);
     noProjView.appendChild(actions);
 
-    // 最近项目列表
-    if (recentProjects && recentProjects.length > 0) {
+    // 按 lastOpened 降序排序
+    const sorted = (recentProjects || []).slice().sort((a, b) => (b.lastOpened || 0) - (a.lastOpened || 0));
+
+    if (sorted.length > 0) {
       const listHeader = document.createElement('div');
       listHeader.className = 'no-project-list-header';
 
@@ -117,9 +119,6 @@ const Sidebar = (function() {
       const searchInput = document.createElement('input');
       searchInput.type = 'text';
       searchInput.placeholder = StringLoader.get('sidebar.searchProjects', '搜索项目');
-      searchInput.addEventListener('input', () => {
-        filterRecentProjects(searchInput.value.toLowerCase(), recentProjects);
-      });
       searchBox.appendChild(searchInput);
 
       noProjView.appendChild(listHeader);
@@ -129,40 +128,72 @@ const Sidebar = (function() {
       const projectList = document.createElement('div');
       projectList.className = 'no-project-list';
       projectList.id = 'recentProjectList';
-      renderRecentProjectList(projectList, recentProjects);
       noProjView.appendChild(projectList);
+
+      // 首次渲染
+      renderRecentProjectList(projectList, sorted, '');
+
+      // 搜索输入监听
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim();
+        const filtered = query ? sorted.filter(p => {
+          const name = (p.path.split(/[\\/]/).pop() || '').toLowerCase();
+          const q = query.toLowerCase();
+          return name.includes(q) || p.path.toLowerCase().includes(q);
+        }) : sorted;
+        renderRecentProjectList(projectList, filtered, query);
+      });
     }
 
     taskList.appendChild(noProjView);
   }
 
-  function renderRecentProjectList(container, projects) {
+  function renderRecentProjectList(container, projects, searchQuery) {
     container.innerHTML = '';
+
+    if (projects.length === 0) {
+      const emptyHint = document.createElement('div');
+      emptyHint.className = 'recent-project-empty';
+      emptyHint.textContent = StringLoader.get('sidebar.noProjectsFound', '没有找到匹配的项目');
+      container.appendChild(emptyHint);
+      return;
+    }
+
     projects.forEach(proj => {
+      const folderName = proj.path.split(/[\\/]/).pop() || proj.path;
+      const initials = folderName.slice(0, 2).toUpperCase();
+      const hue = (hashString(proj.path) % 360);
+
       const item = document.createElement('div');
       item.className = 'recent-project-item';
       item.title = proj.path;
 
-      const folderName = proj.path.split(/[\\/]/).pop() || proj.path;
-      const initials = folderName.slice(0, 2).toUpperCase();
-      const hue = (hashString(proj.path) % 360);
-      const avatarColor = `hsl(${hue}, 55%, 45%)`;
+      // 异步检查目录是否存在
+      checkAndMarkMissing(item, proj.path);
 
       const avatar = document.createElement('div');
       avatar.className = 'recent-project-avatar';
-      avatar.style.backgroundColor = avatarColor;
       avatar.textContent = initials;
+      // 初始颜色（检查完成后可能会变灰）
+      avatar.style.backgroundColor = `hsl(${hue}, 55%, 45%)`;
 
       const info = document.createElement('div');
       info.className = 'recent-project-info';
 
       const nameEl = document.createElement('div');
       nameEl.className = 'recent-project-name';
-      nameEl.textContent = folderName;
 
       const pathEl = document.createElement('div');
       pathEl.className = 'recent-project-path';
-      pathEl.textContent = proj.path;
+
+      // 搜索高亮
+      if (searchQuery) {
+        nameEl.innerHTML = highlightMatch(folderName, searchQuery);
+        pathEl.innerHTML = highlightMatch(proj.path, searchQuery);
+      } else {
+        nameEl.textContent = folderName;
+        pathEl.textContent = proj.path;
+      }
 
       info.appendChild(nameEl);
       info.appendChild(pathEl);
@@ -189,14 +220,33 @@ const Sidebar = (function() {
     });
   }
 
-  function filterRecentProjects(query, allProjects) {
-    const container = document.getElementById('recentProjectList');
-    if (!container) return;
-    const filtered = allProjects.filter(p => {
-      const name = (p.path.split(/[\\/]/).pop() || '').toLowerCase();
-      return name.includes(query) || p.path.toLowerCase().includes(query);
-    });
-    renderRecentProjectList(container, filtered);
+  // 异步检查目录是否存在，标记不存在的项目为灰色
+  async function checkAndMarkMissing(item, dirPath) {
+    try {
+      const exists = await window.electronAPI.checkDirExists(dirPath);
+      if (!exists) {
+        item.classList.add('recent-project-missing');
+        // 灰色头像
+        const avatar = item.querySelector('.recent-project-avatar');
+        if (avatar) avatar.style.backgroundColor = '#3a3a3a';
+      }
+    } catch (e) {
+      // 检查失败，不做标记
+    }
+  }
+
+  // 高亮匹配文本
+  function highlightMatch(text, query) {
+    if (!query) return escapeHtml(text);
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    return escapeHtml(text).replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   function hashString(str) {

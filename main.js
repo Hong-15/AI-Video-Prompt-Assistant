@@ -932,6 +932,16 @@ function setupIPC() {
     writeRecentProjects(projects);
   });
 
+  // 检查目录是否存在
+  ipcMain.handle('check-dir-exists', async (event, dirPath) => {
+    try {
+      await fsPromises.access(dirPath);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  });
+
   // 保存语言配置
   ipcMain.handle('save-language', async (event, lang) => {
     const langPath = path.join(__dirname, 'config', 'language.json');

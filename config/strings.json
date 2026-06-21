@@ -16,6 +16,7 @@
     "exportMD": "导出为 Markdown",
     "exportTXT": "导出为 文本文件",
     "layout": "布局",
+    "aiSpec": "AI规范",
     "resetCurrentLayout": "当前任务项恢复默认",
     "resetAllLayout": "全局任务项恢复默认",
     "quit": "退出",
@@ -204,6 +205,10 @@
     "saveSuccess": "数据保存成功",
     "saveFailed": "数据保存失败",
     "noFolder": "请先打开一个工作文件夹"
+  },
+  "aiSpec": {
+    "loading": "加载中...",
+    "loadFailed": "加载规范文件失败"
   },
   "about": {
     "title": "关于",

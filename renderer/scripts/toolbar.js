@@ -31,6 +31,7 @@ const Toolbar = (function() {
     _onMoreSettings = callbacks.onMoreSettings || null;
     _onGlobalSearch = callbacks.onGlobalSearch || null;
     _onCreateProject = callbacks.onCreateProject || null;
+    _onAiSpec = callbacks.onAiSpec || null;
 
     // 从字符串资源更新工具栏文本
     updateToolbarText();
@@ -142,6 +143,14 @@ const Toolbar = (function() {
       if (_onResetAllLayout) _onResetAllLayout();
     });
 
+    // ========== AI规范按钮 ==========
+    const menuAiSpecBtn = document.getElementById('menuAiSpecBtn');
+    if (menuAiSpecBtn) {
+      menuAiSpecBtn.addEventListener('click', () => {
+        if (_onAiSpec) _onAiSpec();
+      });
+    }
+
     // ========== 设置菜单 ==========
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
     const menuSettingsDropdown = document.getElementById('menuSettingsDropdown');
@@ -252,6 +261,9 @@ const Toolbar = (function() {
 
     const menuLayoutBtn = document.getElementById('menuLayoutBtn');
     if (menuLayoutBtn) menuLayoutBtn.textContent = StringLoader.get('menu.layout', '布局');
+
+    const menuAiSpecBtn = document.getElementById('menuAiSpecBtn');
+    if (menuAiSpecBtn) menuAiSpecBtn.textContent = StringLoader.get('menu.aiSpec', 'AI规范');
 
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
     if (menuSettingsBtn) menuSettingsBtn.textContent = StringLoader.get('toolbar.settings', '设置');

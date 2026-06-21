@@ -106,6 +106,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 以只读方式打开指定日志文件
   openLogFile: (fileName) => ipcRenderer.invoke('open-log-file', fileName),
 
+  // 读取 AI 规范文件
+  readAiSpec: (lang) => ipcRenderer.invoke('read-ai-spec', lang),
+
   // 获取日志目录绝对路径
   getLogDir: () => ipcRenderer.invoke('get-log-dir'),
 

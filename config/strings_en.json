@@ -17,6 +17,7 @@
     "exportMD": "Export as Markdown",
     "exportTXT": "Export as Text File",
     "layout": "Layout",
+    "aiSpec": "AI Spec",
     "resetCurrentLayout": "Reset Current Task",
     "resetAllLayout": "Reset All Tasks",
     "quit": "Quit",
@@ -205,6 +206,10 @@
     "saveSuccess": "Data saved successfully",
     "saveFailed": "Data save failed",
     "noFolder": "Please open a working folder first"
+  },
+  "aiSpec": {
+    "loading": "Loading...",
+    "loadFailed": "Failed to load spec file"
   },
   "about": {
     "title": "About",

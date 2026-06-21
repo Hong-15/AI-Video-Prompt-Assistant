@@ -705,6 +705,19 @@ function setupIPC() {
   });
 
   // 获取维度配置
+  // 读取 AI 规范文件
+  ipcMain.handle('read-ai-spec', async (event, lang) => {
+    const fileName = lang === 'en' ? 'AI_Data_Output_Format_Spec.md' : 'AI数据输出格式规范.md';
+    const specPath = path.join(__dirname, fileName);
+    try {
+      const content = await fsPromises.readFile(specPath, 'utf-8');
+      return content;
+    } catch (e) {
+      console.error('读取AI规范文件失败:', e);
+      return null;
+    }
+  });
+
   ipcMain.handle('get-field-config', async () => {
     const configPath = path.join(__dirname, 'config', 'fieldConfig.json');
     try {

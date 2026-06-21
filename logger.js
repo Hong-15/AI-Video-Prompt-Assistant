@@ -131,14 +131,45 @@ function getCurrentLocalDateString() {
 }
 
 /**
- * 初始化日志模块：确保目录存在、清理过期日志、生成当日文件路径
+ * 查找当前已有的当日最新日志文件（按文件名排序取最后一份），没有则返回 null
+ * @param {string} lang
+ * @returns {string|null}
+ */
+async function findLatestLogFileForToday(lang) {
+  const dir = getLogDir();
+  const todayPrefix = formatDate(new Date());
+  const expectedSuffix = `_${lang}.txt`;
+
+  try {
+    await fsPromises.access(dir);
+  } catch (e) {
+    return null;
+  }
+
+  try {
+    const files = await fsPromises.readdir(dir);
+    const todayFiles = files
+      .filter(file => isValidLogFileName(file))
+      .filter(file => file.startsWith(todayPrefix) && file.endsWith(expectedSuffix))
+      .sort();
+    if (todayFiles.length === 0) return null;
+    return path.join(dir, todayFiles[todayFiles.length - 1]);
+  } catch (e) {
+    console.error('[UserActionLogger] 查找当日日志失败:', e);
+    return null;
+  }
+}
+
+/**
+ * 初始化日志模块：确保目录存在、清理过期日志、复用或生成当日文件路径
  */
 async function initLogger() {
   await ensureLogDir();
   await cleanOldLogs();
   currentLogDate = getCurrentLocalDateString();
   for (const lang of LOG_LANGUAGES) {
-    currentLogFiles[lang] = getLogFilePath(lang);
+    const existing = await findLatestLogFileForToday(lang);
+    currentLogFiles[lang] = existing || getLogFilePath(lang);
   }
 }
 

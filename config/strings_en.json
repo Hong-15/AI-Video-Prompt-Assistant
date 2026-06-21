@@ -177,6 +177,7 @@
     "menuCloseBehavior": "Close Behavior",
     "menuShortcuts": "Shortcut Settings",
     "menuLanguage": "Language",
+    "menuLogs": "Logs",
     "menuAbout": "About",
     "closeBehavior": "Close Behavior",
     "closeBehaviorDesc": "Configure what happens when clicking the X button",
@@ -196,6 +197,24 @@
     "restartTitle": "Language Changed",
     "restartMsg": "Language settings have been changed. A restart is required to take effect. Restart now?",
     "restartConfirm": "Restart Now"
+  },
+  "logs": {
+    "title": "Operation Logs",
+    "desc": "View user action logs generated within the last 7 days. Click a file name or the Open button to preview it read-only with the system default text viewer.",
+    "empty": "No log files",
+    "fileName": "File Name",
+    "date": "Date",
+    "time": "Time",
+    "language": "Language",
+    "size": "Size",
+    "status": "Status",
+    "openBtn": "Open",
+    "openFailed": "Failed to open log",
+    "pathLabel": "Log Directory: ",
+    "within7Days": "Within 7 days",
+    "expired": "Expired",
+    "languageZh": "Chinese",
+    "languageEn": "English"
   },
   "createProject": {
     "title": "New Project",

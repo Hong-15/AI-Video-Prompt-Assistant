@@ -1,6 +1,11 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage, shell } = require('electron');
 const path = require('path');
 const fsPromises = require('fs').promises;
+const os = require('os');
+const util = require('util');
+const { exec } = require('child_process');
+const execAsync = util.promisify(exec);
+const { initLogger, logAction, getLogDir, isValidLogFileName } = require('./logger');
 
 // 字符串资源加载（根据语言配置，异步避免阻塞主进程）
 let strings = {};
@@ -310,11 +315,107 @@ async function saveUserData(folderPath, data) {
   }
 }
 
+// 以只读临时副本方式打开日志文件，防止用户误修改原始日志
+async function openLogFileReadOnly(fileName) {
+  const logDir = getLogDir();
+  if (!isValidLogFileName(fileName)) {
+    throw new Error('Invalid log file name');
+  }
+
+  const srcPath = path.join(logDir, fileName);
+  try {
+    await fsPromises.access(srcPath);
+  } catch (e) {
+    throw new Error('Log file not found');
+  }
+
+  const tempDir = path.join(os.tmpdir(), 'ai_helper_logs');
+  await fsPromises.mkdir(tempDir, { recursive: true });
+  const tempName = `${Date.now()}_${fileName}`;
+  const tempPath = path.join(tempDir, tempName);
+
+  await fsPromises.copyFile(srcPath, tempPath);
+  try {
+    await fsPromises.chmod(tempPath, 0o444);
+  } catch (e) {
+    // 部分平台 chmod 受限，忽略
+  }
+
+  const openResult = await shell.openPath(tempPath);
+  if (openResult) {
+    // macOS 回退：使用原生文本编辑器 open -t
+    if (process.platform === 'darwin') {
+      try {
+        await execAsync(`open -t ${JSON.stringify(tempPath)}`);
+        return;
+      } catch (e) {
+        console.error('[Main] macOS 文本编辑器回退打开失败:', e);
+      }
+    }
+    throw new Error(openResult);
+  }
+}
+
 // IPC 处理
 function setupIPC() {
   // 渲染进程就绪（JS 初始化完成，已移除 visibility:hidden 锁）
   ipcMain.on('renderer-ready', (event) => {
     // 窗口已由 ready-to-show 显示，此处仅做确认
+  });
+
+  // 记录用户操作到本地日志
+  ipcMain.on('log-user-action', (event, action) => {
+    logAction(action).catch((err) => {
+      console.error('[Main] 记录用户操作失败:', err);
+    });
+  });
+
+  // 获取日志文件列表（含是否在 7 天内的标记）
+  ipcMain.handle('get-log-files', async () => {
+    const logDir = getLogDir();
+    try {
+      await fsPromises.access(logDir);
+    } catch (e) {
+      return [];
+    }
+
+    const now = Date.now();
+    const maxAgeMs = 7 * 24 * 60 * 60 * 1000;
+    const files = await fsPromises.readdir(logDir);
+    const result = [];
+
+    for (const file of files) {
+      if (!isValidLogFileName(file)) continue;
+      const filePath = path.join(logDir, file);
+      try {
+        const stat = await fsPromises.stat(filePath);
+        if (!stat.isFile()) continue;
+        const match = file.match(/^(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2}-\d{3})_(zh-CN|en)\.txt$/);
+        result.push({
+          fileName: file,
+          date: match ? match[1] : '',
+          time: match ? match[2] : '',
+          language: match ? match[3] : 'unknown',
+          size: stat.size,
+          isWithin7Days: (now - stat.mtime.getTime()) <= maxAgeMs
+        });
+      } catch (e) {
+        console.error('[Main] 读取日志文件信息失败:', file, e);
+      }
+    }
+
+    return result.sort((a, b) => b.fileName.localeCompare(a.fileName));
+  });
+
+  // 以只读方式打开指定日志文件
+  ipcMain.handle('open-log-file', async (event, fileName) => {
+    await openLogFileReadOnly(fileName);
+    return true;
+  });
+
+  // 获取日志目录绝对路径
+  ipcMain.handle('get-log-dir', () => {
+    return getLogDir();
   });
 
   // 窗口控制
@@ -767,6 +868,8 @@ app.whenReady().then(async () => {
   await loadStrings();
   await loadSettings();
   await loadTheme();
+  // 初始化用户操作日志模块（确保 logs 目录存在并清理过期日志）
+  await initLogger();
   // 使用自定义标题栏和工具栏菜单，无需默认应用菜单
   Menu.setApplicationMenu(null);
   setupIPC();

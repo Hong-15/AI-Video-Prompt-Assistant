@@ -176,6 +176,7 @@
     "menuCloseBehavior": "关闭行为",
     "menuShortcuts": "快捷键设置",
     "menuLanguage": "语言",
+    "menuLogs": "日志",
     "menuAbout": "关于",
     "closeBehavior": "关闭行为",
     "closeBehaviorDesc": "设置点击右上角 X 按钮时的行为",
@@ -195,6 +196,24 @@
     "restartTitle": "语言变更",
     "restartMsg": "语言设置已更改，需要重启应用才能生效。是否立即重启？",
     "restartConfirm": "立即重启"
+  },
+  "logs": {
+    "title": "操作日志",
+    "desc": "查看最近 7 天内生成的用户操作日志。点击文件名或“打开”按钮，可使用系统默认的文本阅读器以只读方式预览。",
+    "empty": "暂无日志文件",
+    "fileName": "文件名",
+    "date": "日期",
+    "time": "时间",
+    "language": "语言",
+    "size": "大小",
+    "status": "状态",
+    "openBtn": "打开",
+    "openFailed": "打开日志失败",
+    "pathLabel": "日志目录：",
+    "within7Days": "7 天内",
+    "expired": "已过期",
+    "languageZh": "中文",
+    "languageEn": "英文"
   },
   "createProject": {
     "title": "新建项目",

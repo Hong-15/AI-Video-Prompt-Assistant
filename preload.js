@@ -87,6 +87,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 在系统浏览器中打开URL
   openExternalUrl: (url) => ipcRenderer.send('open-external-url', url),
 
+  // 记录用户操作到本地日志
+  logUserAction: (action) => ipcRenderer.send('log-user-action', action),
+
+  // 获取日志文件列表
+  getLogFiles: () => ipcRenderer.invoke('get-log-files'),
+
+  // 以只读方式打开指定日志文件
+  openLogFile: (fileName) => ipcRenderer.invoke('open-log-file', fileName),
+
+  // 获取日志目录绝对路径
+  getLogDir: () => ipcRenderer.invoke('get-log-dir'),
+
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {
     ipcRenderer.on('folder-opened', (event, folderPath) => callback(folderPath));

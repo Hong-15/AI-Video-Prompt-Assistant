@@ -1627,6 +1627,155 @@ html[data-theme="light"] .more-settings-help-btn {
   flex-shrink: 0;
 }
 
+/* 日志列表面板 */
+.more-settings-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.more-settings-logs-list::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+.more-settings-logs-list::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
+}
+
+.more-settings-logs-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.more-settings-logs-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+.more-settings-logs-empty {
+  color: var(--text-muted);
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.more-settings-logs-path {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.logs-path-label {
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logs-path-value {
+  color: var(--accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+  transition: color 0.15s;
+}
+
+.logs-path-value:hover {
+  text-decoration: underline;
+}
+
+.logs-path-copied {
+  color: var(--accentGreen) !important;
+}
+
+.more-settings-logs-header,
+.more-settings-logs-item {
+  display: grid;
+  grid-template-columns: minmax(120px, 2fr) 90px 80px 60px 70px 70px 60px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.4rem;
+}
+
+.more-settings-logs-header {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.4rem;
+}
+
+.more-settings-logs-item {
+  color: var(--text-secondary);
+  background: var(--active04);
+  transition: background 0.15s;
+}
+
+.more-settings-logs-item:hover {
+  background: var(--active06);
+}
+
+.logs-col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logs-col-filename {
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 0.78rem;
+}
+
+.logs-col-action {
+  text-align: right;
+}
+
+.logs-status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.logs-status-within {
+  background: var(--success15);
+  color: var(--accentGreen);
+}
+
+.logs-status-expired {
+  background: var(--danger15);
+  color: var(--danger);
+}
+
+.logs-open-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.logs-open-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--active06);
+}
+
 /* 浅色主题适配 */
 html[data-theme="light"] .more-settings-box {
   background: var(--close-hover-color);

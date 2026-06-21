@@ -62,6 +62,73 @@ const App = (function() {
 
     // 10. 注册全局键盘快捷键
     await initKeyboardShortcuts();
+
+    // 11. 注册全局用户操作监听，用于本地日志记录
+    initUserActionLogger();
+  }
+
+  // ========== 用户操作日志 ==========
+
+  /**
+   * 初始化全局用户操作监听，将点击、输入、按键等操作发送到主进程写入日志
+   */
+  function initUserActionLogger() {
+    if (!window.electronAPI || !window.electronAPI.logUserAction) return;
+
+    // 点击监听（捕获阶段获取最精确目标）
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      const action = buildAction('click', target, e);
+      window.electronAPI.logUserAction(action);
+    }, true);
+
+    // 输入监听（去抖，避免高频输入刷屏）
+    let inputTimer = null;
+    document.addEventListener('input', (e) => {
+      if (inputTimer) clearTimeout(inputTimer);
+      inputTimer = setTimeout(() => {
+        const target = e.target;
+        const action = buildAction('input', target, e);
+        action.value = target.value || target.textContent || '';
+        window.electronAPI.logUserAction(action);
+      }, 500);
+    }, true);
+
+    // 按键监听
+    document.addEventListener('keydown', (e) => {
+      const action = buildAction('keydown', e.target, e);
+      action.key = e.key;
+      action.ctrlKey = e.ctrlKey;
+      action.shiftKey = e.shiftKey;
+      action.altKey = e.altKey;
+      window.electronAPI.logUserAction(action);
+    }, true);
+  }
+
+  /**
+   * 构建用户操作日志对象
+   * @param {string} type - 操作类型
+   * @param {HTMLElement} target - 触发元素
+   * @param {Event} event - 原生事件对象
+   * @returns {Object}
+   */
+  function buildAction(type, target, event) {
+    const activeTask = Sidebar && Sidebar.getActiveTask ? Sidebar.getActiveTask() : null;
+    return {
+      type,
+      tag: target ? target.tagName : '',
+      id: target ? target.id : '',
+      className: target ? target.className : '',
+      text: target ? (target.innerText || target.textContent || '').trim().slice(0, 100) : '',
+      clientX: event ? event.clientX : undefined,
+      clientY: event ? event.clientY : undefined,
+      folderPath: _currentFolder || '',
+      currentTask: activeTask ? activeTask.name || activeTask.id : '',
+      windowSize: `${window.innerWidth}x${window.innerHeight}`,
+      extra: {
+        href: target && target.href ? target.href : ''
+      }
+    };
   }
 
   // ========== 主题管理 ==========
@@ -748,6 +815,7 @@ const App = (function() {
       { id: 'closeBehavior', label: 'moreSettings.menuCloseBehavior', defaultLabel: '关闭行为' },
       { id: 'shortcuts', label: 'moreSettings.menuShortcuts', defaultLabel: '快捷键设置' },
       { id: 'language', label: 'moreSettings.menuLanguage', defaultLabel: '语言' },
+      { id: 'logs', label: 'moreSettings.menuLogs', defaultLabel: '日志' },
       { id: 'about', label: 'moreSettings.menuAbout', defaultLabel: '关于' }
     ];
 
@@ -1003,7 +1071,174 @@ const App = (function() {
 
     content.appendChild(panelLanguage);
 
-    // ===== 面板4：关于 =====
+    // ===== 面板4：日志 =====
+    const panelLogs = document.createElement('div');
+    panelLogs.className = 'more-settings-panel';
+    panelLogs.id = 'panelLogs';
+
+    const logsTitle = document.createElement('h3');
+    logsTitle.textContent = StringLoader.get('logs.title', '操作日志');
+    panelLogs.appendChild(logsTitle);
+
+    const logsDesc = document.createElement('p');
+    logsDesc.className = 'more-settings-desc';
+    logsDesc.textContent = StringLoader.get('logs.desc', '查看最近 7 天内生成的用户操作日志。');
+    panelLogs.appendChild(logsDesc);
+
+    const logsPathRow = document.createElement('div');
+    logsPathRow.className = 'more-settings-logs-path';
+    const logsPathLabel = document.createElement('span');
+    logsPathLabel.className = 'logs-path-label';
+    logsPathLabel.textContent = StringLoader.get('logs.pathLabel', '日志目录：');
+    const logsPathValue = document.createElement('span');
+    logsPathValue.className = 'logs-path-value';
+    logsPathValue.title = StringLoader.get('status.clickToCopy', '点击复制路径');
+    logsPathValue.textContent = '';
+    logsPathValue.addEventListener('click', async () => {
+      const text = logsPathValue.textContent;
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        const original = text;
+        logsPathValue.textContent = StringLoader.get('status.copiedPath', '已复制路径!');
+        logsPathValue.classList.add('logs-path-copied');
+        setTimeout(() => {
+          logsPathValue.textContent = original;
+          logsPathValue.classList.remove('logs-path-copied');
+        }, 1500);
+      } catch (e) {
+        console.error('复制日志路径失败:', e);
+      }
+    });
+    logsPathRow.appendChild(logsPathLabel);
+    logsPathRow.appendChild(logsPathValue);
+    panelLogs.appendChild(logsPathRow);
+
+    // 异步获取日志目录路径
+    (async () => {
+      try {
+        if (window.electronAPI && window.electronAPI.getLogDir) {
+          logsPathValue.textContent = await window.electronAPI.getLogDir();
+        }
+      } catch (e) {
+        console.error('获取日志目录失败:', e);
+      }
+    })();
+
+    const logsListContainer = document.createElement('div');
+    logsListContainer.className = 'more-settings-logs-list';
+    panelLogs.appendChild(logsListContainer);
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function getLanguageLabel(lang) {
+      if (lang === 'zh-CN') return StringLoader.get('logs.languageZh', '中文');
+      if (lang === 'en') return StringLoader.get('logs.languageEn', '英文');
+      return lang;
+    }
+
+    async function renderLogsList() {
+      logsListContainer.innerHTML = '';
+      let logFiles = [];
+      try {
+        logFiles = await window.electronAPI.getLogFiles();
+      } catch (e) {
+        console.error('加载日志列表失败:', e);
+      }
+
+      if (logFiles.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'more-settings-logs-empty';
+        empty.textContent = StringLoader.get('logs.empty', '暂无日志文件');
+        logsListContainer.appendChild(empty);
+        return;
+      }
+
+      const headerRow = document.createElement('div');
+      headerRow.className = 'more-settings-logs-header';
+      headerRow.innerHTML =
+        '<span class="logs-col logs-col-name">' + StringLoader.get('logs.fileName', '文件名') + '</span>' +
+        '<span class="logs-col logs-col-date">' + StringLoader.get('logs.date', '日期') + '</span>' +
+        '<span class="logs-col logs-col-time">' + StringLoader.get('logs.time', '时间') + '</span>' +
+        '<span class="logs-col logs-col-lang">' + StringLoader.get('logs.language', '语言') + '</span>' +
+        '<span class="logs-col logs-col-size">' + StringLoader.get('logs.size', '大小') + '</span>' +
+        '<span class="logs-col logs-col-status">' + StringLoader.get('logs.status', '状态') + '</span>' +
+        '<span class="logs-col logs-col-action"></span>';
+      logsListContainer.appendChild(headerRow);
+
+      logFiles.forEach(file => {
+        const row = document.createElement('div');
+        row.className = 'more-settings-logs-item';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'logs-col logs-col-name logs-col-filename';
+        nameSpan.textContent = file.fileName;
+        nameSpan.title = file.fileName;
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'logs-col logs-col-date';
+        dateSpan.textContent = file.date;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'logs-col logs-col-time';
+        timeSpan.textContent = file.time;
+
+        const langSpan = document.createElement('span');
+        langSpan.className = 'logs-col logs-col-lang';
+        langSpan.textContent = getLanguageLabel(file.language);
+
+        const sizeSpan = document.createElement('span');
+        sizeSpan.className = 'logs-col logs-col-size';
+        sizeSpan.textContent = formatBytes(file.size);
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'logs-col logs-col-status';
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'logs-status-badge ' + (file.isWithin7Days ? 'logs-status-within' : 'logs-status-expired');
+        statusBadge.textContent = file.isWithin7Days
+          ? StringLoader.get('logs.within7Days', '7 天内')
+          : StringLoader.get('logs.expired', '已过期');
+        statusSpan.appendChild(statusBadge);
+
+        const actionSpan = document.createElement('span');
+        actionSpan.className = 'logs-col logs-col-action';
+        const openBtn = document.createElement('button');
+        openBtn.className = 'logs-open-btn';
+        openBtn.textContent = StringLoader.get('logs.openBtn', '打开');
+        openBtn.addEventListener('click', async () => {
+          try {
+            await window.electronAPI.openLogFile(file.fileName);
+          } catch (e) {
+            console.error('打开日志失败:', e);
+            Modal.show({
+              title: StringLoader.get('logs.openFailed', '打开日志失败'),
+              message: String(e && e.message ? e.message : e),
+              confirmText: StringLoader.get('modal.ok', '确定'),
+              showCancel: false
+            });
+          }
+        });
+        actionSpan.appendChild(openBtn);
+
+        row.appendChild(nameSpan);
+        row.appendChild(dateSpan);
+        row.appendChild(timeSpan);
+        row.appendChild(langSpan);
+        row.appendChild(sizeSpan);
+        row.appendChild(statusSpan);
+        row.appendChild(actionSpan);
+        logsListContainer.appendChild(row);
+      });
+    }
+
+    renderLogsList();
+    content.appendChild(panelLogs);
+
+    // ===== 面板5：关于 =====
     const panelAbout = document.createElement('div');
     panelAbout.className = 'more-settings-panel';
     panelAbout.id = 'panelAbout';

@@ -1,28 +1,30 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage, shell } = require('electron');
 const path = require('path');
-const fs = require('fs');
+const fsPromises = require('fs').promises;
 
-// 字符串资源加载（根据语言配置）
+// 字符串资源加载（根据语言配置，异步避免阻塞主进程）
 let strings = {};
-function loadStrings() {
+async function loadStrings() {
   const langPath = path.join(__dirname, 'config', 'language.json');
   let lang = 'zh-CN';
   try {
-    if (fs.existsSync(langPath)) {
-      const langConfig = JSON.parse(fs.readFileSync(langPath, 'utf-8'));
-      lang = langConfig.language || 'zh-CN';
-    }
+    await fsPromises.access(langPath);
+    const langRaw = await fsPromises.readFile(langPath, 'utf-8');
+    const langConfig = JSON.parse(langRaw);
+    lang = langConfig.language || 'zh-CN';
   } catch (e) {
-    console.error('加载语言配置失败:', e);
+    if (e.code !== 'ENOENT') {
+      console.error('加载语言配置失败:', e);
+    }
   }
   const stringsFile = lang === 'en' ? 'strings_en.json' : 'strings.json';
   try {
-    strings = JSON.parse(fs.readFileSync(path.join(__dirname, 'config', stringsFile), 'utf-8'));
+    const raw = await fsPromises.readFile(path.join(__dirname, 'config', stringsFile), 'utf-8');
+    strings = JSON.parse(raw);
   } catch (e) {
     console.error('加载字符串资源失败:', e);
   }
 }
-loadStrings();
 
 let mainWindow = null;
 let currentFolderPath = null;
@@ -31,31 +33,81 @@ let closeBehavior = 'exit'; // 'exit' | 'tray' | 'taskbar'
 let isRestarting = false; // 重启标志，跳过 before-quit 数据保存
 let isDarkTheme = true; // 是否暗色主题
 let showDebounceTimer = null; // 显示防抖
+let windowConfig = null; // 窗口配置缓存
+let themeColors = null; // 主题颜色缓存
 
-// 加载设置
-function loadSettings() {
+// 加载设置（异步，避免阻塞主进程）
+async function loadSettings() {
   const settingsPath = path.join(__dirname, 'config', 'settings.json');
   try {
-    if (fs.existsSync(settingsPath)) {
-      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-      closeBehavior = settings.closeBehavior || 'exit';
-    }
+    await fsPromises.access(settingsPath);
+    const raw = await fsPromises.readFile(settingsPath, 'utf-8');
+    const settings = JSON.parse(raw);
+    closeBehavior = settings.closeBehavior || 'exit';
   } catch (e) {
-    console.error('加载设置失败:', e);
+    if (e.code !== 'ENOENT') {
+      console.error('加载设置失败:', e);
+    }
   }
 }
 
-// 加载主题配置，判断是否为暗色主题
-function loadTheme() {
+// 加载主题配置，判断是否为暗色主题并缓存颜色（异步，避免阻塞主进程）
+async function loadTheme() {
   const themePath = path.join(__dirname, 'config', 'theme.json');
   try {
-    if (fs.existsSync(themePath)) {
-      const themeConfig = JSON.parse(fs.readFileSync(themePath, 'utf-8'));
-      isDarkTheme = themeConfig.theme !== 'light';
-    }
+    await fsPromises.access(themePath);
+    const raw = await fsPromises.readFile(themePath, 'utf-8');
+    const themeConfig = JSON.parse(raw);
+    isDarkTheme = themeConfig.theme !== 'light';
+    themeColors = themeConfig.colors || null;
   } catch (e) {
-    console.error('加载主题配置失败:', e);
+    if (e.code !== 'ENOENT') {
+      console.error('加载主题配置失败:', e);
+    }
   }
+}
+
+// 加载窗口配置（异步，避免阻塞主进程）
+async function loadWindowConfig() {
+  const windowConfigPath = path.join(__dirname, 'config', 'window.json');
+  const defaults = {
+    width: 1200,
+    height: 800,
+    minWidth: 900,
+    minHeight: 600,
+    showDebounceMs: 333,
+    showReadyTimeoutMs: 300,
+    closeSaveDelayMs: 500,
+    closeForceTimeoutMs: 1000,
+    beforeQuitSaveTimeoutMs: 3000,
+    restartSaveDelayMs: 500
+  };
+  try {
+    await fsPromises.access(windowConfigPath);
+    const raw = await fsPromises.readFile(windowConfigPath, 'utf-8');
+    const cfg = JSON.parse(raw);
+    windowConfig = { ...defaults, ...cfg };
+    return;
+  } catch (e) {
+    if (e.code !== 'ENOENT') {
+      console.error('加载窗口配置失败:', e);
+    }
+  }
+  windowConfig = defaults;
+}
+
+// 默认窗口背景色兜底值（当主题配置缺失时使用）
+const DEFAULT_DARK_WINDOW_BG = '#0b0b1a';
+const DEFAULT_LIGHT_WINDOW_BG = '#f5f5f7';
+
+// 获取当前主题对应的窗口背景色
+function getWindowBackgroundColor() {
+  if (themeColors) {
+    const key = isDarkTheme ? 'dark' : 'light';
+    return themeColors[key]?.windowBackground ||
+      (isDarkTheme ? DEFAULT_DARK_WINDOW_BG : DEFAULT_LIGHT_WINDOW_BG);
+  }
+  return isDarkTheme ? DEFAULT_DARK_WINDOW_BG : DEFAULT_LIGHT_WINDOW_BG;
 }
 
 // 等待渲染进程确认已完成首帧合成后再显示窗口
@@ -84,11 +136,11 @@ function showAfterComposed(win) {
   // 发送准备显示信号，让渲染进程完成一次合成
   win.webContents.send('prepare-show');
 
-  // 兜底：300ms 后无论是否收到回复都显示
+  // 兜底：配置超时后无论是否收到回复都显示
   setTimeout(() => {
     ipcMain.off('show-ready', onShowReady);
     doShow();
-  }, 300);
+  }, windowConfig?.showReadyTimeoutMs || 300);
 }
 
 // 防抖显示窗口，防止快速点击导致 WM_ERASEBKGND / WM_PAINT 消息堆积
@@ -107,14 +159,14 @@ function debouncedShowWindow(win) {
       }
     }
     showDebounceTimer = null;
-  }, 333);
+  }, windowConfig?.showDebounceMs || 333);
 }
 
-// 保存设置
-function saveSettings(settings) {
+// 保存设置（异步，避免阻塞主进程）
+async function saveSettings(settings) {
   const settingsPath = path.join(__dirname, 'config', 'settings.json');
   try {
-    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+    await fsPromises.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
     return true;
   } catch (e) {
     console.error('保存设置失败:', e);
@@ -123,14 +175,17 @@ function saveSettings(settings) {
 }
 
 function createWindow(parentFolderPath) {
+  const cfg = windowConfig || {};
+  const bgColor = getWindowBackgroundColor();
+
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: cfg.width || 1200,
+    height: cfg.height || 800,
+    minWidth: cfg.minWidth || 900,
+    minHeight: cfg.minHeight || 600,
     title: strings.app?.windowTitle || 'AI提示词助手',
     icon: path.join(__dirname, 'assets', 'H.jpg'),
-    backgroundColor: '#0b0b1a',
+    backgroundColor: bgColor,
     frame: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -143,7 +198,7 @@ function createWindow(parentFolderPath) {
   });
 
   // 显式设置背景色，确保未合成区域显示为应用主题色而非白色
-  win.setBackgroundColor('#0b0b1a');
+  win.setBackgroundColor(bgColor);
 
   // 转发窗口最大化/取消最大化状态到渲染进程
   win.on('maximize', () => {
@@ -174,12 +229,12 @@ function createWindow(parentFolderPath) {
     if (currentFolderPath && !win.isDestroyed() && !isRestarting) {
       e.preventDefault();
       win.webContents.send('save-before-close');
-      // 安全超时：1秒后强制关闭
+      // 安全超时：配置时间后强制关闭
       closeTimeout = setTimeout(() => {
         if (win && !win.isDestroyed()) {
           win.destroy();
         }
-      }, 1000);
+      }, windowConfig?.closeForceTimeoutMs || 1000);
     }
   });
   win.on('closed', () => {
@@ -190,48 +245,6 @@ function createWindow(parentFolderPath) {
   });
 
   return win;
-}
-
-// 构建应用菜单
-function buildMenu() {
-  const template = [
-    {
-      label: strings.menu?.file || '文件',
-      submenu: [
-        {
-          label: strings.menu?.openFolder || '打开文件夹',
-          submenu: [
-            {
-              label: strings.menu?.openFolderThis || '此窗口打开',
-              click: () => handleOpenFolder(mainWindow)
-            },
-            {
-              label: strings.menu?.openFolderNew || '新窗口打开',
-              click: () => handleOpenFolderNew()
-            }
-          ]
-        },
-        { type: 'separator' },
-        {
-          label: strings.menu?.newWindow || '新建窗口',
-          click: () => {
-            const newWin = createWindow();
-            newWin.show();
-          }
-        },
-        { type: 'separator' },
-        {
-          label: strings.menu?.tutorial || '教学',
-          enabled: false
-        },
-        { type: 'separator' },
-        { role: 'quit', label: strings.menu?.quit || '退出' }
-      ]
-    }
-  ];
-
-  const menu = Menu.buildFromTemplate(template);
-  Menu.setApplicationMenu(menu);
 }
 
 // 打开文件夹（当前窗口）
@@ -264,25 +277,26 @@ async function handleOpenFolderNew() {
   }
 }
 
-// 读取文件夹中的 userData.json
-function loadUserData(folderPath) {
+// 读取文件夹中的 userData.json（异步，避免阻塞主进程）
+async function loadUserData(folderPath) {
   const filePath = path.join(folderPath, 'userData.json');
   try {
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, 'utf-8');
-      return JSON.parse(data);
-    }
+    await fsPromises.access(filePath);
+    const data = await fsPromises.readFile(filePath, 'utf-8');
+    return JSON.parse(data);
   } catch (e) {
-    console.error('加载数据失败:', e);
+    if (e.code !== 'ENOENT') {
+      console.error('加载数据失败:', e);
+    }
   }
   return null;
 }
 
-// 保存数据到文件夹中的 userData.json
-function saveUserData(folderPath, data) {
+// 保存数据到文件夹中的 userData.json（异步，避免阻塞主进程）
+async function saveUserData(folderPath, data) {
   const filePath = path.join(folderPath, 'userData.json');
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    await fsPromises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
     return true;
   } catch (e) {
     console.error('保存数据失败:', e);
@@ -364,43 +378,47 @@ function setupIPC() {
   });
 
   // 获取语言配置
-  ipcMain.handle('get-language-config', () => {
+  ipcMain.handle('get-language-config', async () => {
     const langPath = path.join(__dirname, 'config', 'language.json');
     try {
-      if (fs.existsSync(langPath)) {
-        return JSON.parse(fs.readFileSync(langPath, 'utf-8'));
-      }
+      await fsPromises.access(langPath);
+      const raw = await fsPromises.readFile(langPath, 'utf-8');
+      return JSON.parse(raw);
     } catch (e) {
-      console.error('加载语言配置失败:', e);
+      if (e.code !== 'ENOENT') {
+        console.error('加载语言配置失败:', e);
+      }
     }
     return { language: 'zh-CN' };
   });
 
   // 获取维度配置
-  ipcMain.handle('get-field-config', () => {
+  ipcMain.handle('get-field-config', async () => {
     const configPath = path.join(__dirname, 'config', 'fieldConfig.json');
     try {
-      return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      const raw = await fsPromises.readFile(configPath, 'utf-8');
+      return JSON.parse(raw);
     } catch (e) {
       return [];
     }
   });
 
   // 获取快捷键配置
-  ipcMain.handle('get-shortcuts-config', () => {
+  ipcMain.handle('get-shortcuts-config', async () => {
     const configPath = path.join(__dirname, 'config', 'shortcuts.json');
     try {
-      return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      const raw = await fsPromises.readFile(configPath, 'utf-8');
+      return JSON.parse(raw);
     } catch (e) {
       return {};
     }
   });
 
   // 保存快捷键配置
-  ipcMain.handle('save-shortcuts-config', (event, config) => {
+  ipcMain.handle('save-shortcuts-config', async (event, config) => {
     const configPath = path.join(__dirname, 'config', 'shortcuts.json');
     try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+      await fsPromises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
       return true;
     } catch (e) {
       console.error('保存快捷键配置失败:', e);
@@ -417,7 +435,7 @@ function setupIPC() {
     });
     if (!result.canceled && result.filePath) {
       try {
-        fs.writeFileSync(result.filePath, content, 'utf-8');
+        await fsPromises.writeFile(result.filePath, content, 'utf-8');
         return { success: true, filePath: result.filePath };
       } catch (e) {
         return { success: false, error: e.message };
@@ -427,23 +445,25 @@ function setupIPC() {
   });
 
   // 获取主题配置
-  ipcMain.handle('get-theme-config', () => {
+  ipcMain.handle('get-theme-config', async () => {
     const configPath = path.join(__dirname, 'config', 'theme.json');
     try {
-      if (fs.existsSync(configPath)) {
-        return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      }
+      await fsPromises.access(configPath);
+      const raw = await fsPromises.readFile(configPath, 'utf-8');
+      return JSON.parse(raw);
     } catch (e) {
-      console.error('加载主题配置失败:', e);
+      if (e.code !== 'ENOENT') {
+        console.error('加载主题配置失败:', e);
+      }
     }
     return { theme: 'default' };
   });
 
   // 保存主题配置
-  ipcMain.handle('save-theme-config', (event, config) => {
+  ipcMain.handle('save-theme-config', async (event, config) => {
     const configPath = path.join(__dirname, 'config', 'theme.json');
     try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+      await fsPromises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
       return true;
     } catch (e) {
       console.error('保存主题配置失败:', e);
@@ -452,21 +472,23 @@ function setupIPC() {
   });
 
   // 获取设置（关闭行为等）
-  ipcMain.handle('get-settings', () => {
+  ipcMain.handle('get-settings', async () => {
     const settingsPath = path.join(__dirname, 'config', 'settings.json');
     try {
-      if (fs.existsSync(settingsPath)) {
-        return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
-      }
+      await fsPromises.access(settingsPath);
+      const raw = await fsPromises.readFile(settingsPath, 'utf-8');
+      return JSON.parse(raw);
     } catch (e) {
-      console.error('加载设置失败:', e);
+      if (e.code !== 'ENOENT') {
+        console.error('加载设置失败:', e);
+      }
     }
     return { closeBehavior: 'exit' };
   });
 
   // 保存设置
-  ipcMain.handle('save-settings', (event, settings) => {
-    const result = saveSettings(settings);
+  ipcMain.handle('save-settings', async (event, settings) => {
+    const result = await saveSettings(settings);
     if (result && settings.closeBehavior) {
       closeBehavior = settings.closeBehavior;
     }
@@ -489,10 +511,15 @@ function setupIPC() {
   ipcMain.handle('create-project-dir', async (event, parentDir, folderName) => {
     const fullPath = path.join(parentDir, folderName);
     try {
-      if (fs.existsSync(fullPath)) {
-        return { success: false, errorCode: 'DUPLICATE', error: '同名目录已存在，请更换文件夹名称' };
+      await fsPromises.access(fullPath);
+      return { success: false, errorCode: 'DUPLICATE', error: '同名目录已存在，请更换文件夹名称' };
+    } catch (e) {
+      if (e.code !== 'ENOENT') {
+        return { success: false, errorCode: 'ERROR', error: e.message };
       }
-      fs.mkdirSync(fullPath, { recursive: true });
+    }
+    try {
+      await fsPromises.mkdir(fullPath, { recursive: true });
       return { success: true, path: fullPath };
     } catch (e) {
       return { success: false, errorCode: 'ERROR', error: e.message };
@@ -515,10 +542,10 @@ function setupIPC() {
   });
 
   // 保存语言配置
-  ipcMain.handle('save-language', (event, lang) => {
+  ipcMain.handle('save-language', async (event, lang) => {
     const langPath = path.join(__dirname, 'config', 'language.json');
     try {
-      fs.writeFileSync(langPath, JSON.stringify({ language: lang }, null, 2), 'utf-8');
+      await fsPromises.writeFile(langPath, JSON.stringify({ language: lang }, null, 2), 'utf-8');
       return true;
     } catch (e) {
       console.error('保存语言配置失败:', e);
@@ -534,7 +561,7 @@ function setupIPC() {
         isRestarting = true;
         app.relaunch();
         app.exit(0);
-      }, 500);
+      }, windowConfig?.restartSaveDelayMs || 500);
     } else {
       isRestarting = true;
       app.relaunch();
@@ -543,14 +570,16 @@ function setupIPC() {
   });
 
   // 获取官方地址配置
-  ipcMain.handle('get-urls-config', () => {
+  ipcMain.handle('get-urls-config', async () => {
     const urlsPath = path.join(__dirname, 'config', 'urls.json');
     try {
-      if (fs.existsSync(urlsPath)) {
-        return JSON.parse(fs.readFileSync(urlsPath, 'utf-8'));
-      }
+      await fsPromises.access(urlsPath);
+      const raw = await fsPromises.readFile(urlsPath, 'utf-8');
+      return JSON.parse(raw);
     } catch (e) {
-      console.error('加载URL配置失败:', e);
+      if (e.code !== 'ENOENT') {
+        console.error('加载URL配置失败:', e);
+      }
     }
     return {};
   });
@@ -572,7 +601,7 @@ function handleWindowClose(win) {
   // 延迟执行关闭动作，给渲染进程保存时间
   setTimeout(() => {
     performCloseAction(win);
-  }, 500);
+  }, windowConfig?.closeSaveDelayMs || 500);
 }
 
 function performCloseAction(win) {
@@ -638,10 +667,13 @@ function createTray() {
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows', 'true');
 app.commandLine.appendSwitch('disable-renderer-backgrounding', 'true');
 
-app.whenReady().then(() => {
-  loadSettings();
-  loadTheme();
-  buildMenu();
+app.whenReady().then(async () => {
+  await loadWindowConfig();
+  await loadStrings();
+  await loadSettings();
+  await loadTheme();
+  // 使用自定义标题栏和工具栏菜单，无需默认应用菜单
+  Menu.setApplicationMenu(null);
   setupIPC();
   mainWindow = createWindow();
 });
@@ -654,7 +686,7 @@ app.on('before-quit', (event) => {
     mainWindow.webContents.send('save-before-close');
     setTimeout(() => {
       app.exit();
-    }, 3000);
+    }, windowConfig?.beforeQuitSaveTimeoutMs || 3000);
   }
 });
 

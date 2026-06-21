@@ -12,6 +12,7 @@ const Sidebar = (function() {
   let _onOpenFolder = null;
   let _onCreateProject = null;
   let _onOpenRecentProject = null;
+  let _onDropProjectImport = null;
   let _contextMenu = null;
   let _contextSubmenu = null;
   let _submenuTimer = null;
@@ -26,6 +27,7 @@ const Sidebar = (function() {
     _onOpenFolder = callbacks.onOpenFolder || null;
     _onCreateProject = callbacks.onCreateProject || null;
     _onOpenRecentProject = callbacks.onOpenRecentProject || null;
+    _onDropProjectImport = callbacks.onDropProjectImport || null;
 
     // 新建任务按钮
     const addBtn = document.getElementById('addTaskBtn');
@@ -52,6 +54,51 @@ const Sidebar = (function() {
     document.addEventListener('click', () => {
       hideContextMenu();
     });
+
+    // 侧边栏任务列表拖拽导入（项目级导入）
+    if (_onDropProjectImport) {
+      const taskList = document.getElementById('taskList');
+      let taskListDragCounter = 0;
+      taskList.addEventListener('dragenter', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        taskListDragCounter++;
+        taskList.classList.add('task-list-drag-over');
+      });
+      taskList.addEventListener('dragover', (e) => {
+        e.preventDefault(); e.stopPropagation();
+      });
+      taskList.addEventListener('dragleave', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        taskListDragCounter--;
+        if (taskListDragCounter <= 0) {
+          taskListDragCounter = 0;
+          taskList.classList.remove('task-list-drag-over');
+        }
+      });
+      taskList.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        taskListDragCounter = 0;
+        taskList.classList.remove('task-list-drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length === 0) return;
+        const file = files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'md' && ext !== 'txt') {
+          Modal.show({
+            title: '导入失败',
+            message: StringLoader.get('import.errorFormat', '只支持 .md 或 .txt 格式文件'),
+            confirmText: StringLoader.get('modal.ok', '确定'),
+            showCancel: false
+          });
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          _onDropProjectImport(event.target.result, file.name);
+        };
+        reader.readAsText(file, 'utf-8');
+      });
+    }
   }
 
   // ========== 无项目视图 ==========

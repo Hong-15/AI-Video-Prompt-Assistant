@@ -29,7 +29,29 @@ const App = (function() {
       onInsertTask: handleInsertTask,
       onOpenFolder: handleOpenFolder,
       onCreateProject: showCreateProjectModal,
-      onOpenRecentProject: handleOpenRecentProject
+      onOpenRecentProject: handleOpenRecentProject,
+      onDropProjectImport: (content, fileName) => {
+        if (!_currentFolder) {
+          showNoFolderDialog();
+          return;
+        }
+        const parseResult = parseProjectExport(content);
+        if (!parseResult.success) {
+          Modal.show({
+            title: '导入失败',
+            message: parseResult.error,
+            confirmText: '确定',
+            showCancel: false
+          });
+          return;
+        }
+        Modal.confirm(
+          '导入项目数据',
+          '将导入 ' + parseResult.tasks.length + ' 个任务，当前项目中的任务不会被清空。确认导入？',
+          () => { applyProjectImport(parseResult.tasks); },
+          { confirmText: '确认', cancelText: '取消' }
+        );
+      }
     });
 
     // 5. 初始化工具栏
@@ -583,11 +605,24 @@ const App = (function() {
       });
 
       if (result.success) {
+        const filePath = result.filePath;
+        const maxLen = 80;
+        const displayPath = filePath.length > maxLen
+          ? filePath.substring(0, 30) + '...' + filePath.substring(filePath.length - 40)
+          : filePath;
         Modal.show({
           title: StringLoader.get('dialog.exportSuccess', '导出成功'),
-          message: StringLoader.get('dialog.exportSuccessMsg', '文件已保存至：') + result.filePath,
+          message: StringLoader.get('dialog.exportSuccessMsg', '文件已保存至：') + displayPath,
           showCancel: false,
-          confirmText: StringLoader.get('modal.ok', '确定')
+          confirmText: StringLoader.get('modal.ok', '确定'),
+          extraButton: {
+            text: StringLoader.get('modal.copy', '复制'),
+            onClick: () => {
+              navigator.clipboard.writeText(filePath).then(() => {
+                Content.showToast(StringLoader.get('dialog.exportCopyOk', '路径已复制'));
+              }).catch(() => {});
+            }
+          }
         });
       } else if (!result.canceled) {
         Modal.show({

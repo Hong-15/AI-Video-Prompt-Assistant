@@ -68,6 +68,17 @@ const Modal = (function() {
     const confirmLabel = options.confirmText || StringLoader.get('modal.confirm', '确认');
     confirmBtn.textContent = confirmLabel + ' (Y)';
 
+    // 额外按钮（如复制），显示在确认和取消之间
+    if (options.extraButton) {
+      const extraBtn = document.createElement('button');
+      extraBtn.className = 'modal-btn ' + (options.extraButton.class || 'modal-btn-extra');
+      extraBtn.textContent = options.extraButton.text || '';
+      extraBtn.addEventListener('click', () => {
+        if (options.extraButton.onClick) options.extraButton.onClick();
+      });
+      actions.appendChild(extraBtn);
+    }
+
     function confirm() {
       const inputValue = inputEl ? inputEl.value : null;
       const result = options.onConfirm ? options.onConfirm(inputValue) : true;

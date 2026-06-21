@@ -142,9 +142,17 @@ function createWindow(parentFolderPath) {
   // 转发窗口最大化/取消最大化状态到渲染进程
   win.on('maximize', () => {
     win.webContents.send('window-maximized', true);
+    win.webContents.send('window-zoom-state-changed', 'maximized');
   });
   win.on('unmaximize', () => {
     win.webContents.send('window-maximized', false);
+    win.webContents.send('window-zoom-state-changed', 'restored');
+  });
+  win.on('minimize', () => {
+    win.webContents.send('window-zoom-state-changed', 'minimized');
+  });
+  win.on('restore', () => {
+    win.webContents.send('window-zoom-state-changed', 'restored');
   });
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));

@@ -1340,4 +1340,21 @@ document.addEventListener('DOMContentLoaded', () => {
   App.init().then(() => {
     window.electronAPI.rendererReady();
   });
+
+  // 监听窗口缩放状态变化，执行过渡动画
+  window.electronAPI.onWindowZoomStateChanged((state) => {
+    const body = document.body;
+    body.classList.remove('window-zoom-in', 'window-zoom-out');
+    // 强制重排，确保类移除生效
+    void body.offsetWidth;
+    if (state === 'maximized' || state === 'restored') {
+      body.classList.add('window-zoom-in');
+    } else if (state === 'minimized') {
+      body.classList.add('window-zoom-out');
+    }
+    // 动画结束后移除类
+    setTimeout(() => {
+      body.classList.remove('window-zoom-in', 'window-zoom-out');
+    }, 250);
+  });
 });

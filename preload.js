@@ -11,6 +11,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('window-maximized', (event, isMaximized) => callback(isMaximized));
   },
 
+  // 监听窗口缩放状态变化（最大化/最小化/恢复），用于过渡动画
+  onWindowZoomStateChanged: (callback) => {
+    ipcRenderer.on('window-zoom-state-changed', (event, state) => callback(state));
+  },
+
   // 打开文件夹对话框
   openFolder: () => ipcRenderer.invoke('open-folder'),
 

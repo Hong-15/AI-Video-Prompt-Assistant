@@ -279,6 +279,7 @@ async function handleOpenFolder(win) {
       return;
     }
     currentFolderPath = folderPath;
+    ensureProjectIcon(currentFolderPath);
     win.webContents.send('folder-opened', currentFolderPath);
   }
 }
@@ -304,6 +305,7 @@ async function handleOpenFolderNew() {
     }
     const newWin = createWindow();
     currentFolderPath = folderPath;
+    ensureProjectIcon(currentFolderPath);
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', currentFolderPath);
     });
@@ -350,6 +352,65 @@ async function saveUserData(folderPath, data) {
   } catch (e) {
     console.error('保存数据失败:', e);
     return false;
+  }
+}
+
+// 将 H.ico 复制到项目文件夹，返回 ico 路径
+function writeIconToProject(folderPath) {
+  const srcPath = path.join(__dirname, 'assets', 'H.ico');
+  const destPath = path.join(folderPath, '_icon.ico');
+
+  try {
+    // 如果目标已存在且比源文件新，跳过
+    const srcStat = fs.statSync(srcPath);
+    try {
+      const destStat = fs.statSync(destPath);
+      if (destStat.mtimeMs >= srcStat.mtimeMs) return destPath;
+    } catch (_) {}
+
+    fs.copyFileSync(srcPath, destPath);
+    return destPath;
+  } catch (e) {
+    console.error('复制项目图标失败:', e.message);
+    return null;
+  }
+}
+
+// 通过 desktop.ini 让项目文件夹在资源管理器中显示应用图标
+// 仅在打开/新建项目时调用，无 ico 资源时不做处理
+async function ensureProjectIcon(folderPath) {
+  const icoPath = writeIconToProject(folderPath);
+  if (!icoPath) return; // 无 ico 资源，不做处理
+
+  const iniContent = `[.ShellClassInfo]\r\nIconResource=${icoPath},0\r\n`;
+  const iniPath = path.join(folderPath, 'desktop.ini');
+
+  try {
+    let needWrite = true;
+    try {
+      const existing = await fsPromises.readFile(iniPath, 'utf-8');
+      if (existing === iniContent) needWrite = false;
+    } catch (_) {}
+
+    if (needWrite) {
+      await fsPromises.writeFile(iniPath, iniContent, 'utf-8');
+    }
+
+    // 清理旧版 .project-icon.ico
+    const oldIcon = path.join(folderPath, '.project-icon.ico');
+    try { await fsPromises.unlink(oldIcon); } catch (_) {}
+
+    // Windows: desktop.ini / _icon.ico / userData.json 设为隐藏+系统，文件夹设为只读以启用图标
+    try {
+      await execAsync(`attrib +s +h "${iniPath}"`);
+      await execAsync(`attrib +s +h "${icoPath}"`);
+      const jsonPath = path.join(folderPath, 'userData.json');
+      await execAsync(`attrib +s +h "${jsonPath}"`);
+      await execAsync(`attrib -r "${folderPath}"`);
+      await execAsync(`attrib +r "${folderPath}"`);
+    } catch (_) {}
+  } catch (e) {
+    // 不影响主功能
   }
 }
 
@@ -580,6 +641,7 @@ function setupIPC() {
         return null;
       }
       currentFolderPath = folderPath;
+      ensureProjectIcon(currentFolderPath);
       return currentFolderPath;
     }
     return null;
@@ -789,7 +851,9 @@ function setupIPC() {
 
   // 初始化项目数据（创建 userData.json）
   ipcMain.handle('init-project-data', async (event, folderPath, data) => {
-    return saveUserData(folderPath, data);
+    const result = await saveUserData(folderPath, data);
+    if (result) ensureProjectIcon(folderPath);
+    return result;
   });
 
   // 在新窗口中打开指定文件夹

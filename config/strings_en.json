@@ -100,6 +100,7 @@
     "cardExport": "Export",
     "cardExportTitle": "Export this card",
     "cardExportSuccess": "Card data exported successfully",
+    "cardMenu": "Card Menu",
     "cardDeleteConfirmTitle": "Delete Card",
     "cardDeleteConfirmMsg": "Are you sure you want to delete card \"{name}\"? You can restore it via \"Reset Default Layout\".",
     "cardRenameConfirmTitle": "Rename Card",

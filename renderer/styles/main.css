@@ -705,6 +705,80 @@ body.window-zoom-out {
   color: var(--danger);
 }
 
+/* 卡片菜单按钮 m（右上角） */
+.card-menu-btn {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.field-card:hover .card-menu-btn {
+  opacity: 0.6;
+}
+
+.field-card:hover .card-menu-btn:hover {
+  opacity: 1;
+  background: var(--active20);
+  color: var(--accent);
+}
+
+/* 卡片右键弹出菜单 */
+.card-context-menu {
+  position: fixed;
+  z-index: 10000;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px var(--shadow);
+  padding: 4px 0;
+  min-width: 130px;
+}
+
+.card-context-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-speed);
+}
+
+.card-context-menu-item:hover {
+  background: var(--active15);
+}
+
+.card-context-menu-danger {
+  color: var(--danger) !important;
+}
+
+.card-context-menu-danger:hover {
+  background: var(--danger20) !important;
+}
+
+.card-context-menu-separator {
+  height: 1px;
+  background: var(--border-color);
+  margin: 4px 8px;
+}
+
 .clear-field-btn {
   background: transparent;
   border: none;

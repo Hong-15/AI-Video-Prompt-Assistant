@@ -139,51 +139,21 @@ const Content = (function() {
     labelText.className = 'label-text';
     labelText.textContent = cardDef.icon ? `${cardDef.icon} ${cardDef.label}` : cardDef.label;
 
-    // 操作按钮组
-    const cardActions = document.createElement('div');
-    cardActions.className = 'card-actions';
-
-    const renameBtn = document.createElement('button');
-    renameBtn.className = 'card-action-btn card-rename-btn';
-    renameBtn.textContent = StringLoader.get('content.cardRename', '重命名');
-    renameBtn.title = StringLoader.get('content.cardRenameTitle', '重命名此卡片');
-    renameBtn.addEventListener('click', (e) => {
+    // 卡片菜单按钮（右上角 m）
+    const menuBtn = document.createElement('button');
+    menuBtn.className = 'card-menu-btn';
+    menuBtn.textContent = 'm';
+    menuBtn.title = StringLoader.get('content.cardMenu', '卡片菜单');
+    menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      showRenameCardDialog(cardDef);
+      showCardMenu(e, cardDef, textarea, fieldsData);
     });
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'card-action-btn card-delete-btn';
-    deleteBtn.textContent = StringLoader.get('content.cardDelete', '删除');
-    deleteBtn.title = StringLoader.get('content.cardDeleteTitle', '删除此卡片');
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showDeleteCardDialog(cardDef);
-    });
-
-    const clearFieldBtn = document.createElement('button');
-    clearFieldBtn.className = 'clear-field-btn';
-    clearFieldBtn.textContent = StringLoader.get('content.clearField', '清空');
-    clearFieldBtn.title = StringLoader.get('content.clearFieldTitle', '清空此栏');
-
-    const exportCardBtn = document.createElement('button');
-    exportCardBtn.className = 'card-action-btn card-export-btn';
-    exportCardBtn.textContent = StringLoader.get('content.cardExport', '导出');
-    exportCardBtn.title = StringLoader.get('content.cardExportTitle', '导出此卡片');
-    exportCardBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      exportCardToFile(cardDef, fieldsData);
-    });
-
-    cardActions.appendChild(renameBtn);
-    cardActions.appendChild(deleteBtn);
-    cardActions.appendChild(clearFieldBtn);
-    cardActions.appendChild(exportCardBtn);
 
     label.appendChild(dragHandle);
     label.appendChild(labelText);
-    label.appendChild(cardActions);
+    label.appendChild(menuBtn);
 
+    // 移除旧的 card-actions，改用弹出菜单
     const textarea = document.createElement('textarea');
     textarea.dataset.fieldKey = cardDef.key;
     textarea.placeholder = cardDef.placeholder;
@@ -219,21 +189,6 @@ const Content = (function() {
       }
     });
 
-    clearFieldBtn.addEventListener('click', () => {
-      const cardLabel = cardDef.label;
-      const msg = StringLoader.get('content.clearFieldConfirm', '确认清空卡片"{name}"的内容吗？').replace('{name}', cardLabel);
-      Modal.confirm(
-        StringLoader.get('content.clearFieldTitle', '清空此栏'),
-        msg,
-        () => {
-          textarea.value = '';
-          updatePrompt();
-          if (_onInputChange) _onInputChange();
-        },
-        { confirmText: StringLoader.get('content.clearField', '清空'), confirmClass: 'modal-btn-danger' }
-      );
-    });
-
     initCardResize(card, textarea, resizeHandle);
 
     // 拖拽手柄事件
@@ -241,6 +196,13 @@ const Content = (function() {
       e.preventDefault();
       e.stopPropagation();
       startDrag(card, e);
+    });
+
+    // 右键弹出卡片菜单
+    card.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showCardMenu(e, cardDef, textarea, fieldsData);
     });
 
     return card;
@@ -830,6 +792,106 @@ const Content = (function() {
       }
     });
     return allTextareas;
+  }
+
+  // 卡片右键/菜单按钮弹出菜单
+  let _cardMenu = null;
+
+  function showCardMenu(e, cardDef, textarea, fieldsData) {
+    hideCardMenu();
+
+    _cardMenu = document.createElement('div');
+    _cardMenu.className = 'card-context-menu';
+
+    // 定位在鼠标位置，但保持在视口内
+    let left = e.clientX;
+    let top = e.clientY;
+    const menuWidth = 140;
+    if (left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - 4;
+    _cardMenu.style.left = left + 'px';
+    _cardMenu.style.top = top + 'px';
+
+    const createItem = (text, action) => {
+      const item = document.createElement('button');
+      item.className = 'card-context-menu-item';
+      item.textContent = text;
+      item.addEventListener('click', () => {
+        hideCardMenu();
+        action();
+      });
+      return item;
+    };
+
+    // 重命名
+    _cardMenu.appendChild(createItem(
+      StringLoader.get('content.cardRename', '重命名'),
+      () => showRenameCardDialog(cardDef)
+    ));
+
+    // 清空
+    _cardMenu.appendChild(createItem(
+      StringLoader.get('content.clearField', '清空'),
+      () => {
+        const cardLabel = cardDef.label;
+        const msg = StringLoader.get('content.clearFieldConfirm', '确认清空卡片"{name}"的内容吗？').replace('{name}', cardLabel);
+        Modal.confirm(
+          StringLoader.get('content.clearFieldTitle', '清空此栏'),
+          msg,
+          () => {
+            textarea.value = '';
+            updatePrompt();
+            if (_onInputChange) _onInputChange();
+          },
+          { confirmText: StringLoader.get('content.clearField', '清空'), confirmClass: 'modal-btn-danger' }
+        );
+      }
+    ));
+
+    // 导出
+    _cardMenu.appendChild(createItem(
+      StringLoader.get('content.cardExport', '导出'),
+      () => exportCardToFile(cardDef, fieldsData)
+    ));
+
+    // 分隔线
+    const separator = document.createElement('div');
+    separator.className = 'card-context-menu-separator';
+    _cardMenu.appendChild(separator);
+
+    // 删除
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'card-context-menu-item card-context-menu-danger';
+    deleteBtn.textContent = StringLoader.get('content.cardDelete', '删除');
+    deleteBtn.addEventListener('click', () => {
+      hideCardMenu();
+      showDeleteCardDialog(cardDef);
+    });
+    _cardMenu.appendChild(deleteBtn);
+
+    document.body.appendChild(_cardMenu);
+
+    // 点击菜单外关闭
+    setTimeout(() => {
+      document.addEventListener('click', onDocumentClick, { once: true });
+    }, 0);
+  }
+
+  function hideCardMenu() {
+    if (_cardMenu) {
+      _cardMenu.remove();
+      _cardMenu = null;
+    }
+  }
+
+  function onDocumentClick(e) {
+    if (_cardMenu && !_cardMenu.contains(e.target)) {
+      hideCardMenu();
+    } else if (_cardMenu) {
+      // 点击在菜单内，重新绑定
+      setTimeout(() => {
+        document.addEventListener('click', onDocumentClick, { once: true });
+      }, 0);
+    }
   }
 
   // 导出单个卡片到文件

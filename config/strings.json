@@ -99,6 +99,7 @@
     "cardExport": "导出",
     "cardExportTitle": "导出此卡片",
     "cardExportSuccess": "卡片数据已成功导出",
+    "cardMenu": "卡片菜单",
     "cardDeleteConfirmTitle": "删除卡片",
     "cardDeleteConfirmMsg": "确认删除卡片\"{name}\"吗？删除后可通过\"恢复默认布局\"恢复。",
     "cardRenameConfirmTitle": "重命名卡片",

@@ -599,9 +599,22 @@ const Sidebar = (function() {
     });
 
     const safeName = task.name.replace(/[\\/:*?"<>|]/g, '_');
+    const now = new Date();
+    const ts = now.getFullYear()
+      + String(now.getMonth() + 1).padStart(2, '0')
+      + String(now.getDate()).padStart(2, '0')
+      + '_' + String(now.getHours()).padStart(2, '0')
+      + String(now.getMinutes()).padStart(2, '0')
+      + String(now.getSeconds()).padStart(2, '0');
+    let folderName = 'project';
+    try {
+      const folderPath = await window.electronAPI.getCurrentFolder();
+      if (folderPath) folderName = folderPath.split(/[\\/]/).pop();
+    } catch (e) {}
+    const defaultName = folderName + '_' + safeName + '_' + ts + '_' + Date.now() + '.md';
     try {
       const result = await window.electronAPI.exportFile({
-        defaultName: safeName + '.md',
+        defaultName: defaultName,
         content: content,
         filters: [{ name: 'Markdown', extensions: ['md'] }],
         title: StringLoader.get('import.exportTaskTitle', '导出当前任务数据')

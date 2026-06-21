@@ -813,7 +813,7 @@ const ImportManager = (function() {
       content += card.content + '\n';
     });
 
-    // 生成文件名
+    // 生成文件名：父级目录名_任务名_时间(精确到秒)_时间戳
     const now = new Date();
     const ts = String(now.getFullYear())
       + String(now.getMonth() + 1).padStart(2, '0')
@@ -822,7 +822,13 @@ const ImportManager = (function() {
       + String(now.getHours()).padStart(2, '0')
       + String(now.getMinutes()).padStart(2, '0')
       + String(now.getSeconds()).padStart(2, '0');
-    const fileName = task.name + '_' + ts + '.md';
+    const safeTaskName = task.name.replace(/[\\/:*?"<>|]/g, '_');
+    let folderName = 'project';
+    try {
+      const folderPath = await window.electronAPI.getCurrentFolder();
+      if (folderPath) folderName = folderPath.split(/[\\/]/).pop();
+    } catch (e) {}
+    const fileName = folderName + '_' + safeTaskName + '_' + ts + '_' + Date.now() + '.md';
 
     try {
       const result = await window.electronAPI.exportFile({

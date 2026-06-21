@@ -910,10 +910,26 @@ const Content = (function() {
     // 构建单卡片 demoMd3 格式
     const fileContent = '### ' + cardDef.label + '\n**内容**\n' + content + '\n';
 
-    const safeName = cardDef.label.replace(/[\\/:*?"<>|]/g, '_');
+    const safeCardName = cardDef.label.replace(/[\\/:*?"<>|]/g, '_');
+    const now = new Date();
+    const ts = now.getFullYear()
+      + String(now.getMonth() + 1).padStart(2, '0')
+      + String(now.getDate()).padStart(2, '0')
+      + '_' + String(now.getHours()).padStart(2, '0')
+      + String(now.getMinutes()).padStart(2, '0')
+      + String(now.getSeconds()).padStart(2, '0');
+    let folderName = 'project';
+    let taskName = 'task';
+    try {
+      const folderPath = await window.electronAPI.getCurrentFolder();
+      if (folderPath) folderName = folderPath.split(/[\\/]/).pop();
+      const activeTask = Sidebar.getActiveTask();
+      if (activeTask && activeTask.name) taskName = activeTask.name.replace(/[\\/:*?"<>|]/g, '_');
+    } catch (e) {}
+    const fileName = folderName + '_' + taskName + '_' + safeCardName + '_' + ts + '_' + Date.now() + '.md';
     try {
       const result = await window.electronAPI.exportFile({
-        defaultName: safeName + '.md',
+        defaultName: fileName,
         content: fileContent,
         filters: [{ name: 'Markdown', extensions: ['md'] }],
         title: StringLoader.get('content.cardExportTitle', '导出此卡片')

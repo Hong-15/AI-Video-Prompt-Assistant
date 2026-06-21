@@ -506,7 +506,7 @@ const App = (function() {
       });
     }
 
-    // 生成唯一文件名（时间戳 + UUID短码）
+    // 生成唯一文件名：父级目录名_时间(精确到秒)_时间戳
     const now = new Date();
     const ts = now.getFullYear()
       + String(now.getMonth() + 1).padStart(2, '0')
@@ -514,7 +514,8 @@ const App = (function() {
       + '_' + String(now.getHours()).padStart(2, '0')
       + String(now.getMinutes()).padStart(2, '0')
       + String(now.getSeconds()).padStart(2, '0');
-    const defaultName = StringLoader.get('dialog.exportFileName', '项目任务导出') + '_' + ts + '.' + ext;
+    const folderName = _currentFolder ? _currentFolder.split(/[\\/]/).pop() : 'project';
+    const defaultName = folderName + '_' + ts + '_' + Date.now() + '.' + ext;
 
     try {
       const result = await window.electronAPI.exportFile({

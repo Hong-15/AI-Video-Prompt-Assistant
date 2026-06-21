@@ -441,44 +441,68 @@ const App = (function() {
       return fieldLabelMap[fieldKey] || fieldKey;
     }
 
+    // 按标准顺序构建卡片列表（固定卡片 → 自定义卡片按 cardOrder）
+    function buildOrderedCards(task, labelMap) {
+      const cards = [];
+      const fieldKeys = new Set(Object.keys(task.fields || {}));
+      const hiddenFields = task.hiddenFields || [];
+      const customCards = task.customCards || [];
+      const cardOrder = task.cardOrder || [];
+
+      // 固定卡片按 fieldConfig 顺序，跳过隐藏的
+      Object.keys(labelMap).forEach(fieldKey => {
+        if (!hiddenFields.includes(fieldKey) && task.fields[fieldKey] && task.fields[fieldKey].trim()) {
+          cards.push({ name: labelMap[fieldKey] || fieldKey, content: task.fields[fieldKey] });
+          fieldKeys.delete(fieldKey);
+        }
+      });
+
+      // 自定义卡片按 cardOrder
+      const customMap = {};
+      customCards.forEach(cc => { customMap[cc.key] = cc.label; });
+      cardOrder.forEach(key => {
+        if (customMap[key] && task.fields[key] && task.fields[key].trim()) {
+          cards.push({ name: customMap[key], content: task.fields[key] });
+          fieldKeys.delete(key);
+        }
+      });
+
+      // 剩余未在 cardOrder 中的自定义卡片
+      fieldKeys.forEach(key => {
+        if (task.fields[key] && task.fields[key].trim() && customMap[key]) {
+          cards.push({ name: customMap[key], content: task.fields[key] });
+        }
+      });
+
+      return cards;
+    }
+
     let content = '';
     const ext = format === 'md' ? 'md' : 'txt';
 
     if (format === 'md') {
-      content = '# ' + StringLoader.get('dialog.exportFileName', '项目任务导出') + '\n\n';
-      content += '> ' + StringLoader.get('dialog.exportTime', '导出时间') + '：' + new Date().toLocaleString() + '\n';
-      content += '> ' + StringLoader.get('dialog.exportTaskCount', '任务总数') + '：' + data.tasks.length + '\n\n---\n\n';
-
+      // 标准导入格式：## 任务名 + **卡片名**：内容
       data.tasks.forEach((task, index) => {
-        content += '## ' + (index + 1) + '. ' + (task.name || StringLoader.get('dialog.unnamedTask', '未命名任务')) + '\n\n';
+        content += '## ' + (index + 1) + '. ' + (task.name || StringLoader.get('dialog.unnamedTask', '未命名任务')) + '\n';
         if (task.fields) {
-          Object.keys(task.fields).forEach(fieldKey => {
-            const val = task.fields[fieldKey];
-            if (val && val.trim()) {
-              content += `**${getFieldDisplayLabel(fieldKey)}**：${val}\n\n`;
-            }
+          const cards = buildOrderedCards(task, fieldLabelMap);
+          cards.forEach(card => {
+            content += '\n**' + card.name + '**：' + card.content + '\n';
           });
         }
-        content += '---\n\n';
+        if (index < data.tasks.length - 1) content += '\n';
       });
     } else {
-      content = StringLoader.get('dialog.exportFileName', '项目任务导出') + '\n';
-      content += StringLoader.get('dialog.exportTime', '导出时间') + '：' + new Date().toLocaleString() + '\n';
-      content += StringLoader.get('dialog.exportTaskCount', '任务总数') + '：' + data.tasks.length + '\n';
-      content += '='.repeat(50) + '\n\n';
-
+      // 标准导入格式（txt）：【任务名】 + 卡片名：内容
       data.tasks.forEach((task, index) => {
-        content += '【' + (index + 1) + '. ' + (task.name || StringLoader.get('dialog.unnamedTask', '未命名任务')) + '】\n';
-        content += `${'-'.repeat(40)}\n`;
+        content += '【' + (task.name || StringLoader.get('dialog.unnamedTask', '未命名任务')) + '】\n';
         if (task.fields) {
-          Object.keys(task.fields).forEach(fieldKey => {
-            const val = task.fields[fieldKey];
-            if (val && val.trim()) {
-              content += `${getFieldDisplayLabel(fieldKey)}：${val}\n`;
-            }
+          const cards = buildOrderedCards(task, fieldLabelMap);
+          cards.forEach(card => {
+            content += card.name + '：' + card.content + '\n';
           });
         }
-        content += `\n${'='.repeat(50)}\n\n`;
+        if (index < data.tasks.length - 1) content += '\n';
       });
     }
 

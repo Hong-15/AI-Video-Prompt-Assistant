@@ -28,6 +28,12 @@ const ImportManager = (function() {
       btn.classList.remove('import-btn-drag-over');
       handleButtonDrop(e);
     });
+
+    // 导出任务按钮
+    const exportBtn = document.getElementById('exportTaskBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', exportTask);
+    }
   }
 
   // 打开导入对话框
@@ -736,6 +742,108 @@ const ImportManager = (function() {
       if (typeof App !== 'undefined' && App.markDirty) App.markDirty();
     } else if (renameConflicts.length === 0) {
       Content.showToast(StringLoader.get('import.errorEmpty', '文件内容为空'));
+    }
+  }
+
+  // 导出当前任务数据（demoMd2 标准导入格式）
+  async function exportTask() {
+    const activeTask = Sidebar.getActiveTask();
+    if (!activeTask) {
+      Modal.show({
+        title: StringLoader.get('import.errorTitle', '提示'),
+        message: StringLoader.get('sidebar.noFolderPrompt', '请先打开一个工作文件夹'),
+        confirmText: StringLoader.get('modal.ok', '确定'),
+        showCancel: false
+      });
+      return;
+    }
+
+    const fieldConfig = Content.getFieldConfig ? Content.getFieldConfig() : [];
+    const task = Sidebar.getTasks().find(t => t.id === activeTask.id);
+    if (!task) return;
+
+    const fields = task.fields || {};
+    const hiddenFields = task.hiddenFields || [];
+    const customCards = task.customCards || [];
+    const fieldLabels = task.fieldLabels || {};
+    const cardOrder = task.cardOrder || [];
+
+    const cards = [];
+
+    // 收集固定卡片（按 fieldConfig 顺序，跳过隐藏的）
+    fieldConfig.forEach(field => {
+      if (hiddenFields.includes(field.key)) return;
+      if (fields[field.key] && fields[field.key].trim()) {
+        const label = fieldLabels[field.key] || field.label;
+        cards.push({ name: label, content: fields[field.key] });
+      }
+    });
+
+    // 按 cardOrder 收集自定义卡片
+    const customCardMap = {};
+    customCards.forEach(cc => {
+      if (fields[cc.key] && fields[cc.key].trim()) {
+        customCardMap[cc.key] = { name: cc.label, content: fields[cc.key] };
+      }
+    });
+    cardOrder.forEach(key => {
+      if (customCardMap[key]) {
+        cards.push(customCardMap[key]);
+        delete customCardMap[key];
+      }
+    });
+    // 剩余未在 cardOrder 中的自定义卡片追加到末尾
+    Object.values(customCardMap).forEach(card => cards.push(card));
+
+    if (cards.length === 0) {
+      Modal.show({
+        title: StringLoader.get('import.errorTitle', '提示'),
+        message: StringLoader.get('import.exportTaskEmpty', '当前任务没有卡片数据可导出'),
+        confirmText: StringLoader.get('modal.ok', '确定'),
+        showCancel: false
+      });
+      return;
+    }
+
+    // 构建 demoMd2 格式内容
+    let content = '## 1. ' + task.name + '\n';
+    cards.forEach(card => {
+      content += '\n### ' + card.name + '\n';
+      content += '**内容**\n';
+      content += card.content + '\n';
+    });
+
+    // 生成文件名
+    const now = new Date();
+    const ts = String(now.getFullYear())
+      + String(now.getMonth() + 1).padStart(2, '0')
+      + String(now.getDate()).padStart(2, '0')
+      + '_'
+      + String(now.getHours()).padStart(2, '0')
+      + String(now.getMinutes()).padStart(2, '0')
+      + String(now.getSeconds()).padStart(2, '0');
+    const fileName = task.name + '_' + ts + '.md';
+
+    try {
+      const result = await window.electronAPI.exportFile({
+        defaultName: fileName,
+        content: content,
+        filters: [{ name: 'Markdown', extensions: ['md'] }],
+        title: StringLoader.get('import.exportTaskTitle', '导出当前任务数据')
+      });
+
+      if (result.success) {
+        Content.showToast(StringLoader.get('import.exportTaskSuccess', '任务数据已成功导出'));
+      }
+    } catch (e) {
+      if (e.message !== 'cancelled') {
+        Modal.show({
+          title: '导出失败',
+          message: e.message || '导出时发生未知错误',
+          confirmText: StringLoader.get('modal.ok', '确定'),
+          showCancel: false
+        });
+      }
     }
   }
 

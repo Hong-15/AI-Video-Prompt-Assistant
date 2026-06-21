@@ -258,7 +258,7 @@ const Toolbar = (function() {
     if (elNewWindow) elNewWindow.textContent = StringLoader.get('menu.newWindow', '新建窗口');
 
     const elExport = document.getElementById('menuExport');
-    if (elExport) elExport.textContent = StringLoader.get('menu.export', '项目任务导出');
+    if (elExport) elExport.textContent = StringLoader.get('menu.export', '项目数据导出');
 
     const elExportMD = document.getElementById('menuExportMD');
     if (elExportMD) elExportMD.textContent = StringLoader.get('menu.exportMD', '导出为 Markdown');

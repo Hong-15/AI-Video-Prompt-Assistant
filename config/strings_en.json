@@ -12,7 +12,7 @@
     "newWindow": "New Window",
     "createProject": "New Project",
     "import": "Import Project Data",
-    "export": "Export Project Tasks",
+    "export": "Export Project Data",
     "exportMD": "Export as Markdown",
     "exportTXT": "Export as Text File",
     "layout": "Layout",
@@ -120,7 +120,7 @@
   },
   "dialog": {
     "selectFolder": "Select Working Folder",
-    "exportTitle": "Export Project Tasks",
+    "exportTitle": "Export Project Data",
     "exportSuccess": "Export Successful",
     "exportSuccessMsg": "File saved to: ",
     "exportFailed": "Export Failed",
@@ -129,7 +129,7 @@
     "exportTime": "Export Time",
     "exportTaskCount": "Total Tasks",
     "unnamedTask": "Unnamed Task",
-    "exportFileName": "Project Task Export",
+    "exportFileName": "Project Data Export",
     "markdownFile": "Markdown File",
     "textFile": "Text File",
     "importTitle": "Select Import File",
@@ -166,8 +166,12 @@
     "renameMessage": "The following cards conflict with existing cards. Please copy, rename them in the source file, and re-import:",
     "understand": "Understood",
     "copy": "Copy",
-    "copyFailed": "Copy failed",
-    "copySuccess": "Copied to clipboard"
+    "copyFailed": "Copy Failed",
+    "copySuccess": "Copied to Clipboard",
+    "exportTask": "Export Task",
+    "exportTaskTitle": "Export Current Task Data",
+    "exportTaskEmpty": "No card data to export in current task",
+    "exportTaskSuccess": "Task data exported successfully"
   },
   "status": {
     "saved": "Saved",

@@ -2226,9 +2226,17 @@ const App = (function() {
           tasks: [taskData],
           activeTaskId: taskId
         };
-        await window.electronAPI.initProjectData(result.path, dataToSave);
+        const initResult = await window.electronAPI.initProjectData(result.path, dataToSave);
+        if (!initResult) {
+          nameError.textContent = StringLoader.get('createProject.errorInitData', '初始化项目数据失败，请重试');
+          nameError.style.display = 'block';
+          return;
+        }
       } catch (e) {
         console.error('初始化项目数据失败:', e);
+        nameError.textContent = StringLoader.get('createProject.errorInitData', '初始化项目数据失败，请重试');
+        nameError.style.display = 'block';
+        return;
       }
 
       // 关闭模态窗口

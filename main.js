@@ -400,12 +400,11 @@ async function ensureProjectIcon(folderPath) {
     const oldIcon = path.join(folderPath, '.project-icon.ico');
     try { await fsPromises.unlink(oldIcon); } catch (_) {}
 
-    // Windows: desktop.ini / _icon.ico / userData.json 设为隐藏+系统，文件夹设为只读以启用图标
+    // Windows: desktop.ini / _icon.ico 设为隐藏+系统，文件夹设为只读以启用图标
+    // 注意：userData.json 不应该被隐藏，否则用户在资源管理器中看不到它
     try {
       await execAsync(`attrib +s +h "${iniPath}"`);
       await execAsync(`attrib +s +h "${icoPath}"`);
-      const jsonPath = path.join(folderPath, 'userData.json');
-      await execAsync(`attrib +s +h "${jsonPath}"`);
       await execAsync(`attrib -r "${folderPath}"`);
       await execAsync(`attrib +r "${folderPath}"`);
     } catch (_) {}
@@ -861,7 +860,7 @@ function setupIPC() {
   // 初始化项目数据（创建 userData.json）
   ipcMain.handle('init-project-data', async (event, folderPath, data) => {
     const result = await saveUserData(folderPath, data);
-    if (result) ensureProjectIcon(folderPath);
+    if (result) await ensureProjectIcon(folderPath);
     return result;
   });
 

@@ -405,6 +405,17 @@ body.window-zoom-out {
   border-color: var(--active30);
 }
 
+.task-item:focus {
+  outline: 2px solid var(--accent-color);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* 鼠标点击时不显示焦点框 */
+.task-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .task-item.drag-over {
   background: var(--active20);
   border-color: var(--accent);

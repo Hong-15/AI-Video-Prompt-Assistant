@@ -55,21 +55,37 @@
     "enabled": false,
     "description": "展开/隐藏侧边栏"
   },
-  "focusNextInput": {
+  "focusNextTask": {
     "key": "ArrowDown",
     "ctrl": true,
     "shift": false,
     "alt": false,
     "enabled": true,
-    "description": "聚焦下一个输入框"
+    "description": "聚焦下一个任务"
   },
-  "focusPrevInput": {
+  "focusPrevTask": {
     "key": "ArrowUp",
     "ctrl": true,
     "shift": false,
     "alt": false,
     "enabled": true,
-    "description": "聚焦上一个输入框"
+    "description": "聚焦上一个任务"
+  },
+  "focusNextInput": {
+    "key": "ArrowRight",
+    "ctrl": true,
+    "shift": false,
+    "alt": false,
+    "enabled": true,
+    "description": "聚焦下一个卡片输入框"
+  },
+  "focusPrevInput": {
+    "key": "ArrowLeft",
+    "ctrl": true,
+    "shift": false,
+    "alt": false,
+    "enabled": true,
+    "description": "聚焦上一个卡片输入框"
   },
   "openFolder": {
     "key": "",

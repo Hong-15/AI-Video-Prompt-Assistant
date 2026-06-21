@@ -364,6 +364,12 @@ const App = (function() {
       case 'toggleSidebar':
         if (Sidebar.toggle) Sidebar.toggle();
         break;
+      case 'focusNextTask':
+        if (Sidebar.focusNextTask) Sidebar.focusNextTask();
+        break;
+      case 'focusPrevTask':
+        if (Sidebar.focusPrevTask) Sidebar.focusPrevTask();
+        break;
       case 'focusNextInput':
         if (Content.focusNextInput) Content.focusNextInput();
         break;
@@ -1228,8 +1234,10 @@ const App = (function() {
     copyPreview: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "复制预览内容" },
     addCustomCard: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "添加自定义卡片" },
     toggleSidebar: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "展开/隐藏侧边栏" },
-    focusNextInput: { key: "ArrowDown", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个输入框" },
-    focusPrevInput: { key: "ArrowUp", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个输入框" },
+    focusNextTask: { key: "ArrowDown", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个任务" },
+    focusPrevTask: { key: "ArrowUp", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个任务" },
+    focusNextInput: { key: "ArrowRight", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个卡片输入框" },
+    focusPrevInput: { key: "ArrowLeft", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个卡片输入框" },
     openFolder: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "打开文件夹" },
     exportMD: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为 Markdown" },
     exportTXT: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为文本文件" }

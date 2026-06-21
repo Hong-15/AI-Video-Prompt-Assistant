@@ -39,6 +39,27 @@ const Content = (function() {
       addCustomCardBtn.addEventListener('click', handleAddCustomCard);
     }
 
+    // Tab 只聚焦卡片输入框
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const activeEl = document.activeElement;
+      // 只拦截卡片 textarea 中的 Tab
+      if (!activeEl || activeEl.tagName !== 'TEXTAREA' || !activeEl.closest('.field-card')) return;
+      e.preventDefault();
+      const textareas = getVisibleTextareas();
+      if (textareas.length === 0) return;
+      const idx = textareas.indexOf(activeEl);
+      if (e.shiftKey) {
+        // Shift+Tab：上一张，第一张回绕到最后
+        if (idx <= 0) textareas[textareas.length - 1].focus();
+        else textareas[idx - 1].focus();
+      } else {
+        // Tab：下一张，最后一张回绕到第一张
+        if (idx === -1 || idx >= textareas.length - 1) textareas[0].focus();
+        else textareas[idx + 1].focus();
+      }
+    });
+
     // 窗口大小变化时重新布局瀑布流
     window.addEventListener('resize', debounce(layoutMasonry, 150));
   }
@@ -752,32 +773,28 @@ const Content = (function() {
     _dragState = null;
   }
 
-  // 聚焦下一个输入框
+  // 聚焦下一个输入框（最后一张回绕到第一张）
   function focusNextInput() {
     const allTextareas = getVisibleTextareas();
     if (allTextareas.length === 0) return;
     const activeEl = document.activeElement;
     const currentIdx = allTextareas.indexOf(activeEl);
-    if (currentIdx === -1) {
+    if (currentIdx === -1 || currentIdx >= allTextareas.length - 1) {
       allTextareas[0].focus();
-      return;
-    }
-    if (currentIdx < allTextareas.length - 1) {
+    } else {
       allTextareas[currentIdx + 1].focus();
     }
   }
 
-  // 聚焦上一个输入框
+  // 聚焦上一个输入框（第一张回绕到最后）
   function focusPrevInput() {
     const allTextareas = getVisibleTextareas();
     if (allTextareas.length === 0) return;
     const activeEl = document.activeElement;
     const currentIdx = allTextareas.indexOf(activeEl);
-    if (currentIdx === -1) {
+    if (currentIdx <= 0) {
       allTextareas[allTextareas.length - 1].focus();
-      return;
-    }
-    if (currentIdx > 0) {
+    } else {
       allTextareas[currentIdx - 1].focus();
     }
   }

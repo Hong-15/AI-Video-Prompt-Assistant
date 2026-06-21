@@ -270,6 +270,7 @@ const Sidebar = (function() {
       const item = document.createElement('div');
       item.className = 'task-item' + (task.id === _activeTaskId ? ' active' : '');
       item.dataset.taskId = task.id;
+      item.tabIndex = 0;
 
       const indexSpan = document.createElement('span');
       indexSpan.className = 'task-index';
@@ -293,6 +294,14 @@ const Sidebar = (function() {
       item.addEventListener('click', (e) => {
         if (e.target === deleteBtn) return;
         setActiveTask(task.id);
+      });
+
+      // 聚焦后按 Enter 等同于点击
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          setActiveTask(task.id);
+        }
       });
 
       // 双击重命名
@@ -634,6 +643,53 @@ const Sidebar = (function() {
     }
   }
 
+  function exportTaskToFileEnd() {} // placeholder
+
+  // Ctrl+↑/↓：聚焦上/下一个任务项
+  function focusNextTask() {
+    const items = document.querySelectorAll('.task-item');
+    if (items.length === 0) return;
+    const activeEl = document.activeElement;
+    let idx = -1;
+    items.forEach((el, i) => { if (el === activeEl || el.contains(activeEl)) idx = i; });
+    // 没有任务项被聚焦时，从当前 active 的任务项出发
+    if (idx === -1) {
+      items.forEach((el, i) => { if (el.classList.contains('active')) idx = i; });
+    }
+    let nextIdx = (idx === -1 || idx >= items.length - 1) ? 0 : idx + 1;
+    const taskId = _tasks[nextIdx]?.id;
+    if (!taskId) return;
+    setActiveTask(taskId);
+    requestAnimationFrame(() => {
+      const newItems = document.querySelectorAll('.task-item');
+      if (newItems[nextIdx]) {
+        newItems[nextIdx].focus({ preventScroll: true });
+      }
+    });
+  }
+
+  function focusPrevTask() {
+    const items = document.querySelectorAll('.task-item');
+    if (items.length === 0) return;
+    const activeEl = document.activeElement;
+    let idx = -1;
+    items.forEach((el, i) => { if (el === activeEl || el.contains(activeEl)) idx = i; });
+    // 没有任务项被聚焦时，从当前 active 的任务项出发
+    if (idx === -1) {
+      items.forEach((el, i) => { if (el.classList.contains('active')) idx = i; });
+    }
+    let prevIdx = (idx <= 0) ? items.length - 1 : idx - 1;
+    const taskId = _tasks[prevIdx]?.id;
+    if (!taskId) return;
+    setActiveTask(taskId);
+    requestAnimationFrame(() => {
+      const newItems = document.querySelectorAll('.task-item');
+      if (newItems[prevIdx]) {
+        newItems[prevIdx].focus({ preventScroll: true });
+      }
+    });
+  }
+
   return {
     init,
     addTask,
@@ -654,6 +710,8 @@ const Sidebar = (function() {
     setActiveTask,
     showDeleteConfirm,
     render,
+    focusNextTask,
+    focusPrevTask,
     // 切换侧边栏展开/收起
     toggle: () => {
       const sidebar = document.getElementById('sidebar');

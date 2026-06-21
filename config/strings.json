@@ -19,7 +19,9 @@
     "quit": "退出",
     "help": "帮助",
     "tutorial": "教学",
-    "tutorialPlaceholder": "暂未开放"
+    "tutorialPlaceholder": "暂未开放",
+    "closeWindow": "关闭此窗口",
+    "quitApp": "退出软件"
   },
   "toolbar": {
     "toggleSidebar": "[|]",

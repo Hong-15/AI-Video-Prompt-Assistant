@@ -96,6 +96,18 @@ const Toolbar = (function() {
       if (_onCreateProject) _onCreateProject();
     });
 
+    // 关闭当前窗口
+    document.getElementById('menuCloseWindow').addEventListener('click', () => {
+      hideAllDropdowns();
+      window.electronAPI.closeCurrentWindow();
+    });
+
+    // 退出应用
+    document.getElementById('menuQuitApp').addEventListener('click', () => {
+      hideAllDropdowns();
+      window.electronAPI.quitApp();
+    });
+
     // ========== 布局菜单 ==========
     const menuLayoutBtn = document.getElementById('menuLayoutBtn');
     const menuLayoutDropdown = document.getElementById('menuLayoutDropdown');
@@ -277,6 +289,12 @@ const Toolbar = (function() {
 
     const elCreateProject = document.getElementById('menuCreateProject');
     if (elCreateProject) elCreateProject.textContent = StringLoader.get('menu.createProject', '新建项目');
+
+    const elCloseWindow = document.getElementById('menuCloseWindow');
+    if (elCloseWindow) elCloseWindow.textContent = StringLoader.get('menu.closeWindow', '关闭此窗口');
+
+    const elQuitApp = document.getElementById('menuQuitApp');
+    if (elQuitApp) elQuitApp.textContent = StringLoader.get('menu.quitApp', '退出软件');
 
     // 布局菜单项
     const elResetCurrent = document.getElementById('menuResetCurrentLayout');

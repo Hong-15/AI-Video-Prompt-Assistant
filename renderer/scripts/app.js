@@ -69,62 +69,107 @@ const App = (function() {
   async function loadTheme() {
     try {
       const config = await window.electronAPI.getThemeConfig();
-      applyTheme(config.theme || 'default');
+      applyTheme(config.theme || 'default', config.colors || null);
     } catch (e) {
-      applyTheme('default');
+      applyTheme('default', null);
     }
   }
 
-  function applyTheme(theme) {
+  /**
+   * 将 camelCase 字符串转换为 kebab-case，用于生成 CSS 变量名
+   * @param {string} str - camelCase 字符串
+   * @returns {string} kebab-case 字符串
+   */
+  function camelToKebab(str) {
+    return str.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+  }
+
+  /**
+   * 将主题色板注入为 :root CSS 自定义属性，实现配置驱动的样式
+   * @param {Object} palette - 当前主题颜色配置
+   */
+  function injectThemeCssVariables(palette) {
+    const cssText = Object.entries(palette)
+      .map(([key, value]) => `  --${camelToKebab(key)}: ${value};`)
+      .join('\n');
+
+    let style = document.getElementById('theme-css-variables');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'theme-css-variables';
+      document.head.appendChild(style);
+    }
+    style.textContent = `:root {\n${cssText}\n}`;
+  }
+
+  /**
+   * 应用指定主题：注入对应色板 CSS 变量并同步 html 属性
+   * @param {string} theme - 主题标识：dark/light/system/default
+   * @param {Object|null} colors - 包含 dark/light 色板的配置对象
+   */
+  function applyTheme(theme, colors) {
     const html = document.documentElement;
+    const isLight = theme === 'light' ||
+      (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+    const palette = colors?.[isLight ? 'light' : 'dark'] || colors?.dark || {};
+
+    // 注入配置驱动的 CSS 变量，避免样式硬编码
+    injectThemeCssVariables(palette);
+
     if (theme === 'light') {
       html.setAttribute('data-theme', 'light');
-      html.style.background = '#f5f5f7';
     } else if (theme === 'dark') {
       html.removeAttribute('data-theme');
-      html.style.background = '#0b0b1a';
     } else if (theme === 'system') {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        html.setAttribute('data-theme', 'light');
-        html.style.background = '#f5f5f7';
-      } else {
-        html.removeAttribute('data-theme');
-        html.style.background = '#0b0b1a';
-      }
-      listenSystemTheme();
+      listenSystemTheme(colors);
     } else {
       html.removeAttribute('data-theme');
-      html.style.background = '#0b0b1a';
       removeSystemThemeListener();
     }
   }
 
   let _systemThemeQuery = null;
-  function listenSystemTheme() {
+  let _systemThemeHandler = null;
+  /**
+   * 监听系统主题变化，动态切换并注入对应色板变量
+   * @param {Object} colors - 包含 dark/light 色板的配置对象
+   */
+  function listenSystemTheme(colors) {
     removeSystemThemeListener();
+    const darkPalette = colors?.dark || {};
+    const lightPalette = colors?.light || {};
     _systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    _systemThemeQuery.addEventListener('change', (e) => {
+    _systemThemeHandler = (e) => {
       if (e.matches) {
         document.documentElement.removeAttribute('data-theme');
-        document.documentElement.style.background = '#0b0b1a';
+        injectThemeCssVariables(darkPalette);
       } else {
         document.documentElement.setAttribute('data-theme', 'light');
-        document.documentElement.style.background = '#f5f5f7';
+        injectThemeCssVariables(lightPalette);
       }
-    });
+    };
+    _systemThemeQuery.addEventListener('change', _systemThemeHandler);
   }
 
   function removeSystemThemeListener() {
-    if (_systemThemeQuery) {
-      _systemThemeQuery.removeEventListener('change', () => {});
-      _systemThemeQuery = null;
+    if (_systemThemeQuery && _systemThemeHandler) {
+      _systemThemeQuery.removeEventListener('change', _systemThemeHandler);
     }
+    _systemThemeQuery = null;
+    _systemThemeHandler = null;
   }
 
   async function handleThemeChange(theme) {
-    applyTheme(theme);
+    let colors = null;
     try {
-      await window.electronAPI.saveThemeConfig({ theme: theme });
+      const existing = await window.electronAPI.getThemeConfig();
+      colors = existing.colors || null;
+    } catch (e) {
+      colors = null;
+    }
+    applyTheme(theme, colors);
+    try {
+      await window.electronAPI.saveThemeConfig({ theme: theme, colors: colors });
     } catch (e) {
       console.error('保存主题配置失败:', e);
     }
@@ -1050,10 +1095,12 @@ const App = (function() {
     helpBtn.addEventListener('click', async () => {
       try {
         const urlsConfig = await window.electronAPI.getUrlsConfig();
-        const officialUrl = urlsConfig.official || Object.values(urlsConfig)[0] || 'https://gitee.com/spaceHong/AI-Video-Prompt-Assistant';
-        window.electronAPI.openExternalUrl(officialUrl);
+        const officialUrl = urlsConfig.official || Object.values(urlsConfig)[0];
+        if (officialUrl) {
+          window.electronAPI.openExternalUrl(officialUrl);
+        }
       } catch (e) {
-        window.electronAPI.openExternalUrl('https://gitee.com/spaceHong/AI-Video-Prompt-Assistant');
+        console.error('打开官方帮助链接失败:', e);
       }
     });
     actions.appendChild(helpBtn);

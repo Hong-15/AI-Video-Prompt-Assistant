@@ -20,7 +20,9 @@
     "quit": "Quit",
     "help": "Help",
     "tutorial": "Tutorial",
-    "tutorialPlaceholder": "Coming Soon"
+    "tutorialPlaceholder": "Coming Soon",
+    "closeWindow": "Close This Window",
+    "quitApp": "Quit Software"
   },
   "toolbar": {
     "toggleSidebar": "[|]",

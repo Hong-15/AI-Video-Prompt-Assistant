@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   winMinimize: () => ipcRenderer.send('win-minimize'),
   winMaximize: () => ipcRenderer.send('win-maximize'),
   winClose: () => ipcRenderer.send('win-close'),
+  closeCurrentWindow: () => ipcRenderer.send('close-current-window'),
+  quitApp: () => ipcRenderer.send('quit-app'),
 
   // 监听窗口最大化状态变化
   onWindowMaximized: (callback) => {

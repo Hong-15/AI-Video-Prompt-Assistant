@@ -6,6 +6,9 @@
   --bg-dark: #0e0e1c;
   --bg-toolbar: #0a0a18;
   --bg-sidebar: rgba(14, 14, 28, 0.9);
+  --html-bg: #0b0b1a;
+  --body-gradient-start: #0b0b1a;
+  --body-gradient-end: #16162b;
   --border-color: rgba(255, 255, 255, 0.06);
   --border-active: #6366f1;
   --text-primary: #e0e0e0;
@@ -29,11 +32,11 @@
 }
 
 html {
-  background: #0b0b1a;
+  background: var(--html-bg);
 }
 
 body {
-  background: linear-gradient(135deg, #0b0b1a 0%, #16162b 100%);
+  background: linear-gradient(135deg, var(--body-gradient-start) 0%, var(--body-gradient-end) 100%);
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   color: var(--text-primary);
   height: 100vh;
@@ -110,14 +113,14 @@ body.window-zoom-out {
 .toolbar-title {
   font-size: 15px;
   font-weight: 600;
-  background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue), var(--accent-green));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   letter-spacing: 0.5px;
   margin: 0 0 0 12px;
   line-height: 1.2;
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
 }
 
 .toolbar-right {
@@ -129,7 +132,7 @@ body.window-zoom-out {
 .folder-path {
   font-size: 10px;
   color: var(--text-muted);
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 400px;
@@ -145,12 +148,12 @@ body.window-zoom-out {
   cursor: pointer;
   font-size: 13px;
   transition: background var(--transition-speed);
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   -webkit-app-region: no-drag;
 }
 
 .toolbar-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-color8);
 }
 
 .toggle-btn {
@@ -171,12 +174,12 @@ body.window-zoom-out {
   top: 100%;
   left: 0;
   min-width: 160px;
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 4px 0;
   z-index: 200;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--shadow-color);
   backdrop-filter: blur(12px);
   -webkit-app-region: no-drag;
 }
@@ -201,7 +204,7 @@ body.window-zoom-out {
 }
 
 .dropdown-item:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--active20);
 }
 
 .dropdown-item-disabled {
@@ -237,12 +240,12 @@ body.window-zoom-out {
 }
 
 .win-ctrl-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white10);
 }
 
 .win-close-btn:hover {
-  background: #e81123;
-  color: #fff;
+  background: var(--close-hover-bg);
+  color: var(--close-hover-color);
 }
 
 .dropdown-separator {
@@ -261,12 +264,12 @@ body.window-zoom-out {
 .dropdown-submenu {
   position: absolute;
   min-width: 180px;
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 4px 0;
   z-index: 210;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--shadow-color);
   backdrop-filter: blur(12px);
 }
 
@@ -313,15 +316,15 @@ body.window-zoom-out {
 .sidebar-add-label {
   font-size: 13px;
   color: var(--text-secondary);
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
 }
 
 .add-task-btn {
   width: 31px;
   height: 31px;
   border-radius: 50%;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--active20);
+  border: 1px solid var(--active30);
   color: var(--accent-blue);
   font-size: 20px;
   cursor: pointer;
@@ -332,7 +335,7 @@ body.window-zoom-out {
 }
 
 .add-task-btn:hover {
-  background: rgba(99, 102, 241, 0.4);
+  background: var(--active40);
   border-color: var(--border-active);
   transform: scale(1.05);
 }
@@ -344,16 +347,24 @@ body.window-zoom-out {
 }
 
 .task-list::-webkit-scrollbar {
-  width: 4px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
 
 .task-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
 }
 
 .task-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.task-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 .task-item {
@@ -369,13 +380,13 @@ body.window-zoom-out {
 }
 
 .task-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--white5);
+  border-color: var(--border-color8);
 }
 
 .task-item.active {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: var(--active15);
+  border-color: var(--active30);
 }
 
 .task-index {
@@ -393,7 +404,7 @@ body.window-zoom-out {
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
 }
 
 .task-item.active .task-name {
@@ -419,7 +430,7 @@ body.window-zoom-out {
 
 .task-delete-btn:hover {
   color: var(--danger);
-  background: rgba(248, 113, 113, 0.15);
+  background: var(--danger15);
 }
 
 .sidebar-footer {
@@ -442,7 +453,7 @@ body.window-zoom-out {
 }
 
 .resize-handle:hover {
-  background: rgba(99, 102, 241, 0.3);
+  background: var(--active30);
 }
 
 /* ========== 底部状态栏 ========== */
@@ -478,7 +489,7 @@ body.window-zoom-out {
 .status-item {
   font-size: 11px;
   color: var(--text-muted);
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -490,11 +501,11 @@ body.window-zoom-out {
 }
 
 .status-save-indicator.saved {
-  color: #34d399;
+  color: var(--accent-green);
 }
 
 .status-save-indicator.unsaved {
-  color: #fbbf24;
+  color: var(--accent-warning);
 }
 
 .status-folder-path {
@@ -538,16 +549,24 @@ body.window-zoom-out {
 }
 
 .content-area::-webkit-scrollbar {
-  width: 6px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
 
 .content-area::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
 }
 
 .content-area::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.content-area::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* ========== 空状态 ========== */
@@ -579,13 +598,13 @@ body.window-zoom-out {
 .workspace {
   max-width: 1300px;
   width: 100%;
-  background: rgba(18, 18, 36, 0.65);
+  background: var(--workspace-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 2.5rem;
   padding: 2.5rem 2.2rem;
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 30px 60px -15px var(--shadow-color70);
+  border: 1px solid var(--workspace-border);
 }
 
 /* 输入卡片网格 */
@@ -600,15 +619,15 @@ body.window-zoom-out {
   border-radius: 1.5rem;
   padding: 1.3rem 1.1rem;
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--white4);
   transition: border var(--transition-speed), box-shadow var(--transition-speed), left 0.3s ease, top 0.3s ease;
   display: flex;
   flex-direction: column;
 }
 
 .field-card:hover {
-  border-color: rgba(99, 102, 241, 0.25);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  border-color: var(--active25);
+  box-shadow: 0 8px 18px var(--shadow-color40);
 }
 
 .field-card label {
@@ -655,12 +674,12 @@ body.window-zoom-out {
 }
 
 .card-rename-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--active20);
   color: var(--accent);
 }
 
 .card-delete-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--danger20);
   color: var(--danger);
 }
 
@@ -679,7 +698,7 @@ body.window-zoom-out {
 }
 
 .clear-field-btn:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--danger15);
   color: var(--danger);
   z-index: 2;
 }
@@ -688,15 +707,37 @@ body.window-zoom-out {
   flex: 1;
   min-height: 60px;
   background: var(--bg-dark);
-  border: 1px solid #2e2e48;
+  border: 1px solid var(--input-border);
   border-radius: 0.9rem;
   padding: 0.8rem 0.9rem;
-  color: #e2e2f0;
+  color: var(--text-primary);
   font-family: 'JetBrains Mono', 'Fira Code', 'PingFang SC', monospace;
   font-size: 0.9rem;
   resize: none;
   transition: border 0.2s;
   line-height: 1.5;
+}
+
+/* 卡片文本域滚动条 */
+.field-card textarea::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+.field-card textarea::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
+}
+
+.field-card textarea::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.field-card textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* 卡片底部拖动把手 */
@@ -705,14 +746,14 @@ body.window-zoom-out {
   cursor: ns-resize;
   margin: 0.4rem 0.2rem 0;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white4);
   transition: background 0.2s;
   flex-shrink: 0;
 }
 
 .card-resize-handle:hover,
 .field-card:hover .card-resize-handle {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--active20);
 }
 
 /* 卡片拖拽手柄 */
@@ -737,7 +778,7 @@ body.window-zoom-out {
 .card-drag-handle:hover,
 .field-card:hover .card-drag-handle {
   color: var(--accent);
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--active15);
 }
 
 .card-drag-handle:active {
@@ -755,7 +796,7 @@ body.window-zoom-out {
   z-index: 9999;
   pointer-events: none;
   opacity: 0.88;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 32px var(--shadow-color);
   border: 2px solid var(--accent);
   transform-origin: 0 0;
   transition: none;
@@ -764,21 +805,21 @@ body.window-zoom-out {
 .field-card textarea:focus {
   outline: none;
   border-color: var(--border-active);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px var(--active20);
 }
 
 .field-card textarea::placeholder {
-  color: #4a4a66;
+  color: var(--placeholder-color);
   font-style: italic;
   font-size: 0.85rem;
 }
 
 /* 输出区域 */
 .output-area {
-  background: rgba(12, 12, 24, 0.7);
+  background: var(--output-area-bg);
   border-radius: 1.5rem;
   padding: 1.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
   margin-bottom: 1.5rem;
 }
 
@@ -791,13 +832,13 @@ body.window-zoom-out {
 
 .output-label {
   font-weight: 600;
-  color: #a5a5c0;
+  color: var(--text-secondary);
 }
 
 .copy-btn {
-  background: #2d2d4a;
+  background: var(--input-bg);
   border: none;
-  color: #d0d0e0;
+  color: var(--text-secondary);
   padding: 0.5rem 1.3rem;
   border-radius: 2rem;
   cursor: pointer;
@@ -809,26 +850,26 @@ body.window-zoom-out {
 }
 
 .copy-btn:hover {
-  background: #3e3e62;
+  background: var(--button-hover-bg);
 }
 
 .prompt-box {
-  background: #050510;
+  background: var(--tooltip-bg);
   border-radius: 1rem;
   padding: 1.5rem;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.95rem;
   line-height: 1.7;
-  color: #d4d4e4;
+  color: var(--text-secondary);
   word-break: break-word;
   min-height: 100px;
-  border: 1px solid #2a2a3c;
-  white-space: pre-wrap;
+  border: 1px solid var(--border-color);
+  var(--close-hover-color)-space: pre-wrap;
 }
 
 .prompt-box:empty::before {
   content: "在上方输入框中填写描述，组合后的提示词将自动显示在这里...";
-  color: #555;
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -841,8 +882,8 @@ body.window-zoom-out {
 
 .clear-btn {
   background: transparent;
-  border: 1px solid #4b4b6a;
-  color: #c0c0d0;
+  border: 1px solid var(--input-focus-border);
+  color: var(--text-secondary);
   padding: 0.6rem 1.6rem;
   border-radius: 2rem;
   cursor: pointer;
@@ -851,8 +892,8 @@ body.window-zoom-out {
 }
 
 .clear-btn:hover {
-  background: #2a2a42;
-  color: white;
+  background: var(--bg-secondary);
+  color: var(--close-hover-color);
 }
 
 /* ========== 自定义对话框 ========== */
@@ -862,7 +903,7 @@ body.window-zoom-out {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -871,13 +912,13 @@ body.window-zoom-out {
 }
 
 .modal-box {
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
   min-width: 320px;
   max-width: 420px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 40px var(--shadow-color60);
 }
 
 .modal-title {
@@ -890,7 +931,7 @@ body.window-zoom-out {
 .modal-input {
   width: 100%;
   background: var(--bg-dark);
-  border: 1px solid #2e2e48;
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 10px 14px;
   color: var(--text-primary);
@@ -916,7 +957,7 @@ body.window-zoom-out {
   color: var(--text-muted);
   margin-bottom: 16px;
   padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white3);
   border-radius: 6px;
   border-left: 3px solid var(--border-active);
 }
@@ -944,37 +985,37 @@ body.window-zoom-out {
 }
 
 .modal-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--white5);
 }
 
 .modal-btn-confirm {
   background: var(--border-active);
-  color: white;
+  color: var(--close-hover-color);
 }
 
 .modal-btn-confirm:hover {
-  background: #4f46e5;
+  background: var(--button-primary);
 }
 
 .modal-btn-danger {
   background: var(--danger);
-  color: white;
+  color: var(--close-hover-color);
 }
 
 .modal-btn-danger:hover {
-  background: #ef4444;
+  background: var(--danger-solid);
 }
 
 /* ========== 右键菜单 ========== */
 .context-menu {
   position: fixed;
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 4px 0;
   min-width: 140px;
   z-index: 1001;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--shadow-color);
 }
 
 .context-menu-item {
@@ -991,7 +1032,7 @@ body.window-zoom-out {
 }
 
 .context-menu-item:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--active20);
 }
 
 .context-menu-separator {
@@ -1014,13 +1055,13 @@ body.window-zoom-out {
 
 .context-submenu {
   position: absolute;
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 4px 0;
   min-width: 200px;
   z-index: 1002;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--shadow-color);
 }
 
 /* ========== 响应式 ========== */
@@ -1064,8 +1105,8 @@ body.window-zoom-out {
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: #e74c3c;
-  color: white;
+  background: var(--danger-hover);
+  color: var(--close-hover-color);
   padding: 10px 24px;
   border-radius: 8px;
   font-size: 13px;
@@ -1080,121 +1121,6 @@ body.window-zoom-out {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ========== 主题：浅色模式 ========== */
-html[data-theme="light"] {
-  background: #f5f5f7;
-  --bg-primary: #f5f5f7;
-  --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.9);
-  --bg-dark: #e8e8ec;
-  --bg-toolbar: #f0f0f3;
-  --bg-sidebar: rgba(245, 245, 247, 0.95);
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-active: #6366f1;
-  --text-primary: #1a1a2e;
-  --text-secondary: #555570;
-  --text-muted: #9999aa;
-  --accent-purple: #7c3aed;
-  --accent-blue: #2563eb;
-  --accent-green: #059669;
-  --danger: #dc2626;
-}
-
-html[data-theme="light"] body {
-  background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%);
-}
-
-html[data-theme="light"] .toolbar {
-  background: #f0f0f3;
-}
-
-html[data-theme="light"] .status-bar {
-  background: #f0f0f3;
-}
-
-html[data-theme="light"] .dropdown-menu,
-html[data-theme="light"] .dropdown-submenu {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-html[data-theme="light"] .dropdown-item:hover {
-  background: rgba(99, 102, 241, 0.1);
-}
-
-html[data-theme="light"] .sidebar {
-  background: rgba(245, 245, 247, 0.95);
-}
-
-html[data-theme="light"] .workspace {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-html[data-theme="light"] .field-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-html[data-theme="light"] .field-card textarea {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
-}
-
-html[data-theme="light"] .card-drag-handle:hover,
-html[data-theme="light"] .field-card:hover .card-drag-handle {
-  background: rgba(99, 102, 241, 0.12);
-}
-
-html[data-theme="light"] .card-drag-ghost {
-  border-color: rgba(99, 102, 241, 0.8);
-}
-
-html[data-theme="light"] .output-area {
-  background: rgba(245, 245, 247, 0.8);
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-html[data-theme="light"] .prompt-box {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
-}
-
-html[data-theme="light"] .modal-box {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-html[data-theme="light"] .modal-input {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
-}
-
-html[data-theme="light"] .context-menu {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-html[data-theme="light"] .context-submenu {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-}
-
-html[data-theme="light"] .context-menu-item:hover {
-  background: rgba(99, 102, 241, 0.1);
-}
-
-html[data-theme="light"] .task-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-html[data-theme="light"] .task-item.active {
-  background: rgba(99, 102, 241, 0.1);
-}
-
 /* ========== 快捷键设置弹窗 ========== */
 .shortcut-settings-overlay {
   position: fixed;
@@ -1202,7 +1128,7 @@ html[data-theme="light"] .task-item.active {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1211,7 +1137,7 @@ html[data-theme="light"] .task-item.active {
 }
 
 .shortcut-settings-box {
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 28px;
@@ -1219,7 +1145,7 @@ html[data-theme="light"] .task-item.active {
   max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 40px var(--shadow-color60);
 }
 
 .shortcut-settings-title {
@@ -1248,7 +1174,7 @@ html[data-theme="light"] .task-item.active {
   padding: 10px 12px;
   font-size: 13px;
   color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--white3);
 }
 
 .shortcut-settings-table .shortcut-desc {
@@ -1259,7 +1185,7 @@ html[data-theme="light"] .task-item.active {
 .shortcut-key-input {
   width: 80px;
   background: var(--bg-dark);
-  border: 1px solid #2e2e48;
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   padding: 6px 10px;
   color: var(--text-primary);
@@ -1290,14 +1216,14 @@ html[data-theme="light"] .task-item.active {
 }
 
 html[data-theme="light"] .shortcut-settings-box {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
+  background: var(--close-hover-color);
+  border-color: var(--border-color10);
 }
 
 html[data-theme="light"] .shortcut-key-input {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--bg-tertiary);
 }
 
 /* ========== 工作区头部（自定义卡片按钮） ========== */
@@ -1310,21 +1236,21 @@ html[data-theme="light"] .shortcut-key-input {
 }
 
 .add-custom-card-btn {
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--active15);
+  border: 1px solid var(--active30);
   color: var(--accent-purple);
   font-size: 0.8rem;
   padding: 0.3rem 0.8rem;
   border-radius: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
 }
 
 .add-custom-card-btn:hover {
-  background: rgba(99, 102, 241, 0.25);
-  border-color: rgba(99, 102, 241, 0.5);
-  color: #c4b5fd;
+  background: var(--active25);
+  border-color: var(--active50);
+  color: var(--accent-purple-light);
 }
 
 /* ========== 更多设置弹窗 ========== */
@@ -1334,7 +1260,7 @@ html[data-theme="light"] .shortcut-key-input {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-bg);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1352,7 +1278,7 @@ html[data-theme="light"] .shortcut-key-input {
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px var(--shadow-color);
   animation: slideUp 0.2s ease;
   overflow: hidden;
 }
@@ -1389,7 +1315,7 @@ html[data-theme="light"] .shortcut-key-input {
 }
 
 .more-settings-close-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--danger20);
   color: var(--danger);
 }
 
@@ -1424,12 +1350,12 @@ html[data-theme="light"] .shortcut-key-input {
 
 .more-settings-menu-item:hover {
   color: var(--text-primary);
-  background: rgba(99, 102, 241, 0.06);
+  background: var(--active06);
 }
 
 .more-settings-menu-item.active {
   color: var(--accent);
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--active10);
   border-left-color: var(--accent);
   font-weight: 500;
 }
@@ -1438,6 +1364,27 @@ html[data-theme="light"] .shortcut-key-input {
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+}
+
+.more-settings-content::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+.more-settings-content::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
+}
+
+.more-settings-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.more-settings-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 .more-settings-panel {
@@ -1474,7 +1421,7 @@ html[data-theme="light"] .shortcut-key-input {
 
 .more-settings-option:hover {
   border-color: var(--border-active);
-  background: rgba(99, 102, 241, 0.05);
+  background: var(--active05);
 }
 
 .more-settings-option input[type="radio"] {
@@ -1570,7 +1517,7 @@ html[data-theme="light"] .shortcut-key-input {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-color8);
   border: 1px solid var(--border-color);
   color: var(--text-muted);
   font-size: 1rem;
@@ -1585,13 +1532,13 @@ html[data-theme="light"] .shortcut-key-input {
 
 .more-settings-help-btn:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--close-hover-color);
   border-color: var(--accent);
 }
 
 html[data-theme="light"] .more-settings-help-btn {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: #d4d4d8;
+  background: var(--black05);
+  border-color: var(--input-border);
 }
 
 /* URL列表 */
@@ -1611,7 +1558,7 @@ html[data-theme="light"] .more-settings-help-btn {
 
 .more-settings-url-label {
   color: var(--text-muted);
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   flex-shrink: 0;
 }
 
@@ -1634,7 +1581,7 @@ html[data-theme="light"] .more-settings-help-btn {
 
 .more-settings-shortcut-table td {
   padding: 0.4rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--white3);
   vertical-align: middle;
 }
 
@@ -1645,7 +1592,7 @@ html[data-theme="light"] .more-settings-help-btn {
 .more-settings-shortcut-record-input {
   width: 140px;
   padding: 0.3rem 0.5rem;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
   border: 1px solid var(--border-color);
   border-radius: 0.3rem;
   color: var(--text-primary);
@@ -1678,42 +1625,42 @@ html[data-theme="light"] .more-settings-help-btn {
 
 /* 浅色主题适配 */
 html[data-theme="light"] .more-settings-box {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
+  background: var(--close-hover-color);
+  border-color: var(--border-color10);
 }
 
 html[data-theme="light"] .more-settings-option {
-  border-color: rgba(0, 0, 0, 0.1);
+  border-color: var(--border-color10);
 }
 
 html[data-theme="light"] .more-settings-option:hover {
-  background: rgba(99, 102, 241, 0.05);
+  background: var(--active05);
 }
 
 html[data-theme="light"] .more-settings-lang-select {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
+  background: var(--input-bg);
+  border-color: var(--input-border);
 }
 
 html[data-theme="light"] .more-settings-shortcut-record-input {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--bg-tertiary);
 }
 
 html[data-theme="light"] .more-settings-menu-item:hover {
-  background: rgba(99, 102, 241, 0.05);
+  background: var(--active05);
 }
 
 html[data-theme="light"] .more-settings-menu-item.active {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--active08);
 }
 
 /* ========== 创建新项目模态窗口 ========== */
 .create-project-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 18, 25, 0.55);
+  background: var(--create-project-overlay-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 10000;
@@ -1724,14 +1671,14 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-dialog {
-  background: #1a1a2e;
+  background: var(--bg-tertiary);
   border-radius: 18px;
   width: 100%;
   max-width: 620px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px var(--shadow-color);
   overflow: hidden;
 }
 
@@ -1742,7 +1689,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   justify-content: space-between;
   padding: 20px 24px 16px;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .create-project-header-left {
@@ -1755,7 +1702,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   width: 42px;
   height: 42px;
   border-radius: 10px;
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--active15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1800,7 +1747,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-close-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--danger20);
   color: var(--danger);
 }
 
@@ -1820,17 +1767,24 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-body::-webkit-scrollbar {
-  width: 5px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
 
 .create-project-body::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 10px;
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
 }
 
 .create-project-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.create-project-body::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* 表单组 */
@@ -1881,15 +1835,15 @@ html[data-theme="light"] .more-settings-menu-item.active {
   width: 100%;
   height: 44px;
   padding: 0 38px 0 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--border-color8);
   border-radius: 10px;
   font-size: 0.85rem;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white4);
   transition: all 0.15s;
   cursor: pointer;
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   user-select: none;
@@ -1898,8 +1852,8 @@ html[data-theme="light"] .more-settings-menu-item.active {
 
 .create-project-dir-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px var(--active20);
+  background: var(--border-color);
 }
 
 .create-project-dir-input::placeholder {
@@ -1920,14 +1874,14 @@ html[data-theme="light"] .more-settings-menu-item.active {
 .create-project-browse-btn {
   height: 44px;
   padding: 0 16px;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--border-color8);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white4);
   color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   transition: all 0.15s;
   display: flex;
   align-items: center;
@@ -1936,8 +1890,8 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-browse-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--border-color8);
+  border-color: var(--border-color15);
   color: var(--text-primary);
 }
 
@@ -1951,19 +1905,19 @@ html[data-theme="light"] .more-settings-menu-item.active {
   width: 100%;
   height: 44px;
   padding: 0 14px;
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--border-color8);
   border-radius: 10px;
   font-size: 0.9rem;
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--white4);
   transition: all 0.15s;
   outline: none;
 }
 
 .create-project-name-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px var(--active20);
+  background: var(--border-color);
 }
 
 .create-project-name-input::placeholder {
@@ -1988,12 +1942,12 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-template-card {
-  border: 2px solid rgba(255, 255, 255, 0.06);
+  border: 2px solid var(--border-color);
   border-radius: 14px;
   padding: 18px 16px;
   cursor: pointer;
   transition: all 0.25s;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--white3);
   position: relative;
   user-select: none;
   display: flex;
@@ -2002,15 +1956,15 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-template-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color12);
+  box-shadow: 0 2px 8px var(--shadow-color40);
+  background: var(--white5);
 }
 
 .create-project-template-card.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2), 0 4px 16px rgba(0, 0, 0, 0.4);
-  background: rgba(99, 102, 241, 0.08);
+  box-shadow: 0 0 0 4px var(--active20), 0 4px 16px var(--shadow-color40);
+  background: var(--active08);
 }
 
 .create-project-template-card-header {
@@ -2030,23 +1984,23 @@ html[data-theme="light"] .more-settings-menu-item.active {
 }
 
 .create-project-template-icon.empty {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
   color: var(--text-muted);
 }
 
 .create-project-template-icon.default {
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--active15);
   color: var(--accent);
 }
 
 .create-project-template-card.selected .create-project-template-icon.empty {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--white10);
   color: var(--text-secondary);
 }
 
 .create-project-template-card.selected .create-project-template-icon.default {
-  background: rgba(99, 102, 241, 0.25);
-  color: #a5b4fc;
+  background: var(--active25);
+  color: var(--accent-purple-light);
 }
 
 .create-project-template-icon svg {
@@ -2069,7 +2023,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   padding: 2px 8px;
   border-radius: 20px;
   letter-spacing: 0.02em;
-  background: rgba(52, 211, 153, 0.15);
+  background: var(--success15);
   color: var(--accent-green);
   margin-left: auto;
 }
@@ -2088,7 +2042,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 2px solid var(--border-color15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2102,7 +2056,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   transform: scale(1);
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--close-hover-color);
 }
 
 .create-project-template-check svg {
@@ -2118,7 +2072,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-color);
 }
 
 .create-project-btn {
@@ -2133,7 +2087,7 @@ html[data-theme="light"] .more-settings-menu-item.active {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  white-space: nowrap;
+  var(--close-hover-color)-space: nowrap;
   user-select: none;
 }
 
@@ -2145,134 +2099,134 @@ html[data-theme="light"] .more-settings-menu-item.active {
 .create-project-btn-cancel {
   background: transparent;
   color: var(--text-secondary);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--border-color8);
 }
 
 .create-project-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
   color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-color15);
 }
 
 .create-project-btn-primary {
   background: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  color: var(--close-hover-color);
+  box-shadow: 0 2px 8px var(--active30);
 }
 
 .create-project-btn-primary:hover {
-  background: #7c7ff6;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  background: var(--button-primary-hover);
+  box-shadow: 0 4px 16px var(--active40);
   transform: translateY(-1px);
 }
 
 .create-project-btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--border-color);
   color: var(--text-secondary);
-  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--border-color8);
 }
 
 .create-project-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--border-color12);
   color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-color15);
 }
 
 /* 浅色主题适配 */
 html[data-theme="light"] .create-project-dialog {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--close-hover-color);
+  border: 1px solid var(--border-color8);
 }
 
 html[data-theme="light"] .create-project-header {
-  border-bottom-color: rgba(0, 0, 0, 0.06);
+  border-bottom-color: var(--border-color8);
 }
 
 html[data-theme="light"] .create-project-icon-wrapper {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--active10);
 }
 
 html[data-theme="light"] .create-project-dir-input {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--bg-tertiary);
 }
 
 html[data-theme="light"] .create-project-dir-input:focus {
-  background: #ffffff;
+  background: var(--close-hover-color);
 }
 
 html[data-theme="light"] .create-project-browse-btn {
-  background: #ffffff;
-  border-color: #d4d4d8;
+  background: var(--close-hover-color);
+  border-color: var(--input-border);
 }
 
 html[data-theme="light"] .create-project-browse-btn:hover {
-  background: #f0f0f3;
-  border-color: #b0b0b8;
+  background: var(--input-bg);
+  border-color: var(--input-hover-border);
 }
 
 html[data-theme="light"] .create-project-name-input {
-  background: #ffffff;
-  border-color: #d4d4d8;
-  color: #1a1a2e;
+  background: var(--close-hover-color);
+  border-color: var(--input-border);
+  color: var(--bg-tertiary);
 }
 
 html[data-theme="light"] .create-project-name-input:focus {
-  background: #ffffff;
+  background: var(--close-hover-color);
 }
 
 html[data-theme="light"] .create-project-template-card {
-  border-color: #d4d4d8;
-  background: #ffffff;
+  border-color: var(--input-border);
+  background: var(--close-hover-color);
 }
 
 html[data-theme="light"] .create-project-template-card:hover {
-  border-color: #b0b0b8;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border-color: var(--input-hover-border);
+  box-shadow: 0 1px 4px var(--border-color8);
 }
 
 html[data-theme="light"] .create-project-template-card.selected {
   border-color: var(--accent);
-  background: rgba(99, 102, 241, 0.04);
+  background: var(--active04);
 }
 
 html[data-theme="light"] .create-project-template-icon.empty {
-  background: #f0f0f3;
-  color: #999;
+  background: var(--input-bg);
+  color: var(--text-muted);
 }
 
 html[data-theme="light"] .create-project-template-icon.default {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--active10);
 }
 
 html[data-theme="light"] .create-project-template-check {
-  border-color: #d4d4d8;
+  border-color: var(--input-border);
 }
 
 html[data-theme="light"] .create-project-footer {
-  border-top-color: rgba(0, 0, 0, 0.06);
+  border-top-color: var(--border-color8);
 }
 
 html[data-theme="light"] .create-project-btn-cancel {
-  border-color: #d4d4d8;
-  color: #666;
+  border-color: var(--input-border);
+  color: var(--text-muted);
 }
 
 html[data-theme="light"] .create-project-btn-cancel:hover {
-  background: #f0f0f3;
-  color: #1a1a2e;
+  background: var(--input-bg);
+  color: var(--bg-tertiary);
 }
 
 html[data-theme="light"] .create-project-btn-secondary {
-  background: #f0f0f3;
-  border-color: #d4d4d8;
-  color: #4a4a6a;
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-secondary);
 }
 
 html[data-theme="light"] .create-project-btn-secondary:hover {
-  background: #e4e4e7;
-  color: #1a1a2e;
+  background: var(--bg-dark);
+  color: var(--bg-tertiary);
 }
 
 /* 响应式 */

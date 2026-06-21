@@ -252,7 +252,7 @@ const Toolbar = (function() {
 
     // 文件菜单项
     const elOpenFolder = document.getElementById('menuOpenFolder');
-    if (elOpenFolder) elOpenFolder.textContent = StringLoader.get('menu.openFolder', '打开文件夹');
+    if (elOpenFolder) elOpenFolder.textContent = StringLoader.get('menu.openFolder', '打开项目');
 
     const elNewWindow = document.getElementById('menuNewWindow');
     if (elNewWindow) elNewWindow.textContent = StringLoader.get('menu.newWindow', '新建窗口');
@@ -285,10 +285,10 @@ const Toolbar = (function() {
 
     // 布局菜单项
     const elResetCurrent = document.getElementById('menuResetCurrentLayout');
-    if (elResetCurrent) elResetCurrent.textContent = StringLoader.get('menu.resetCurrentLayout', '当前任务工作台布局恢复默认');
+    if (elResetCurrent) elResetCurrent.textContent = StringLoader.get('menu.resetCurrentLayout', '当前任务项恢复默认');
 
     const elResetAll = document.getElementById('menuResetAllLayout');
-    if (elResetAll) elResetAll.textContent = StringLoader.get('menu.resetAllLayout', '全局任务工作台布局恢复默认');
+    if (elResetAll) elResetAll.textContent = StringLoader.get('menu.resetAllLayout', '全局任务项恢复默认');
 
     // 设置菜单项
     const elGlobalSearch = document.getElementById('menuGlobalSearch');

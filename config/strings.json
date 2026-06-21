@@ -5,7 +5,7 @@
   },
   "menu": {
     "file": "文件",
-    "openFolder": "打开文件夹",
+    "openFolder": "打开项目",
     "openFolderThis": "此窗口打开",
     "openFolderNew": "新窗口打开",
     "newWindow": "新建窗口",
@@ -15,8 +15,8 @@
     "exportMD": "导出为 Markdown",
     "exportTXT": "导出为 文本文件",
     "layout": "布局",
-    "resetCurrentLayout": "当前任务工作台布局恢复默认",
-    "resetAllLayout": "全局任务工作台布局恢复默认",
+    "resetCurrentLayout": "当前任务项恢复默认",
+    "resetAllLayout": "全局任务项恢复默认",
     "quit": "退出",
     "help": "帮助",
     "tutorial": "教学",
@@ -61,7 +61,7 @@
     "reorderPlaceholder": "请输入位置序号",
     "defaultTaskName": "新任务",
     "noFolderPrompt": "请先打开一个工作文件夹，数据将保存在该文件夹中",
-    "openFolderAction": "打开文件夹",
+    "openFolderAction": "打开项目",
     "taskCount": "共 {count} 个任务",
     "contextMenu": {
       "reorder": "重构帧位置",
@@ -90,7 +90,7 @@
     "dragHandleTitle": "拖动排序",
     "emptyPlaceholder": "在上方输入框中填写描述，组合后的提示词将自动显示在这里...",
     "emptyAlert": "请先填写至少一个维度",
-    "emptyStateNoFolder": "请先通过\"文件 → 打开文件夹\"选择一个工作目录",
+    "emptyStateNoFolder": "请先通过\"文件 → 打开项目\"选择一个工作目录",
     "emptyStateNoTask": "暂无任务，点击左侧 + 新建一个提示词任务",
     "cardRename": "重命名",
     "cardRenameTitle": "重命名此卡片",
@@ -141,7 +141,9 @@
     "allFiles": "所有文件",
     "importFailed": "导入失败",
     "confirmImportProject": "将导入 {count} 个任务，当前项目中的任务不会被清空。确认导入？",
-    "importSuccess": "成功导入 {count} 个任务"
+    "importSuccess": "成功导入 {count} 个任务",
+    "invalidProject": "项目不合法，请打开合法项目",
+    "invalidProjectDetail": "所选文件夹中未找到有效的 userData.json 文件，或数据格式不正确。"
   },
   "import": {
     "importData": "导入数据",

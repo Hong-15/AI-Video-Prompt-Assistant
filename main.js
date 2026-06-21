@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage, shell } = require('electron');
 const path = require('path');
-const fsPromises = require('fs').promises;
+const fs = require('fs');
+const fsPromises = fs.promises;
 const os = require('os');
 const util = require('util');
 const { exec } = require('child_process');
@@ -266,7 +267,18 @@ async function handleOpenFolder(win) {
   });
 
   if (!result.canceled && result.filePaths.length > 0) {
-    currentFolderPath = result.filePaths[0];
+    const folderPath = result.filePaths[0];
+    if (!validateProject(folderPath)) {
+      await dialog.showMessageBox(win, {
+        type: 'warning',
+        title: strings.dialog?.invalidProject || '项目不合法',
+        message: strings.dialog?.invalidProject || '项目不合法，请打开合法项目',
+        detail: strings.dialog?.invalidProjectDetail || '所选文件夹中未找到有效的 userData.json 文件，或数据格式不正确。',
+        buttons: ['确定']
+      });
+      return;
+    }
+    currentFolderPath = folderPath;
     win.webContents.send('folder-opened', currentFolderPath);
   }
 }
@@ -279,12 +291,38 @@ async function handleOpenFolderNew() {
   });
 
   if (!result.canceled && result.filePaths.length > 0) {
+    const folderPath = result.filePaths[0];
+    if (!validateProject(folderPath)) {
+      await dialog.showMessageBox({
+        type: 'warning',
+        title: strings.dialog?.invalidProject || '项目不合法',
+        message: strings.dialog?.invalidProject || '项目不合法，请打开合法项目',
+        detail: strings.dialog?.invalidProjectDetail || '所选文件夹中未找到有效的 userData.json 文件，或数据格式不正确。',
+        buttons: ['确定']
+      });
+      return;
+    }
     const newWin = createWindow();
-    currentFolderPath = result.filePaths[0];
+    currentFolderPath = folderPath;
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', currentFolderPath);
     });
     newWin.show();
+  }
+}
+
+// 验证项目文件夹是否合法（必须有可用的 userData.json）
+function validateProject(folderPath) {
+  try {
+    const filePath = path.join(folderPath, 'userData.json');
+    const stat = fs.statSync(filePath);
+    if (!stat.isFile()) return false;
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const data = JSON.parse(raw);
+    // 必须有 tasks 数组
+    return data && Array.isArray(data.tasks);
+  } catch (e) {
+    return false;
   }
 }
 
@@ -530,7 +568,18 @@ function setupIPC() {
       properties: ['openDirectory']
     });
     if (!result.canceled && result.filePaths.length > 0) {
-      currentFolderPath = result.filePaths[0];
+      const folderPath = result.filePaths[0];
+      if (!validateProject(folderPath)) {
+        await dialog.showMessageBox(mainWindow, {
+          type: 'warning',
+          title: strings.dialog?.invalidProject || '项目不合法',
+          message: strings.dialog?.invalidProject || '项目不合法，请打开合法项目',
+          detail: strings.dialog?.invalidProjectDetail || '所选文件夹中未找到有效的 userData.json 文件，或数据格式不正确。',
+          buttons: ['确定']
+        });
+        return null;
+      }
+      currentFolderPath = folderPath;
       return currentFolderPath;
     }
     return null;

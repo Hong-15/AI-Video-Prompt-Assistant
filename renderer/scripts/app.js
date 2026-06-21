@@ -1238,7 +1238,7 @@ const App = (function() {
     focusPrevTask: { key: "ArrowUp", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个任务" },
     focusNextInput: { key: "ArrowRight", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个卡片输入框" },
     focusPrevInput: { key: "ArrowLeft", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个卡片输入框" },
-    openFolder: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "打开文件夹" },
+    openFolder: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "打开项目" },
     exportMD: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为 Markdown" },
     exportTXT: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为文本文件" }
   };
@@ -1549,31 +1549,6 @@ const App = (function() {
       });
     });
     shortcutActions.appendChild(resetShortcutBtn);
-
-    const saveShortcutBtn = document.createElement('button');
-    saveShortcutBtn.className = 'modal-btn modal-btn-confirm';
-    saveShortcutBtn.textContent = StringLoader.get('modal.save', '保存');
-    saveShortcutBtn.addEventListener('click', async () => {
-      const newCfg = {};
-      shortcutKeys.forEach(key => {
-        const inp = shortcutInputs[key];
-        if (inp) {
-          newCfg[key] = {
-            ...inp.cfg,
-            enabled: inp.enabledCheck.checked,
-            description: _shortcutCfg[key].description
-          };
-        }
-      });
-      try {
-        await window.electronAPI.saveShortcutsConfig(newCfg);
-        _shortcutCfg = newCfg;
-        rebindShortcutKeys();
-      } catch (e) {
-        console.error('保存快捷键配置失败:', e);
-      }
-    });
-    shortcutActions.appendChild(saveShortcutBtn);
     panelShortcuts.appendChild(shortcutActions);
 
     content.appendChild(panelShortcuts);
@@ -1891,6 +1866,23 @@ const App = (function() {
         await window.electronAPI.saveSettings({ closeBehavior: _currentCloseBehavior });
         if (langChanged) {
           await window.electronAPI.saveLanguage(_currentLanguage);
+        }
+        // 也保存快捷键设置
+        if (shortcutInputs) {
+          const newCfg = {};
+          Object.keys(_shortcutCfg).forEach(key => {
+            const inp = shortcutInputs[key];
+            if (inp) {
+              newCfg[key] = {
+                ...inp.cfg,
+                enabled: inp.enabledCheck.checked,
+                description: _shortcutCfg[key].description
+              };
+            }
+          });
+          await window.electronAPI.saveShortcutsConfig(newCfg);
+          _shortcutCfg = newCfg;
+          rebindShortcutKeys();
         }
       } catch (e) {
         console.error('保存设置失败:', e);

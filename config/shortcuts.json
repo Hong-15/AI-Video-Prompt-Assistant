@@ -12,7 +12,7 @@
     "ctrl": true,
     "shift": false,
     "alt": false,
-    "enabled": false,
+    "enabled": true,
     "description": "新建任务"
   },
   "deleteTask": {
@@ -93,7 +93,7 @@
     "shift": false,
     "alt": false,
     "enabled": false,
-    "description": "打开文件夹"
+    "description": "打开项目"
   },
   "exportMD": {
     "key": "",

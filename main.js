@@ -29,6 +29,8 @@ let currentFolderPath = null;
 let tray = null;
 let closeBehavior = 'exit'; // 'exit' | 'tray' | 'taskbar'
 let isRestarting = false; // 重启标志，跳过 before-quit 数据保存
+let isDarkTheme = true; // 是否暗色主题
+let showDebounceTimer = null; // 显示防抖
 
 // 加载设置
 function loadSettings() {
@@ -41,6 +43,62 @@ function loadSettings() {
   } catch (e) {
     console.error('加载设置失败:', e);
   }
+}
+
+// 加载主题配置，判断是否为暗色主题
+function loadTheme() {
+  const themePath = path.join(__dirname, 'config', 'theme.json');
+  try {
+    if (fs.existsSync(themePath)) {
+      const themeConfig = JSON.parse(fs.readFileSync(themePath, 'utf-8'));
+      isDarkTheme = themeConfig.theme !== 'light';
+    }
+  } catch (e) {
+    console.error('加载主题配置失败:', e);
+  }
+}
+
+// 等待渲染进程完成一次 paint 后再显示窗口
+function showAfterPaint(win) {
+  if (!win || win.isDestroyed()) return;
+  let shown = false;
+  win.webContents.once('paint', () => {
+    if (shown) return;
+    shown = true;
+    setTimeout(() => {
+      if (win && !win.isDestroyed()) {
+        win.show();
+        win.focus();
+      }
+    }, 30);
+  });
+  // 兜底：即使 paint 没触发，200ms 后也显示
+  setTimeout(() => {
+    if (win && !win.isDestroyed() && !win.isVisible()) {
+      win.show();
+      win.focus();
+    }
+  }, 200);
+}
+
+// 防抖显示窗口，防止快速点击导致 WM_ERASEBKGND / WM_PAINT 消息堆积
+function debouncedShowWindow(win) {
+  if (!win || win.isDestroyed()) return;
+  if (showDebounceTimer) {
+    clearTimeout(showDebounceTimer);
+  }
+  showDebounceTimer = setTimeout(() => {
+    if (win && !win.isDestroyed()) {
+      if (isDarkTheme) {
+        win.setBackgroundColor('#00000000');
+        showAfterPaint(win);
+      } else {
+        win.show();
+        win.focus();
+      }
+    }
+    showDebounceTimer = null;
+  }, 300);
 }
 
 // 保存设置
@@ -63,20 +121,23 @@ function createWindow(parentFolderPath) {
     minHeight: 600,
     title: strings.app?.windowTitle || 'AI提示词助手',
     icon: path.join(__dirname, 'assets', 'H.jpg'),
-    backgroundColor: '#0b0b1a',
+    backgroundColor: '#00000000',
+    transparent: true,
     frame: false,
     autoHideMenuBar: true,
+    hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      backgroundThrottling: false
+      backgroundThrottling: false,
+      offscreen: false
     },
     show: false
   });
 
-  // 显式设置背景色，避免 show:false 窗口首次显示时 GPU 表面为白色
-  win.setBackgroundColor('#0b0b1a');
+  // 显式设置透明背景，由 HTML 负责背景绘制
+  win.setBackgroundColor('#00000000');
 
   // 转发窗口最大化/取消最大化状态到渲染进程
   win.on('maximize', () => {
@@ -88,9 +149,9 @@ function createWindow(parentFolderPath) {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // 窗口首帧就绪即显示（body 被 visibility:hidden 锁定，等 JS 初始化完成后解锁）
+  // 等首帧真正绘制完成后再显示窗口
   win.once('ready-to-show', () => {
-    win.show();
+    showAfterPaint(win);
   });
 
   // 窗口关闭前，通知渲染进程保存数据（非重启场景）
@@ -537,10 +598,7 @@ function createTray() {
     {
       label: strings.toolbar?.about || '显示窗口',
       click: () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
+        debouncedShowWindow(mainWindow);
       }
     },
     { type: 'separator' },
@@ -558,11 +616,7 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 
   tray.on('double-click', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setBackgroundColor('#0b0b1a');
-      mainWindow.show();
-      mainWindow.focus();
-    }
+    debouncedShowWindow(mainWindow);
   });
 }
 
@@ -572,10 +626,10 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding', 'true');
 
 app.whenReady().then(() => {
   loadSettings();
+  loadTheme();
   buildMenu();
   setupIPC();
   mainWindow = createWindow();
-  mainWindow.show();
 });
 
 // 应用退出前强制保存（兜底，防止 close 事件未触发）
@@ -599,6 +653,5 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow();
-    mainWindow.show();
   }
 });

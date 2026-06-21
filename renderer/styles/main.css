@@ -41,6 +41,7 @@ body {
   display: flex;
   flex-direction: column;
   user-select: none;
+  contain: layout style paint;
 }
 
 /* ========== 工具栏 ========== */
@@ -240,6 +241,8 @@ body {
   flex: 1;
   overflow: hidden;
   position: relative;
+  background: var(--bg-primary);
+  contain: layout style paint;
 }
 
 /* ========== 侧边栏 ========== */
@@ -496,6 +499,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  background: var(--bg-primary);
 }
 
 .content-area::-webkit-scrollbar {

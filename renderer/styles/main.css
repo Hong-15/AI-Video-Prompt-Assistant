@@ -1333,6 +1333,13 @@ html[data-theme="light"] .shortcut-key-input {
   color: var(--bg-tertiary);
 }
 
+/* ========== 工作区拖拽导入视觉反馈 ========== */
+.workspace.workspace-drag-over {
+  outline: 3px dashed var(--accent);
+  outline-offset: -4px;
+  background: var(--active10);
+}
+
 /* ========== 工作区头部（自定义卡片按钮） ========== */
 .workspace-header {
   display: flex;

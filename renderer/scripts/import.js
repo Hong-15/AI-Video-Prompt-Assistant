@@ -1,33 +1,71 @@
 // 卡片数据导入模块
-// 负责工作台"导入数据"按钮：选择/拖拽导入 .md/.txt 卡片数据
+// 负责工作台"导入数据"按钮 + 工作区拖拽 + 弹窗：选择/拖拽导入 .md/.txt 卡片数据
 
 const ImportManager = (function() {
   let _dialog = null;
   let _dragCounter = 0;
+  let _workspaceDragCounter = 0;
 
-  // 初始化导入按钮
+  // 初始化导入按钮 + 工作区拖拽
   function init() {
     const btn = document.getElementById('importDataBtn');
-    if (!btn) return;
 
-    btn.addEventListener('click', openDialog);
+    // --- 导入按钮拖拽 ---
+    if (btn) {
+      btn.addEventListener('click', openDialog);
 
-    // 拖拽文件到按钮上也能触发导入
-    btn.addEventListener('dragenter', (e) => {
-      e.preventDefault();
-      btn.classList.add('import-btn-drag-over');
-    });
-    btn.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });
-    btn.addEventListener('dragleave', () => {
-      btn.classList.remove('import-btn-drag-over');
-    });
-    btn.addEventListener('drop', (e) => {
-      e.preventDefault();
-      btn.classList.remove('import-btn-drag-over');
-      handleButtonDrop(e);
-    });
+      btn.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.classList.add('import-btn-drag-over');
+      });
+      btn.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      btn.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.classList.remove('import-btn-drag-over');
+      });
+      btn.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.classList.remove('import-btn-drag-over');
+        handleDropFile(e);
+      });
+    }
+
+    // --- 整个工作区拖拽导入 ---
+    const workspace = document.getElementById('workspace');
+    if (workspace) {
+      workspace.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        _workspaceDragCounter++;
+        workspace.classList.add('workspace-drag-over');
+      });
+      workspace.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+      workspace.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        _workspaceDragCounter--;
+        if (_workspaceDragCounter <= 0) {
+          _workspaceDragCounter = 0;
+          workspace.classList.remove('workspace-drag-over');
+        }
+      });
+      workspace.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        _workspaceDragCounter = 0;
+        workspace.classList.remove('workspace-drag-over');
+        handleDropFile(e);
+      });
+    }
 
     // 导出任务按钮
     const exportBtn = document.getElementById('exportTaskBtn');
@@ -166,7 +204,7 @@ const ImportManager = (function() {
     }
   }
 
-  // 拖拽导入（弹窗内的拖拽区域）
+  // 统一拖拽导入入口（按钮 / 工作区 / 弹窗）
   function handleDrop(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
@@ -176,8 +214,8 @@ const ImportManager = (function() {
     readDroppedFile(file, () => closeDialog());
   }
 
-  // 拖拽导入（拖到按钮上）
-  function handleButtonDrop(e) {
+  // 拖拽导入（按钮 / 工作区）
+  function handleDropFile(e) {
     const dt = e.dataTransfer;
     const files = dt.files;
     if (files.length === 0) return;

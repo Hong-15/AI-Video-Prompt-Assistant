@@ -24,9 +24,9 @@
     "description": "删除当前任务"
   },
   "clearAll": {
-    "key": "",
-    "ctrl": false,
-    "shift": false,
+    "key": "A",
+    "ctrl": true,
+    "shift": true,
     "alt": false,
     "enabled": false,
     "description": "清空所有输入"

@@ -70,7 +70,8 @@
       "insertAboveEmpty": "在上方插入空模板任务",
       "insertAboveDefault": "在上方插入默认模板任务",
       "insertBelowEmpty": "在下方插入空模板任务",
-      "insertBelowDefault": "在下方插入默认模板任务"
+      "insertBelowDefault": "在下方插入默认模板任务",
+      "exportTask": "导出任务"
     }
   },
   "content": {
@@ -95,6 +96,9 @@
     "cardRenameTitle": "重命名此卡片",
     "cardDelete": "删除",
     "cardDeleteTitle": "删除此卡片",
+    "cardExport": "导出",
+    "cardExportTitle": "导出此卡片",
+    "cardExportSuccess": "卡片数据已成功导出",
     "cardDeleteConfirmTitle": "删除卡片",
     "cardDeleteConfirmMsg": "确认删除卡片\"{name}\"吗？删除后可通过\"恢复默认布局\"恢复。",
     "cardRenameConfirmTitle": "重命名卡片",

@@ -71,7 +71,8 @@
       "insertAboveEmpty": "Insert Empty Template Above",
       "insertAboveDefault": "Insert Default Template Above",
       "insertBelowEmpty": "Insert Empty Template Below",
-      "insertBelowDefault": "Insert Default Template Below"
+      "insertBelowDefault": "Insert Default Below",
+      "exportTask": "Export Task"
     }
   },
   "content": {
@@ -96,6 +97,9 @@
     "cardRenameTitle": "Rename this card",
     "cardDelete": "Delete",
     "cardDeleteTitle": "Delete this card",
+    "cardExport": "Export",
+    "cardExportTitle": "Export this card",
+    "cardExportSuccess": "Card data exported successfully",
     "cardDeleteConfirmTitle": "Delete Card",
     "cardDeleteConfirmMsg": "Are you sure you want to delete card \"{name}\"? You can restore it via \"Reset Default Layout\".",
     "cardRenameConfirmTitle": "Rename Card",

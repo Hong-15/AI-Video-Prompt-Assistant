@@ -437,6 +437,14 @@ const Sidebar = (function() {
       showRenameDialog(task);
     });
 
+    const exportTaskItem = document.createElement('button');
+    exportTaskItem.className = 'context-menu-item';
+    exportTaskItem.textContent = StringLoader.get('sidebar.contextMenu.exportTask', '导出任务');
+    exportTaskItem.addEventListener('click', () => {
+      hideContextMenu();
+      exportTaskToFile(task);
+    });
+
     // 分隔线
     const separator = document.createElement('div');
     separator.className = 'context-menu-separator';
@@ -475,6 +483,7 @@ const Sidebar = (function() {
 
     _contextMenu.appendChild(reorderItem);
     _contextMenu.appendChild(renameItem);
+    _contextMenu.appendChild(exportTaskItem);
     _contextMenu.appendChild(separator);
     _contextMenu.appendChild(newTaskItem);
     _contextMenu.appendChild(separator2);
@@ -540,6 +549,76 @@ const Sidebar = (function() {
       toast.classList.remove('sidebar-toast-visible');
       setTimeout(() => toast.remove(), 300);
     }, 2000);
+  }
+
+  // 导出单个任务到文件
+  async function exportTaskToFile(task) {
+    const fields = task.fields || {};
+    const hiddenFields = task.hiddenFields || [];
+    const customCards = task.customCards || [];
+    const cardOrder = task.cardOrder || [];
+
+    let fieldConfig = [];
+    try {
+      fieldConfig = await window.electronAPI.getFieldConfig();
+    } catch (e) {}
+
+    const cards = [];
+
+    // 固定卡片
+    fieldConfig.forEach(f => {
+      if (!hiddenFields.includes(f.key) && fields[f.key] && fields[f.key].trim()) {
+        cards.push({ name: f.label, content: fields[f.key] });
+      }
+    });
+
+    // 自定义卡片
+    const customMap = {};
+    customCards.forEach(cc => { customMap[cc.key] = cc.label; });
+    cardOrder.forEach(key => {
+      if (customMap[key] && fields[key] && fields[key].trim()) {
+        cards.push({ name: customMap[key], content: fields[key] });
+      }
+    });
+
+    if (cards.length === 0) {
+      Modal.show({
+        title: StringLoader.get('modal.hint', '提示'),
+        message: StringLoader.get('import.exportTaskEmpty', '当前任务没有卡片数据可导出'),
+        confirmText: StringLoader.get('modal.ok', '确定'),
+        showCancel: false
+      });
+      return;
+    }
+
+    let content = '## 1. ' + task.name + '\n';
+    cards.forEach(card => {
+      content += '\n### ' + card.name + '\n';
+      content += '**内容**\n';
+      content += card.content + '\n';
+    });
+
+    const safeName = task.name.replace(/[\\/:*?"<>|]/g, '_');
+    try {
+      const result = await window.electronAPI.exportFile({
+        defaultName: safeName + '.md',
+        content: content,
+        filters: [{ name: 'Markdown', extensions: ['md'] }],
+        title: StringLoader.get('import.exportTaskTitle', '导出当前任务数据')
+      });
+      if (result.success) {
+        showToast(StringLoader.get('import.exportTaskSuccess', '任务数据已成功导出'));
+      }
+    } catch (e) {
+      if (e.message !== 'cancelled') {
+        Modal.show({
+          title: '导出失败',
+          message: e.message || '导出时发生未知错误',
+          confirmText: StringLoader.get('modal.ok', '确定'),
+          showCancel: false
+        });
+      }
+    }
   }
 
   return {

@@ -166,9 +166,19 @@ const Content = (function() {
     clearFieldBtn.textContent = StringLoader.get('content.clearField', '清空');
     clearFieldBtn.title = StringLoader.get('content.clearFieldTitle', '清空此栏');
 
+    const exportCardBtn = document.createElement('button');
+    exportCardBtn.className = 'card-action-btn card-export-btn';
+    exportCardBtn.textContent = StringLoader.get('content.cardExport', '导出');
+    exportCardBtn.title = StringLoader.get('content.cardExportTitle', '导出此卡片');
+    exportCardBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportCardToFile(cardDef, fieldsData);
+    });
+
     cardActions.appendChild(renameBtn);
     cardActions.appendChild(deleteBtn);
     cardActions.appendChild(clearFieldBtn);
+    cardActions.appendChild(exportCardBtn);
 
     label.appendChild(dragHandle);
     label.appendChild(labelText);
@@ -820,6 +830,45 @@ const Content = (function() {
       }
     });
     return allTextareas;
+  }
+
+  // 导出单个卡片到文件
+  async function exportCardToFile(cardDef, fieldsData) {
+    const content = (fieldsData && fieldsData[cardDef.key]) ? fieldsData[cardDef.key].trim() : '';
+    if (!content) {
+      Modal.show({
+        title: StringLoader.get('modal.hint', '提示'),
+        message: StringLoader.get('import.exportTaskEmpty', '该卡片没有内容可导出'),
+        confirmText: StringLoader.get('modal.ok', '确定'),
+        showCancel: false
+      });
+      return;
+    }
+
+    // 构建单卡片 demoMd3 格式
+    const fileContent = '### ' + cardDef.label + '\n**内容**\n' + content + '\n';
+
+    const safeName = cardDef.label.replace(/[\\/:*?"<>|]/g, '_');
+    try {
+      const result = await window.electronAPI.exportFile({
+        defaultName: safeName + '.md',
+        content: fileContent,
+        filters: [{ name: 'Markdown', extensions: ['md'] }],
+        title: StringLoader.get('content.cardExportTitle', '导出此卡片')
+      });
+      if (result.success) {
+        showToast(StringLoader.get('content.cardExportSuccess', '卡片数据已成功导出'));
+      }
+    } catch (e) {
+      if (e.message !== 'cancelled') {
+        Modal.show({
+          title: '导出失败',
+          message: e.message || '导出时发生未知错误',
+          confirmText: StringLoader.get('modal.ok', '确定'),
+          showCancel: false
+        });
+      }
+    }
   }
 
   return {

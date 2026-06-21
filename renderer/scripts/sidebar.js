@@ -350,6 +350,38 @@ const Sidebar = (function() {
     if (_onTaskDelete) _onTaskDelete(taskId);
   }
 
+  // 复制任务（深拷贝任务数据，追加到列表末尾）
+  function duplicateTask(taskId) {
+    const task = _tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // 生成新名称
+    let baseName = task.name + ' (副本)';
+    let newName = baseName;
+    let counter = 1;
+    while (_tasks.some(t => t.name === newName)) {
+      counter++;
+      newName = baseName + ' ' + counter;
+    }
+
+    const newTask = {
+      ...JSON.parse(JSON.stringify(task)),
+      id: generateId(),
+      name: newName,
+      order: _tasks.length,
+      layout: task.layout ? { ...task.layout } : undefined,
+      fields: task.fields ? JSON.parse(JSON.stringify(task.fields)) : undefined,
+      hiddenFields: task.hiddenFields ? [...task.hiddenFields] : undefined,
+      fieldLabels: task.fieldLabels ? { ...task.fieldLabels } : undefined,
+      customCards: task.customCards ? JSON.parse(JSON.stringify(task.customCards)) : undefined,
+      cardOrder: task.cardOrder ? [...task.cardOrder] : undefined
+    };
+
+    _tasks.push(newTask);
+    render();
+    showToast(StringLoader.get('sidebar.duplicated', '任务已复制'));
+  }
+
   // 重命名任务
   function renameTask(taskId, newName) {
     // 检查是否与其他任务重名
@@ -919,6 +951,7 @@ const Sidebar = (function() {
     addTask,
     insertTask,
     deleteTask,
+    duplicateTask,
     renameTask,
     reorderTask,
     getActiveTask,
@@ -933,6 +966,7 @@ const Sidebar = (function() {
     resetAllLayouts,
     setActiveTask,
     showDeleteConfirm,
+    showRenameDialog,
     render,
     focusNextTask,
     focusPrevTask,

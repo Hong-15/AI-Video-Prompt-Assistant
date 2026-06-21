@@ -54,6 +54,7 @@
     "renameTitle": "Rename Task",
     "renamePrompt": "Please enter a new name:",
     "renameDuplicate": "Task name already exists, please use a different name",
+    "duplicated": "Task duplicated",
     "renameBtn": "Rename",
     "renamePlaceholder": "Please enter a new name",
     "reorderTitle": "Reorder Task",

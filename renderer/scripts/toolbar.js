@@ -357,5 +357,13 @@ const Toolbar = (function() {
     }
   }
 
-  return { init, setFolderPath, triggerOpenFolder: () => { if (_onOpenFolder) _onOpenFolder(); } };
+  return {
+    init,
+    setFolderPath,
+    triggerOpenFolder: () => { if (_onOpenFolder) _onOpenFolder(); },
+    triggerCreateProject: () => { if (_onCreateProject) _onCreateProject(); },
+    triggerImportProject: () => { if (_onImport) _onImport(); },
+    triggerGlobalSearch: () => { if (_onGlobalSearch) _onGlobalSearch(); },
+    triggerMoreSettings: () => { if (_onMoreSettings) _onMoreSettings(); }
+  };
 })();

@@ -364,6 +364,20 @@ const App = (function() {
           Sidebar.showDeleteConfirm(activeTask);
         }
         break;
+      case 'renameTask':
+        if (!_currentFolder) return;
+        const renameTask = Sidebar.getActiveTask();
+        if (renameTask) {
+          Sidebar.showRenameDialog(renameTask);
+        }
+        break;
+      case 'duplicateTask':
+        if (!_currentFolder) return;
+        const dupTask = Sidebar.getActiveTask();
+        if (dupTask) {
+          Sidebar.duplicateTask(dupTask.id);
+        }
+        break;
       case 'clearAll':
         if (Content.clearAllInputs) Content.clearAllInputs();
         break;
@@ -391,11 +405,32 @@ const App = (function() {
       case 'openFolder':
         Toolbar.triggerOpenFolder();
         break;
+      case 'createProject':
+        Toolbar.triggerCreateProject();
+        break;
+      case 'closeProject':
+        window.electronAPI.closeProject();
+        break;
+      case 'importProject':
+        Toolbar.triggerImportProject();
+        break;
       case 'exportMD':
         handleExport('md');
         break;
       case 'exportTXT':
         handleExport('txt');
+        break;
+      case 'goToSearch':
+        Toolbar.triggerGlobalSearch();
+        break;
+      case 'goToSettings':
+        Toolbar.triggerMoreSettings();
+        break;
+      case 'resetTaskLayout':
+        if (Content.resetCurrentTaskLayout) Content.resetCurrentTaskLayout();
+        break;
+      case 'resetAllLayouts':
+        if (Sidebar.resetAllLayouts) Sidebar.resetAllLayouts();
         break;
       default:
         console.warn('未知快捷键操作:', action);
@@ -1295,19 +1330,28 @@ const App = (function() {
 
   const DEFAULT_SHORTCUTS = {
     save: { key: "s", ctrl: true, shift: false, alt: false, enabled: true, description: "保存所有数据" },
-    newTask: { key: "n", ctrl: true, shift: false, alt: false, enabled: false, description: "新建任务" },
+    newTask: { key: "n", ctrl: true, shift: false, alt: false, enabled: true, description: "新建任务" },
     deleteTask: { key: "d", ctrl: true, shift: false, alt: false, enabled: false, description: "删除当前任务" },
-    clearAll: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "清空所有输入" },
+    renameTask: { key: "F6", ctrl: false, shift: true, alt: false, enabled: false, description: "重命名当前任务" },
+    duplicateTask: { key: "d", ctrl: true, shift: true, alt: false, enabled: false, description: "复制当前任务" },
+    clearAll: { key: "a", ctrl: true, shift: true, alt: false, enabled: false, description: "清空所有输入" },
     copyPreview: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "复制预览内容" },
     addCustomCard: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "添加自定义卡片" },
-    toggleSidebar: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "展开/隐藏侧边栏" },
-    focusNextTask: { key: "ArrowDown", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个任务" },
-    focusPrevTask: { key: "ArrowUp", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个任务" },
-    focusNextInput: { key: "ArrowRight", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦下一个卡片输入框" },
-    focusPrevInput: { key: "ArrowLeft", ctrl: true, shift: false, alt: false, enabled: false, description: "聚焦上一个卡片输入框" },
+    toggleSidebar: { key: "1", ctrl: false, shift: false, alt: true, enabled: false, description: "展开/隐藏侧边栏" },
+    focusNextTask: { key: "ArrowDown", ctrl: true, shift: false, alt: false, enabled: true, description: "聚焦下一个任务" },
+    focusPrevTask: { key: "ArrowUp", ctrl: true, shift: false, alt: false, enabled: true, description: "聚焦上一个任务" },
+    focusNextInput: { key: "ArrowRight", ctrl: true, shift: false, alt: false, enabled: true, description: "聚焦下一个卡片输入框" },
+    focusPrevInput: { key: "ArrowLeft", ctrl: true, shift: false, alt: false, enabled: true, description: "聚焦上一个卡片输入框" },
     openFolder: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "打开项目" },
+    createProject: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "新建项目" },
+    closeProject: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "关闭当前项目" },
+    importProject: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导入项目数据" },
     exportMD: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为 Markdown" },
-    exportTXT: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为文本文件" }
+    exportTXT: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "导出为文本文件" },
+    goToSearch: { key: "f", ctrl: true, shift: true, alt: false, enabled: false, description: "全局搜索" },
+    goToSettings: { key: "s", ctrl: true, shift: false, alt: true, enabled: false, description: "打开设置" },
+    resetTaskLayout: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "重置当前任务布局" },
+    resetAllLayouts: { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "重置所有任务布局" }
   };
 
   let _currentCloseBehavior = 'exit';

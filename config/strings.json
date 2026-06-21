@@ -53,6 +53,7 @@
     "renameTitle": "重命名任务",
     "renamePrompt": "请输入新名称：",
     "renameDuplicate": "任务名称已存在，请使用其他名称",
+    "duplicated": "任务已复制",
     "renameBtn": "重命名",
     "renamePlaceholder": "请输入新名称",
     "reorderTitle": "重构帧位置",

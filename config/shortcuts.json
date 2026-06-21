@@ -23,8 +23,24 @@
     "enabled": false,
     "description": "删除当前任务"
   },
+  "renameTask": {
+    "key": "F6",
+    "ctrl": false,
+    "shift": true,
+    "alt": false,
+    "enabled": false,
+    "description": "重命名当前任务"
+  },
+  "duplicateTask": {
+    "key": "d",
+    "ctrl": true,
+    "shift": true,
+    "alt": false,
+    "enabled": false,
+    "description": "复制当前任务"
+  },
   "clearAll": {
-    "key": "A",
+    "key": "a",
     "ctrl": true,
     "shift": true,
     "alt": false,
@@ -48,10 +64,10 @@
     "description": "添加自定义卡片"
   },
   "toggleSidebar": {
-    "key": "",
+    "key": "1",
     "ctrl": false,
     "shift": false,
-    "alt": false,
+    "alt": true,
     "enabled": false,
     "description": "展开/隐藏侧边栏"
   },
@@ -95,6 +111,30 @@
     "enabled": false,
     "description": "打开项目"
   },
+  "createProject": {
+    "key": "",
+    "ctrl": false,
+    "shift": false,
+    "alt": false,
+    "enabled": false,
+    "description": "新建项目"
+  },
+  "closeProject": {
+    "key": "",
+    "ctrl": false,
+    "shift": false,
+    "alt": false,
+    "enabled": false,
+    "description": "关闭当前项目"
+  },
+  "importProject": {
+    "key": "",
+    "ctrl": false,
+    "shift": false,
+    "alt": false,
+    "enabled": false,
+    "description": "导入项目数据"
+  },
   "exportMD": {
     "key": "",
     "ctrl": false,
@@ -110,5 +150,37 @@
     "alt": false,
     "enabled": false,
     "description": "导出为文本文件"
+  },
+  "goToSearch": {
+    "key": "f",
+    "ctrl": true,
+    "shift": true,
+    "alt": false,
+    "enabled": true,
+    "description": "全局搜索"
+  },
+  "goToSettings": {
+    "key": "s",
+    "ctrl": true,
+    "shift": false,
+    "alt": true,
+    "enabled": false,
+    "description": "打开设置"
+  },
+  "resetTaskLayout": {
+    "key": "",
+    "ctrl": false,
+    "shift": false,
+    "alt": false,
+    "enabled": false,
+    "description": "重置当前任务布局"
+  },
+  "resetAllLayouts": {
+    "key": "",
+    "ctrl": false,
+    "shift": false,
+    "alt": false,
+    "enabled": false,
+    "description": "重置所有任务布局"
   }
 }

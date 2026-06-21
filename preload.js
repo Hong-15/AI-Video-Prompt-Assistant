@@ -101,6 +101,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 通知主进程渲染进程已就绪，可以显示窗口
   rendererReady: () => ipcRenderer.send('renderer-ready'),
 
+  // 监听主进程准备显示窗口的信号（等待渲染进程合成完成）
+  onPrepareShow: (callback) => {
+    ipcRenderer.on('prepare-show', () => callback());
+  },
+
+  // 通知主进程渲染进程已完成一次合成，可以显示窗口
+  showReady: () => ipcRenderer.send('show-ready'),
+
   // 移除所有监听器
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

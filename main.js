@@ -58,27 +58,37 @@ function loadTheme() {
   }
 }
 
-// 等待渲染进程完成一次 paint 后再显示窗口
-function showAfterPaint(win) {
+// 等待渲染进程确认已完成首帧合成后再显示窗口
+function showAfterComposed(win) {
   if (!win || win.isDestroyed()) return;
   let shown = false;
-  win.webContents.once('paint', () => {
+
+  function doShow() {
     if (shown) return;
     shown = true;
-    setTimeout(() => {
-      if (win && !win.isDestroyed()) {
-        win.show();
-        win.focus();
-      }
-    }, 30);
-  });
-  // 兜底：即使 paint 没触发，200ms 后也显示
-  setTimeout(() => {
-    if (win && !win.isDestroyed() && !win.isVisible()) {
+    if (win && !win.isDestroyed()) {
       win.show();
       win.focus();
     }
-  }, 200);
+  }
+
+  // 渲染进程完成 rAF/paint 并回复 show-ready 后显示
+  function onShowReady(event) {
+    if (event.sender === win.webContents) {
+      doShow();
+      ipcMain.off('show-ready', onShowReady);
+    }
+  }
+  ipcMain.on('show-ready', onShowReady);
+
+  // 发送准备显示信号，让渲染进程完成一次合成
+  win.webContents.send('prepare-show');
+
+  // 兜底：300ms 后无论是否收到回复都显示
+  setTimeout(() => {
+    ipcMain.off('show-ready', onShowReady);
+    doShow();
+  }, 300);
 }
 
 // 防抖显示窗口，防止快速点击导致 WM_ERASEBKGND / WM_PAINT 消息堆积
@@ -90,15 +100,14 @@ function debouncedShowWindow(win) {
   showDebounceTimer = setTimeout(() => {
     if (win && !win.isDestroyed()) {
       if (isDarkTheme) {
-        win.setBackgroundColor('#00000000');
-        showAfterPaint(win);
+        showAfterComposed(win);
       } else {
         win.show();
         win.focus();
       }
     }
     showDebounceTimer = null;
-  }, 300);
+  }, 333);
 }
 
 // 保存设置
@@ -121,23 +130,20 @@ function createWindow(parentFolderPath) {
     minHeight: 600,
     title: strings.app?.windowTitle || 'AI提示词助手',
     icon: path.join(__dirname, 'assets', 'H.jpg'),
-    backgroundColor: '#00000000',
-    transparent: true,
+    backgroundColor: '#0b0b1a',
     frame: false,
     autoHideMenuBar: true,
-    hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      backgroundThrottling: false,
-      offscreen: false
+      backgroundThrottling: false
     },
     show: false
   });
 
-  // 显式设置透明背景，由 HTML 负责背景绘制
-  win.setBackgroundColor('#00000000');
+  // 显式设置背景色，确保未合成区域显示为应用主题色而非白色
+  win.setBackgroundColor('#0b0b1a');
 
   // 转发窗口最大化/取消最大化状态到渲染进程
   win.on('maximize', () => {
@@ -157,9 +163,9 @@ function createWindow(parentFolderPath) {
 
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  // 等首帧真正绘制完成后再显示窗口
+  // 等首帧合成完成后再显示窗口
   win.once('ready-to-show', () => {
-    showAfterPaint(win);
+    showAfterComposed(win);
   });
 
   // 窗口关闭前，通知渲染进程保存数据（非重启场景）

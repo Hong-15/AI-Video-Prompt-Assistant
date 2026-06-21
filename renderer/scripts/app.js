@@ -1341,6 +1341,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.electronAPI.rendererReady();
   });
 
+  // 监听主进程准备显示窗口的信号，确保至少完成一次 rAF/paint 后再通知主进程显示
+  window.electronAPI.onPrepareShow(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.electronAPI.showReady();
+      });
+    });
+  });
+
   // 监听窗口缩放状态变化，执行过渡动画
   window.electronAPI.onWindowZoomStateChanged((state) => {
     const body = document.body;

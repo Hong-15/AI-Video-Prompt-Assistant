@@ -85,21 +85,16 @@ const App = (function() {
   }
 
   /**
-   * 将主题色板注入为 :root CSS 自定义属性，实现配置驱动的样式
+   * 将主题色板作为内联 CSS 变量直接设在 <html> 的 style 属性上。
+   * 内联样式优先级最高，且不依赖独立样式表，防止 GPU 进程重启/样式重算时
+   * 短暂回退到 CSS 文件中 :root 的暗色兜底值，消除 5-9 秒后的背景闪变。
    * @param {Object} palette - 当前主题颜色配置
    */
   function injectThemeCssVariables(palette) {
-    const cssText = Object.entries(palette)
-      .map(([key, value]) => `  --${camelToKebab(key)}: ${value};`)
-      .join('\n');
-
-    let style = document.getElementById('theme-css-variables');
-    if (!style) {
-      style = document.createElement('style');
-      style.id = 'theme-css-variables';
-      document.head.appendChild(style);
-    }
-    style.textContent = `:root {\n${cssText}\n}`;
+    const html = document.documentElement;
+    Object.entries(palette).forEach(([key, value]) => {
+      html.style.setProperty(`--${camelToKebab(key)}`, value);
+    });
   }
 
   /**
@@ -1390,12 +1385,27 @@ document.addEventListener('DOMContentLoaded', () => {
     window.electronAPI.rendererReady();
   });
 
-  // 监听主进程准备显示窗口的信号，等待 init 完成 + 两次 rAF 确保首帧合成后才能回复
+  // 监听主进程准备显示窗口的信号，等待 init 完成 + 三层 rAF 确保 html/body/CSS 变量全部合成后才能回复
   window.electronAPI.onPrepareShow(() => {
     initPromise.then(() => {
+      // html 和 body 初始 opacity:0 防止闪现；init 完成后瞬间设回不透明
+      const html = document.documentElement;
+      const body = document.body;
+      const prevBodyTransition = body.style.transition;
+      html.style.transition = 'none';
+      body.style.transition = 'none';
+      html.style.opacity = '1';
+      body.style.opacity = '1';
+      // 强制样式提交，确保 opacity 和 CSS 变量变更在下一次绘制时生效
+      void body.offsetHeight;
+      html.style.transition = '';
+      body.style.transition = prevBodyTransition;
+      // 三层 rAF：给 GPU 足够时间完成样式→布局→合成→绘制
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          window.electronAPI.showReady();
+          requestAnimationFrame(() => {
+            window.electronAPI.showReady();
+          });
         });
       });
     });

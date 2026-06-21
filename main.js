@@ -35,6 +35,12 @@ let isDarkTheme = true; // 是否暗色主题
 let showDebounceTimer = null; // 显示防抖
 let windowConfig = null; // 窗口配置缓存
 let themeColors = null; // 主题颜色缓存
+let traceWindow = null; // 测试模式调试器窗口
+
+// 是否处于测试模式：命令行包含 --test 或 test 参数时启用远程调试
+const isTestMode = process.argv.includes('--test') || process.argv.includes('test');
+// 是否中文模式：命令行包含 --cn 或 cn 参数时设置 Chromium 内部页面语言为中文，否则为英文
+const isChineseMode = process.argv.includes('--cn') || process.argv.includes('cn');
 
 // 加载设置（异步，避免阻塞主进程）
 async function loadSettings() {
@@ -695,6 +701,66 @@ function createTray() {
 // 防止窗口最小化时渲染进程被挂起，避免恢复时闪白
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows', 'true');
 app.commandLine.appendSwitch('disable-renderer-backgrounding', 'true');
+// 设置 Electron 内部页面（chrome://tracing 等）的语言：传 cn 为中文，否则默认英文
+app.commandLine.appendSwitch('lang', isChineseMode ? 'zh-CN' : 'en-US');
+
+// 测试模式下开启远程调试端口，供浏览器访问 DevTools
+if (isTestMode) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222');
+}
+
+/**
+ * 创建测试模式下的 chrome://tracing 调试器窗口，并在窗口中打印本地调试器访问地址
+ */
+function createTraceWindow() {
+  const cfg = windowConfig || {};
+  traceWindow = new BrowserWindow({
+    width: cfg.width || 1200,
+    height: cfg.height || 800,
+    minWidth: 800,
+    minHeight: 600,
+    title: 'AI提示词助手 - 调试器',
+    icon: path.join(__dirname, 'assets', 'H.jpg'),
+    backgroundColor: '#ffffff',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false
+    },
+    show: false
+  });
+
+  traceWindow.loadURL('chrome://tracing');
+
+  traceWindow.once('ready-to-show', () => {
+    if (traceWindow && !traceWindow.isDestroyed()) {
+      traceWindow.show();
+    }
+  });
+
+  traceWindow.webContents.on('did-finish-load', () => {
+    const devToolsUrl = 'http://127.0.0.1:9222';
+    console.log('[TestMode] 本地调试器链接:', devToolsUrl);
+    if (traceWindow && !traceWindow.isDestroyed()) {
+      traceWindow.webContents.executeJavaScript(`
+        (function() {
+          const msg = '[TestMode] 本地调试器链接: http://127.0.0.1:9222';
+          console.log(msg);
+          // 在 chrome://tracing 页面顶部追加一个可见信息条
+          const banner = document.createElement('div');
+          banner.textContent = msg;
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;padding:8px 16px;background:#1a1a2e;color:#00d4ff;font-family:monospace;font-size:14px;border-bottom:1px solid #00d4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+          document.body.appendChild(banner);
+        })();
+      `).catch((err) => {
+        console.error('[TestMode] 在调试器窗口注入信息失败:', err);
+      });
+    }
+  });
+
+  traceWindow.on('closed', () => {
+    traceWindow = null;
+  });
+}
 
 app.whenReady().then(async () => {
   await loadWindowConfig();
@@ -705,6 +771,10 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
   setupIPC();
   mainWindow = createWindow();
+  // 测试模式额外打开 chrome://tracing 调试器窗口
+  if (isTestMode) {
+    createTraceWindow();
+  }
 });
 
 // 应用退出前强制保存（兜底，防止 close 事件未触发）

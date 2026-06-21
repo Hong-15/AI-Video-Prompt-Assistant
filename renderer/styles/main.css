@@ -317,10 +317,22 @@ body.window-zoom-out {
   gap: 8px;
 }
 
+.sidebar-header.sidebar-header-drag-over {
+  background: var(--active15);
+  border-bottom-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent30);
+}
+
 .sidebar-add-label {
   font-size: 13px;
   color: var(--text-secondary);
-  var(--close-hover-color)-space: nowrap;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--transition-speed);
+}
+
+.sidebar-add-label:hover {
+  color: var(--text-primary);
 }
 
 .add-task-btn {
@@ -391,6 +403,12 @@ body.window-zoom-out {
 .task-item.active {
   background: var(--active15);
   border-color: var(--active30);
+}
+
+.task-item.drag-over {
+  background: var(--active20);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent30);
 }
 
 .task-index {

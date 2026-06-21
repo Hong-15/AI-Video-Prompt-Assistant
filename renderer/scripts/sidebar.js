@@ -29,6 +29,17 @@ const Sidebar = (function() {
       addTask();
     });
 
+    // 点击"新建任务"文字也可新建
+    const addLabel = document.querySelector('.sidebar-add-label');
+    if (addLabel) {
+      addLabel.addEventListener('click', () => {
+        if (_beforeAddTask && !_beforeAddTask()) {
+          return;
+        }
+        addTask();
+      });
+    }
+
     // 全局点击关闭右键菜单
     document.addEventListener('click', () => {
       hideContextMenu();
@@ -300,6 +311,49 @@ const Sidebar = (function() {
       item.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showContextMenu(e.clientX, e.clientY, task);
+      });
+
+      // 拖拽卡片数据文件到任务项
+      let itemDragCounter = 0;
+      item.addEventListener('dragenter', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        itemDragCounter++;
+        item.classList.add('drag-over');
+      });
+      item.addEventListener('dragover', (e) => {
+        e.preventDefault(); e.stopPropagation();
+      });
+      item.addEventListener('dragleave', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        itemDragCounter--;
+        if (itemDragCounter <= 0) {
+          itemDragCounter = 0;
+          item.classList.remove('drag-over');
+        }
+      });
+      item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        itemDragCounter = 0;
+        item.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length === 0) return;
+        const file = files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'md' && ext !== 'txt') {
+          Modal.show({
+            title: '导入失败',
+            message: StringLoader.get('import.errorFormat', '只支持 .md 或 .txt 格式文件'),
+            confirmText: StringLoader.get('modal.ok', '确定'),
+            showCancel: false
+          });
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          ImportManager.importCardsToTask(task.id, event.target.result, file.name);
+        };
+        reader.readAsText(file, 'utf-8');
       });
 
       taskList.appendChild(item);

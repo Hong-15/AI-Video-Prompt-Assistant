@@ -611,5 +611,133 @@ const ImportManager = (function() {
     });
   }
 
-  return { init };
+  // 将卡片数据导入到指定任务（供侧边栏任务项拖拽使用）
+  async function importCardsToTask(taskId, content, fileName) {
+    if (!content || content.trim().length === 0) {
+      showError(StringLoader.get('import.errorEmpty', '文件内容为空'));
+      return false;
+    }
+
+    const parseResult = parseImportContent(content);
+    if (!parseResult.success) {
+      showError(parseResult.error);
+      return false;
+    }
+
+    const count = parseResult.cards.length;
+    const message = parseResult.format === 'demoMd2'
+      ? StringLoader.get('import.confirmTaskCards', '是否导入任务"{task}"下的 {count} 个卡片数据？')
+          .replace('{task}', parseResult.taskName).replace('{count}', count)
+      : StringLoader.get('import.confirmCards', '是否导入 {count} 个卡片数据？').replace('{count}', count);
+
+    return new Promise((resolve) => {
+      Modal.confirm(
+        StringLoader.get('import.dialogTitle', '导入卡片数据'),
+        message,
+        async () => {
+          await applyImportToTask(taskId, parseResult.cards);
+          resolve(true);
+        },
+        { confirmText: StringLoader.get('modal.confirm', '确认'), cancelText: StringLoader.get('modal.cancel', '取消'),
+          onCancel: () => resolve(false) }
+      );
+    });
+  }
+
+  // 将卡片数组应用到指定任务（复用 applyImport 的核心逻辑）
+  async function applyImportToTask(taskId, cards) {
+    const tasks = Sidebar.getTasks();
+    const targetTask = tasks.find(t => t.id === taskId);
+    if (!targetTask) return;
+
+    const fieldConfig = Content.getFieldConfig ? Content.getFieldConfig() : [];
+
+    const visibleExistingCards = [];
+    const hiddenFixedCards = [];
+    const hiddenFields = targetTask.hiddenFields || [];
+    const customCards = targetTask.customCards || [];
+    const fieldLabels = targetTask.fieldLabels || {};
+
+    fieldConfig.forEach(field => {
+      const label = fieldLabels[field.key] || field.label;
+      if (hiddenFields.includes(field.key)) {
+        hiddenFixedCards.push({ key: field.key, label });
+      } else {
+        visibleExistingCards.push({ key: field.key, label, type: 'fixed' });
+      }
+    });
+    customCards.forEach(cc => {
+      visibleExistingCards.push({ key: cc.key, label: cc.label, type: 'custom' });
+    });
+
+    let importedCount = 0;
+    let skipAll = false;
+    let overwriteAll = false;
+    let renameAll = false;
+    const renameConflicts = [];
+    const fields = { ...(targetTask.fields || {}) };
+    let newCustomCards = [...customCards];
+    let newHiddenFields = [...hiddenFields];
+    let newCardOrder = [...(targetTask.cardOrder || [])];
+
+    for (const card of cards) {
+      const visibleExisting = visibleExistingCards.find(c => c.label === card.name);
+      const hiddenFixed = hiddenFixedCards.find(c => c.label === card.name);
+
+      if (visibleExisting) {
+        if (skipAll) continue;
+        if (overwriteAll) {
+          fields[visibleExisting.key] = card.content;
+          importedCount++;
+          continue;
+        }
+        if (renameAll) {
+          renameConflicts.push(card.name);
+          continue;
+        }
+
+        const action = await showDuplicateDialog(card.name);
+        if (action === 'skipAll') { skipAll = true; continue; }
+        if (action === 'overwriteAll') { overwriteAll = true; fields[visibleExisting.key] = card.content; importedCount++; continue; }
+        if (action === 'renameAll') { renameAll = true; renameConflicts.push(card.name); continue; }
+        if (action === 'skip') { continue; }
+        if (action === 'overwrite') { fields[visibleExisting.key] = card.content; importedCount++; continue; }
+        if (action === 'rename') { renameConflicts.push(card.name); continue; }
+      } else if (hiddenFixed) {
+        fields[hiddenFixed.key] = card.content;
+        newHiddenFields = newHiddenFields.filter(k => k !== hiddenFixed.key);
+        importedCount++;
+      } else {
+        const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        newCustomCards.push({ key, label: card.name });
+        fields[key] = card.content;
+        newCardOrder.push(key);
+        visibleExistingCards.push({ key, label: card.name, type: 'custom' });
+        importedCount++;
+      }
+    }
+
+    Sidebar.updateTaskFields(taskId, fields);
+    Sidebar.updateTaskCustomCards(taskId, newCustomCards);
+    Sidebar.updateTaskHiddenFields(taskId, newHiddenFields);
+    Sidebar.updateTaskCardOrder(taskId, newCardOrder);
+
+    // 如果导入的是当前活动任务，刷新工作台
+    const activeTask = Sidebar.getActiveTask();
+    if (activeTask && activeTask.id === taskId) {
+      Content.switchToTask(activeTask);
+    }
+
+    if (renameConflicts.length > 0) {
+      showRenameListDialog(renameConflicts);
+    }
+    if (importedCount > 0) {
+      Content.showToast(StringLoader.get('import.success', '成功导入 {count} 个卡片').replace('{count}', importedCount));
+      if (typeof App !== 'undefined' && App.markDirty) App.markDirty();
+    } else if (renameConflicts.length === 0) {
+      Content.showToast(StringLoader.get('import.errorEmpty', '文件内容为空'));
+    }
+  }
+
+  return { init, importCardsToTask };
 })();

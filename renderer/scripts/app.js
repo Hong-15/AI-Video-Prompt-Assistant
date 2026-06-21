@@ -45,6 +45,71 @@ const App = (function() {
     // 5.1 初始化卡片数据导入
     ImportManager.init();
 
+    // 5.2 侧边栏头部拖拽导入项目数据
+    const sidebarHeader = document.querySelector('.sidebar-header');
+    if (sidebarHeader) {
+      let dragCounter = 0;
+      sidebarHeader.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter++;
+        sidebarHeader.classList.add('sidebar-header-drag-over');
+      });
+      sidebarHeader.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); });
+      sidebarHeader.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter--;
+        if (dragCounter <= 0) {
+          dragCounter = 0;
+          sidebarHeader.classList.remove('sidebar-header-drag-over');
+        }
+      });
+      sidebarHeader.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter = 0;
+        sidebarHeader.classList.remove('sidebar-header-drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length === 0) return;
+        const file = files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'md' && ext !== 'txt') {
+          Modal.show({
+            title: '导入失败',
+            message: '只支持 .md 或 .txt 格式文件',
+            confirmText: '确定',
+            showCancel: false
+          });
+          return;
+        }
+        if (!_currentFolder) {
+          showNoFolderDialog();
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const parseResult = parseProjectExport(event.target.result);
+          if (!parseResult.success) {
+            Modal.show({
+              title: '导入失败',
+              message: parseResult.error,
+              confirmText: '确定',
+              showCancel: false
+            });
+            return;
+          }
+          Modal.confirm(
+            '导入项目数据',
+            '将导入 ' + parseResult.tasks.length + ' 个任务，当前项目中的任务不会被清空。确认导入？',
+            () => { applyProjectImport(parseResult.tasks); },
+            { confirmText: '确认', cancelText: '取消' }
+          );
+        };
+        reader.readAsText(file, 'utf-8');
+      });
+    }
+
     // 6. 初始化侧边栏拖动调整大小
     initResizeHandle();
 
@@ -607,62 +672,234 @@ const App = (function() {
 
   // 应用项目导入
   async function applyProjectImport(tasks) {
-    const currentTasks = Sidebar.getTasks();
+    const existingTasks = Sidebar.getTasks();
+    let allTasks = [...existingTasks];
     let importedCount = 0;
+    let skipAll = false;
+    let overwriteAll = false;
+    let renameAll = false;
+    const renameConflicts = [];
+
+    // 预加载 fieldConfig，避免循环中重复请求
+    const fieldConfig = await window.electronAPI.getFieldConfig();
+    const isEnglish = _currentLanguage === 'en';
 
     for (const taskData of tasks) {
-      const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      const newTask = {
-        id: taskId,
-        name: taskData.name,
-        fields: {},
-        layout: {},
-        hiddenFields: [],
-        fieldLabels: {},
-        customCards: [],
-        cardOrder: []
+      const duplicate = allTasks.find(t => t.name === taskData.name);
+
+      if (duplicate) {
+        if (skipAll) continue;
+        if (overwriteAll) {
+          duplicate.fields = {};
+          duplicate.customCards = [];
+          duplicate.cardOrder = [];
+          fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+          importedCount++;
+          continue;
+        }
+        if (renameAll) {
+          renameConflicts.push(taskData.name);
+          continue;
+        }
+
+        const action = await showDuplicateTaskDialog(taskData.name);
+        if (action === 'skipAll') {
+          skipAll = true;
+          continue;
+        }
+        if (action === 'overwriteAll') {
+          overwriteAll = true;
+          duplicate.fields = {};
+          duplicate.customCards = [];
+          duplicate.cardOrder = [];
+          fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+          importedCount++;
+          continue;
+        }
+        if (action === 'renameAll') {
+          renameAll = true;
+          renameConflicts.push(taskData.name);
+          continue;
+        }
+        if (action === 'skip') {
+          continue;
+        }
+        if (action === 'overwrite') {
+          duplicate.fields = {};
+          duplicate.customCards = [];
+          duplicate.cardOrder = [];
+          fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+          importedCount++;
+          continue;
+        }
+        if (action === 'rename') {
+          renameConflicts.push(taskData.name);
+          continue;
+        }
+      } else {
+        const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const newTask = {
+          id: taskId,
+          name: taskData.name,
+          fields: {},
+          layout: {},
+          hiddenFields: [],
+          fieldLabels: {},
+          customCards: [],
+          cardOrder: []
+        };
+        fillTaskFields(newTask, taskData.cards, fieldConfig, isEnglish);
+        allTasks = [...allTasks, newTask];
+        importedCount++;
+      }
+    }
+
+    // 一次性应用到侧边栏
+    Sidebar.setTasks(allTasks);
+
+    // 提示重命名列表
+    if (renameConflicts.length > 0) {
+      showProjectRenameListDialog(renameConflicts);
+    }
+
+    if (importedCount > 0) {
+      // 选中最后一个导入/覆盖的任务
+      Sidebar.setActiveTask(allTasks[allTasks.length - 1].id);
+      markDirty();
+      Sidebar.render();
+      Content.showToast(
+        StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
+      );
+    } else if (renameConflicts.length === 0) {
+      Content.showToast(StringLoader.get('import.errorEmpty', '文件内容为空'));
+    }
+  }
+
+  // 将卡片数据填充到任务对象的 fields / customCards 中
+  function fillTaskFields(task, cards, fieldConfig, isEnglish) {
+    for (const card of cards) {
+      // 按名称匹配固定卡片
+      const field = fieldConfig.find(f => {
+        const label = isEnglish && f.labelEn ? f.labelEn : f.label;
+        return label === card.name;
+      });
+      if (field) {
+        task.fields[field.key] = card.content;
+      } else {
+        const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        task.customCards.push({ key, label: card.name });
+        task.fields[key] = card.content;
+        task.cardOrder.push(key);
+      }
+    }
+  }
+
+  // 同名任务处理对话框（复用 import.js 的 UI 风格）
+  function showDuplicateTaskDialog(taskName) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'import-dialog-overlay';
+
+      const box = document.createElement('div');
+      box.className = 'import-dialog-box import-duplicate-box';
+
+      const title = document.createElement('div');
+      title.className = 'import-dialog-title';
+      title.textContent = '发现同名任务';
+      box.appendChild(title);
+
+      const msg = document.createElement('div');
+      msg.className = 'import-dialog-message';
+      msg.textContent = '任务"' + taskName + '"已存在，请选择处理方式';
+      box.appendChild(msg);
+
+      const actions = document.createElement('div');
+      actions.className = 'import-duplicate-actions';
+
+      const createBtn = (text, action) => {
+        const btn = document.createElement('button');
+        btn.className = 'import-duplicate-btn';
+        btn.textContent = text;
+        btn.addEventListener('click', () => {
+          overlay.remove();
+          resolve(action);
+        });
+        return btn;
       };
 
-      // 按名称匹配到固定卡片 key
-      const fieldConfig = await window.electronAPI.getFieldConfig();
-      const isEnglish = _currentLanguage === 'en';
+      actions.appendChild(createBtn('跳过', 'skip'));
+      actions.appendChild(createBtn('全部跳过', 'skipAll'));
+      actions.appendChild(createBtn('覆盖', 'overwrite'));
+      actions.appendChild(createBtn('全部覆盖', 'overwriteAll'));
+      actions.appendChild(createBtn('重命名', 'rename'));
+      actions.appendChild(createBtn('全部重命名', 'renameAll'));
+      box.appendChild(actions);
 
-      for (const card of taskData.cards) {
-        const field = fieldConfig.find(f => {
-          const label = isEnglish && f.labelEn ? f.labelEn : f.label;
-          return label === card.name;
-        });
-        if (field) {
-          newTask.fields[field.key] = card.content;
-        } else {
-          // 新建自定义卡片
-          const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-          newTask.customCards.push({ key, label: card.name });
-          newTask.fields[key] = card.content;
-          newTask.cardOrder.push(key);
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+          resolve('skip');
         }
+      });
+    });
+  }
+
+  // 项目导入重命名列表弹窗
+  function showProjectRenameListDialog(conflicts) {
+    const overlay = document.createElement('div');
+    overlay.className = 'import-dialog-overlay';
+
+    const box = document.createElement('div');
+    box.className = 'import-dialog-box import-rename-box';
+
+    const title = document.createElement('div');
+    title.className = 'import-dialog-title';
+    title.textContent = '需要重命名的任务';
+    box.appendChild(title);
+
+    const msg = document.createElement('div');
+    msg.className = 'import-dialog-message';
+    msg.textContent = '以下任务与现有任务重名，请复制后在源文件中修改名称后重新导入：';
+    box.appendChild(msg);
+
+    const list = document.createElement('textarea');
+    list.className = 'import-rename-list';
+    list.readOnly = true;
+    list.value = conflicts.join('\n');
+    box.appendChild(list);
+
+    const actions = document.createElement('div');
+    actions.className = 'import-dialog-actions';
+
+    const understandBtn = document.createElement('button');
+    understandBtn.className = 'import-dialog-btn import-dialog-btn-confirm';
+    understandBtn.textContent = '了解';
+    understandBtn.addEventListener('click', () => overlay.remove());
+    actions.appendChild(understandBtn);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'import-dialog-btn import-dialog-btn-cancel';
+    copyBtn.textContent = '复制';
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(conflicts.join('\n'));
+        Content.showToast('已复制到剪贴板');
+      } catch (e) {
+        Content.showToast('复制失败');
       }
+    });
+    actions.appendChild(copyBtn);
 
-      // 插入任务（添加到末尾）
-      const allTasks = [...currentTasks, newTask];
-      Sidebar.setTasks(allTasks);
-      importedCount++;
-    }
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 
-    // 选中第一个导入的任务
-    if (importedCount > 0) {
-      const updatedTasks = Sidebar.getTasks();
-      const lastImported = updatedTasks[updatedTasks.length - 1];
-      if (lastImported) {
-        Sidebar.setActiveTask(lastImported.id);
-      }
-    }
-
-    markDirty();
-    Sidebar.render();
-    Content.showToast(
-      StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
-    );
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
   }
 
   // ========== 文件夹与任务管理 ==========
@@ -2328,7 +2565,7 @@ const App = (function() {
     input.focus();
   }
 
-  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty };
+  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty, importProject: handleImportProject };
 })();
 
 // 启动应用

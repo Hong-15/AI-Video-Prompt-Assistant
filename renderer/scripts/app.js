@@ -1766,7 +1766,7 @@ const App = (function() {
   }
 
   /**
-   * 显示全局搜索面板：半模态、可拖动，支持搜索当前文件夹文件与应用操作
+   * 显示全局搜索面板：半模态、可拖动，支持搜索卡片名与卡片内容
    */
   function showGlobalSearch() {
     if (document.getElementById('globalSearchOverlay')) return;
@@ -1821,8 +1821,8 @@ const App = (function() {
 
     const tabItems = [
       { id: 'all', label: StringLoader.get('globalSearch.tabAll', '所有') },
-      { id: 'files', label: StringLoader.get('globalSearch.tabFiles', '文件') },
-      { id: 'actions', label: StringLoader.get('globalSearch.tabActions', '操作') }
+      { id: 'cards', label: StringLoader.get('globalSearch.tabCards', '卡片名') },
+      { id: 'content', label: StringLoader.get('globalSearch.tabContent', '卡片内容') }
     ];
 
     let activeTab = 'all';
@@ -1835,7 +1835,7 @@ const App = (function() {
       btn.addEventListener('click', () => {
         activeTab = tab.id;
         updateTabs();
-        renderResults();
+        performSearch(input.value);
       });
       tabs.appendChild(btn);
     });
@@ -1904,44 +1904,108 @@ const App = (function() {
     }
 
     // 搜索数据
-    let fileResults = [];
-    let actionResults = [];
+    let cardNameResults = [];
+    let cardContentResults = [];
     let searchTimer = null;
 
-    const actionItems = [
-      { id: 'openFolder', label: 'globalSearch.actionOpenFolder', defaultLabel: '打开文件夹', keywords: 'open folder 打开文件夹', action: () => handleOpenFolder() },
-      { id: 'createProject', label: 'globalSearch.actionCreateProject', defaultLabel: '新建项目', keywords: 'new project 新建项目', action: () => showCreateProjectModal() },
-      { id: 'moreSettings', label: 'globalSearch.actionMoreSettings', defaultLabel: '更多设置', keywords: 'settings 更多设置', action: () => showMoreSettings() },
-      { id: 'resetCurrentLayout', label: 'globalSearch.actionResetCurrentLayout', defaultLabel: '当前任务布局恢复默认', keywords: 'reset layout 布局 恢复默认', action: () => handleResetCurrentLayout() },
-      { id: 'resetAllLayout', label: 'globalSearch.actionResetAllLayout', defaultLabel: '全局任务布局恢复默认', keywords: 'reset all layout 全局布局', action: () => handleResetAllLayout() },
-      { id: 'exportMD', label: 'globalSearch.actionExportMD', defaultLabel: '导出为 Markdown', keywords: 'export markdown 导出', action: () => handleExport('md') },
-      { id: 'exportTXT', label: 'globalSearch.actionExportTXT', defaultLabel: '导出为 文本文件', keywords: 'export txt 导出', action: () => handleExport('txt') },
-      { id: 'toggleSidebar', label: 'globalSearch.actionToggleSidebar', defaultLabel: '展开/隐藏侧边栏', keywords: 'sidebar 侧边栏', action: () => toggleSidebar() },
-      { id: 'quitApp', label: 'globalSearch.actionQuitApp', defaultLabel: '退出软件', keywords: 'quit exit 退出', action: () => window.electronAPI.quitApp() }
-    ];
-
-    function getActionLabel(item) {
-      return StringLoader.get(item.label, item.defaultLabel);
+    function getCardLabel(fieldKey, task) {
+      const fieldConfig = Content.getFieldConfig ? Content.getFieldConfig() : [];
+      const field = fieldConfig.find(f => f.key === fieldKey);
+      const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
+      if (task.fieldLabels && task.fieldLabels[fieldKey]) return task.fieldLabels[fieldKey];
+      if (field) return isEnglish && field.labelEn ? field.labelEn : field.label;
+      // 查找自定义卡片
+      const cc = (task.customCards || []).find(c => c.key === fieldKey);
+      if (cc) return cc.label;
+      return fieldKey;
     }
 
-    function searchActions(query) {
+    function getFixedCardLabel(fieldKey, task) {
+      const fieldConfig = Content.getFieldConfig ? Content.getFieldConfig() : [];
+      const field = fieldConfig.find(f => f.key === fieldKey);
+      const isEnglish = (typeof App !== 'undefined' && App.getCurrentLanguage) ? App.getCurrentLanguage() === 'en' : false;
+      if (task.fieldLabels && task.fieldLabels[fieldKey]) return task.fieldLabels[fieldKey];
+      if (field) return isEnglish && field.labelEn ? field.labelEn : field.label;
+      return fieldKey;
+    }
+
+    function getAllCardDefinitions(task) {
+      const cards = [];
+      const fieldConfig = Content.getFieldConfig ? Content.getFieldConfig() : [];
+      const hiddenFields = task.hiddenFields || [];
+      fieldConfig.forEach(field => {
+        if (!hiddenFields.includes(field.key)) {
+          cards.push({ key: field.key, label: getFixedCardLabel(field.key, task) });
+        }
+      });
+      (task.customCards || []).forEach(cc => {
+        cards.push({ key: cc.key, label: cc.label });
+      });
+      return cards;
+    }
+
+    function searchCardNames(query) {
       const lower = query.toLowerCase().trim();
       if (!lower) return [];
-      return actionItems.filter(item => {
-        const label = getActionLabel(item).toLowerCase();
-        return label.includes(lower) || item.keywords.toLowerCase().includes(lower);
+      const results = [];
+      const tasks = Sidebar.getTasks ? Sidebar.getTasks() : [];
+      tasks.forEach(task => {
+        if (!task) return;
+        if ((task.name || '').toLowerCase().includes(lower)) {
+          results.push({ type: 'taskName', taskId: task.id, taskName: task.name, label: task.name, query: query });
+        }
+        getAllCardDefinitions(task).forEach(card => {
+          if ((card.label || '').toLowerCase().includes(lower)) {
+            results.push({
+              type: 'cardLabel',
+              taskId: task.id,
+              taskName: task.name,
+              label: card.label,
+              fieldKey: card.key,
+              query: query
+            });
+          }
+        });
       });
+      return results;
     }
 
-    async function performSearch(query) {
-      fileResults = [];
-      actionResults = searchActions(query);
-      if (_currentFolder && (activeTab === 'all' || activeTab === 'files')) {
-        try {
-          fileResults = await window.electronAPI.searchFiles(_currentFolder, query);
-        } catch (e) {
-          console.error('搜索文件失败:', e);
-        }
+    function searchCardContent(query) {
+      const lower = query.toLowerCase().trim();
+      if (!lower) return [];
+      const results = [];
+      const tasks = Sidebar.getTasks ? Sidebar.getTasks() : [];
+
+      tasks.forEach(task => {
+        if (!task) return;
+        const fields = { ...(task.fields || {}) };
+        Object.keys(fields).forEach(key => {
+          const val = String(fields[key] || '');
+          if (!val.toLowerCase().includes(lower)) return;
+          const snippet = val.length > 80 ? val.substring(0, 80) + '...' : val;
+          results.push({
+            type: 'cardContent',
+            taskId: task.id,
+            taskName: task.name,
+            fieldKey: key,
+            fieldLabel: getCardLabel(key, task),
+            snippet: snippet,
+            query: query
+          });
+        });
+      });
+      return results;
+    }
+
+    function performSearch(query) {
+      cardNameResults = [];
+      cardContentResults = [];
+      const q = String(query || '');
+      if (activeTab === 'all' || activeTab === 'cards') {
+        cardNameResults = searchCardNames(q);
+      }
+      if (activeTab === 'all' || activeTab === 'content') {
+        cardContentResults = searchCardContent(q);
       }
       renderResults();
     }
@@ -1954,14 +2018,26 @@ const App = (function() {
         .replace(/"/g, '&quot;');
     }
 
+    function escapeRegExp(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function highlightMatch(text, query) {
+      const safeQuery = escapeHtml(query).trim();
+      const safeText = escapeHtml(text);
+      if (!safeQuery) return safeText;
+      const reg = new RegExp('(' + escapeRegExp(safeQuery) + ')', 'gi');
+      return safeText.replace(reg, '<span class="global-search-match">$1</span>');
+    }
+
     function renderResults() {
       resultsContainer.innerHTML = '';
 
-      const showFiles = activeTab === 'all' || activeTab === 'files';
-      const showActions = activeTab === 'all' || activeTab === 'actions';
-      const filesToShow = showFiles ? fileResults : [];
-      const actionsToShow = showActions ? actionResults : [];
-      const total = filesToShow.length + actionsToShow.length;
+      const showCards = activeTab === 'all' || activeTab === 'cards';
+      const showContent = activeTab === 'all' || activeTab === 'content';
+      const cardsToShow = showCards ? cardNameResults : [];
+      const contentToShow = showContent ? cardContentResults : [];
+      const total = cardsToShow.length + contentToShow.length;
 
       if (total === 0) {
         const empty = document.createElement('div');
@@ -1974,50 +2050,51 @@ const App = (function() {
         return;
       }
 
-      if (filesToShow.length > 0) {
-        const fileHeader = document.createElement('div');
-        fileHeader.className = 'global-search-section-header';
-        fileHeader.textContent = StringLoader.get('globalSearch.sectionFiles', '文件');
-        resultsContainer.appendChild(fileHeader);
+      if (cardsToShow.length > 0) {
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'global-search-section-header';
+        cardHeader.textContent = StringLoader.get('globalSearch.sectionCards', '卡片名');
+        resultsContainer.appendChild(cardHeader);
 
-        filesToShow.forEach(file => {
+        cardsToShow.forEach(r => {
           const item = document.createElement('div');
           item.className = 'global-search-result-item';
+          const icon = r.type === 'taskName' ? '📋' : '🏷';
+          const subtitle = r.type === 'cardLabel'
+            ? ' <span class="global-search-result-sub">' + escapeHtml(r.taskName) + ' › ' + StringLoader.get('globalSearch.customCard', '自定义卡片') + '</span>'
+            : ' <span class="global-search-result-sub">' + StringLoader.get('globalSearch.task', '任务') + '</span>';
           item.innerHTML =
-            '<span class="global-search-result-icon">📄</span>' +
+            '<span class="global-search-result-icon">' + icon + '</span>' +
             '<span class="global-search-result-info">' +
-              '<span class="global-search-result-name">' + escapeHtml(file.name) + '</span>' +
-              '<span class="global-search-result-path">' + escapeHtml(file.relPath) + '</span>' +
+              '<span class="global-search-result-name">' + highlightMatch(r.label, r.query) + '</span>' +
+              '<span class="global-search-result-path">' + subtitle + '</span>' +
             '</span>';
-          item.addEventListener('click', async () => {
-            try {
-              await window.electronAPI.openFile(file.path);
-              close();
-            } catch (err) {
-              console.error('打开文件失败:', err);
-            }
+          item.addEventListener('click', () => {
+            Sidebar.setActiveTask(r.taskId);
+            close();
           });
           resultsContainer.appendChild(item);
         });
       }
 
-      if (actionsToShow.length > 0) {
-        const actionHeader = document.createElement('div');
-        actionHeader.className = 'global-search-section-header';
-        actionHeader.textContent = StringLoader.get('globalSearch.sectionActions', '操作');
-        resultsContainer.appendChild(actionHeader);
+      if (contentToShow.length > 0) {
+        const contentHeader = document.createElement('div');
+        contentHeader.className = 'global-search-section-header';
+        contentHeader.textContent = StringLoader.get('globalSearch.sectionContent', '卡片内容');
+        resultsContainer.appendChild(contentHeader);
 
-        actionsToShow.forEach(action => {
+        contentToShow.forEach(r => {
           const item = document.createElement('div');
           item.className = 'global-search-result-item';
           item.innerHTML =
-            '<span class="global-search-result-icon">⚡</span>' +
+            '<span class="global-search-result-icon">📝</span>' +
             '<span class="global-search-result-info">' +
-              '<span class="global-search-result-name">' + escapeHtml(getActionLabel(action)) + '</span>' +
+              '<span class="global-search-result-name">' + highlightMatch(r.fieldLabel, r.query) + '</span>' +
+              '<span class="global-search-result-path">' + escapeHtml(r.taskName) + ' · ' + highlightMatch(r.snippet, r.query) + '</span>' +
             '</span>';
           item.addEventListener('click', () => {
+            Sidebar.setActiveTask(r.taskId);
             close();
-            action.action();
           });
           resultsContainer.appendChild(item);
         });
@@ -2029,7 +2106,7 @@ const App = (function() {
     input.addEventListener('input', () => {
       if (searchTimer) clearTimeout(searchTimer);
       const query = input.value;
-      searchTimer = setTimeout(() => performSearch(query), 200);
+      searchTimer = setTimeout(() => performSearch(query), 120);
     });
 
     input.addEventListener('keydown', (e) => {

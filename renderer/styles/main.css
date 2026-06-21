@@ -408,7 +408,7 @@ body.window-zoom-out {
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
-  var(--close-hover-color)-space: nowrap;
+  white-space: nowrap;
 }
 
 .task-item.active .task-name {
@@ -1928,7 +1928,8 @@ html[data-theme="light"] .more-settings-help-btn {
   flex: 1;
   overflow-y: auto;
   padding: 0.4rem 0;
-  min-height: 120px;
+  min-height: 160px;
+  max-height: 360px;
 }
 
 .global-search-results::-webkit-scrollbar {
@@ -2007,6 +2008,18 @@ html[data-theme="light"] .more-settings-help-btn {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.global-search-result-sub {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.global-search-match {
+  color: var(--accent);
+  background: var(--active08);
+  border-radius: 0.15rem;
+  padding: 0 0.1rem;
 }
 
 .global-search-status {

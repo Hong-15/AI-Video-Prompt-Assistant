@@ -1,0 +1,615 @@
+// 卡片数据导入模块
+// 负责工作台"导入数据"按钮：选择/拖拽导入 .md/.txt 卡片数据
+
+const ImportManager = (function() {
+  let _dialog = null;
+  let _dragCounter = 0;
+
+  // 初始化导入按钮
+  function init() {
+    const btn = document.getElementById('importDataBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', openDialog);
+
+    // 拖拽文件到按钮上也能触发导入
+    btn.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      btn.classList.add('import-btn-drag-over');
+    });
+    btn.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    btn.addEventListener('dragleave', () => {
+      btn.classList.remove('import-btn-drag-over');
+    });
+    btn.addEventListener('drop', (e) => {
+      e.preventDefault();
+      btn.classList.remove('import-btn-drag-over');
+      handleButtonDrop(e);
+    });
+  }
+
+  // 打开导入对话框
+  function openDialog() {
+    if (!Content.hasActiveTask()) {
+      Modal.show({
+        title: StringLoader.get('modal.hint', '提示'),
+        message: StringLoader.get('sidebar.noFolderPrompt', '请先打开一个工作文件夹，数据将保存在该文件夹中'),
+        confirmText: StringLoader.get('modal.ok', '确定'),
+        showCancel: false
+      });
+      return;
+    }
+
+    if (_dialog) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'import-dialog-overlay';
+
+    const box = document.createElement('div');
+    box.className = 'import-dialog-box';
+
+    // 标题栏
+    const header = document.createElement('div');
+    header.className = 'import-dialog-header';
+    const title = document.createElement('span');
+    title.className = 'import-dialog-title';
+    title.textContent = StringLoader.get('import.dialogTitle', '导入卡片数据');
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'import-dialog-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.title = StringLoader.get('modal.close', '关闭');
+    closeBtn.addEventListener('click', closeDialog);
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    box.appendChild(header);
+
+    // 拖拽区域
+    const dropZone = document.createElement('div');
+    dropZone.className = 'import-drop-zone';
+    dropZone.innerHTML = '<div class="import-drop-icon">&#128194;</div>' +
+      '<div class="import-drop-text">' + StringLoader.get('import.dragHint', '将 .md 或 .txt 文件拖到这里') + '</div>' +
+      '<div class="import-drop-formats">' + StringLoader.get('import.formatHint', '支持 demoMd2 / demoMd3 格式') + '</div>';
+    box.appendChild(dropZone);
+
+    // 选择文件按钮
+    const selectBtn = document.createElement('button');
+    selectBtn.className = 'import-select-btn';
+    selectBtn.textContent = StringLoader.get('import.selectFile', '选择文件');
+    selectBtn.addEventListener('click', handleSelectFile);
+    box.appendChild(selectBtn);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    _dialog = overlay;
+
+    // 点击遮罩关闭
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeDialog();
+    });
+
+    // 拖拽事件
+    const boundPreventDefaults = preventDefaults;
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, boundPreventDefaults, false);
+      document.body.addEventListener(eventName, boundPreventDefaults, false);
+    });
+
+    const onDragEnter = () => {
+      _dragCounter++;
+      dropZone.classList.add('import-drop-active');
+    };
+    const onDragLeave = () => {
+      _dragCounter--;
+      if (_dragCounter === 0) dropZone.classList.remove('import-drop-active');
+    };
+    dropZone.addEventListener('dragenter', onDragEnter);
+    dropZone.addEventListener('dragleave', onDragLeave);
+    dropZone.addEventListener('drop', handleDrop);
+
+    // ESC 关闭
+    const onKeydown = (e) => {
+      if (e.key === 'Escape') closeDialog();
+    };
+    document.addEventListener('keydown', onKeydown);
+
+    // 保存引用以便关闭时移除
+    overlay._eventRefs = {
+      dropZone,
+      boundPreventDefaults,
+      onDragEnter,
+      onDragLeave,
+      onKeydown
+    };
+  }
+
+  function closeDialog() {
+    if (!_dialog) return;
+    const refs = _dialog._eventRefs;
+    if (refs) {
+      document.removeEventListener('keydown', refs.onKeydown);
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        refs.dropZone.removeEventListener(eventName, refs.boundPreventDefaults, false);
+        document.body.removeEventListener(eventName, refs.boundPreventDefaults, false);
+      });
+      refs.dropZone.removeEventListener('dragenter', refs.onDragEnter);
+      refs.dropZone.removeEventListener('dragleave', refs.onDragLeave);
+      refs.dropZone.removeEventListener('drop', handleDrop);
+    }
+    _dialog.remove();
+    _dialog = null;
+    _dragCounter = 0;
+  }
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  // 选择文件
+  async function handleSelectFile() {
+    try {
+      const result = await window.electronAPI.importFile();
+      if (result.success && result.content !== undefined) {
+        closeDialog();
+        processImport(result.content, result.filePath);
+      }
+    } catch (e) {
+      console.error('选择导入文件失败:', e);
+    }
+  }
+
+  // 拖拽导入（弹窗内的拖拽区域）
+  function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length === 0) return;
+
+    const file = files[0];
+    readDroppedFile(file, () => closeDialog());
+  }
+
+  // 拖拽导入（拖到按钮上）
+  function handleButtonDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length === 0) return;
+
+    if (!Content.hasActiveTask()) {
+      Modal.show({
+        title: StringLoader.get('modal.hint', '提示'),
+        message: StringLoader.get('sidebar.noFolderPrompt', '请先打开一个工作文件夹，数据将保存在该文件夹中'),
+        confirmText: StringLoader.get('modal.ok', '确定'),
+        showCancel: false
+      });
+      return;
+    }
+
+    readDroppedFile(files[0], null);
+  }
+
+  // 读取拖拽的文件
+  function readDroppedFile(file, onDone) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext !== 'md' && ext !== 'txt') {
+      showError(StringLoader.get('import.errorInvalid', '文件格式错误：{reason}')
+        .replace('{reason}', StringLoader.get('import.formatHint', '支持 demoMd2 / demoMd3 格式')));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (onDone) onDone();
+      processImport(event.target.result, file.name);
+    };
+    reader.onerror = () => {
+      showError(StringLoader.get('import.errorInvalid', '文件格式错误：{reason}')
+        .replace('{reason}', '读取文件失败'));
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  // 处理导入
+  function processImport(content, fileName) {
+    if (!content || content.trim().length === 0) {
+      showError(StringLoader.get('import.errorEmpty', '文件内容为空'));
+      return;
+    }
+
+    const parseResult = parseImportContent(content);
+    if (!parseResult.success) {
+      showError(parseResult.error);
+      return;
+    }
+
+    confirmImport(parseResult);
+  }
+
+  // 解析导入内容
+  function parseImportContent(content) {
+    const lines = content.split(/\r?\n/);
+    const hasTask = lines.some(line => line.trim().startsWith('## '));
+    const hasCard = lines.some(line => line.trim().startsWith('### '));
+
+    if (!hasCard) {
+      return { success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（### 卡片名称）') };
+    }
+
+    const format = hasTask ? 'demoMd2' : 'demoMd3';
+
+    if (format === 'demoMd2') {
+      return parseDemoMd2(lines);
+    }
+    return parseDemoMd3(lines);
+  }
+
+  // 解析 demoMd2 格式：## 任务名称 + ### 卡片名称
+  function parseDemoMd2(lines) {
+    let taskName = '';
+    const cards = [];
+    let i = 0;
+
+    // 找到第一个任务名
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line.startsWith('## ')) {
+        taskName = line.substring(3).trim();
+        i++;
+        break;
+      }
+      i++;
+    }
+
+    if (!taskName) {
+      return { success: false, error: StringLoader.get('import.errorNoTask', '未找到任务项（## 任务名称）') };
+    }
+
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line.startsWith('### ')) {
+        const cardName = line.substring(4).trim();
+        const cardResult = parseCardContent(lines, i + 1);
+        if (cardResult.success) {
+          cards.push({ name: cardName, content: cardResult.content });
+          i = cardResult.nextIndex;
+          continue;
+        }
+      }
+      i++;
+    }
+
+    if (cards.length === 0) {
+      return { success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（### 卡片名称）') };
+    }
+
+    return { success: true, format: 'demoMd2', taskName, cards };
+  }
+
+  // 解析 demoMd3 格式：只有 ### 卡片名称
+  function parseDemoMd3(lines) {
+    const cards = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line.startsWith('### ')) {
+        const cardName = line.substring(4).trim();
+        const cardResult = parseCardContent(lines, i + 1);
+        if (cardResult.success) {
+          cards.push({ name: cardName, content: cardResult.content });
+          i = cardResult.nextIndex;
+          continue;
+        }
+      }
+      i++;
+    }
+
+    if (cards.length === 0) {
+      return { success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（### 卡片名称）') };
+    }
+
+    return { success: true, format: 'demoMd3', cards };
+  }
+
+  // 解析单个卡片内容
+  function parseCardContent(lines, startIndex) {
+    let contentLines = [];
+    let i = startIndex;
+    let foundMarker = false;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // 遇到下一个卡片或任务时结束
+      if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
+        break;
+      }
+
+      if (!foundMarker) {
+        // 匹配 **内容** 或 **内容2** / **内容3** 等标记
+        if (/^\*\*内容(\d+)?\*\*$/.test(trimmed)) {
+          foundMarker = true;
+          i++;
+          continue;
+        }
+        // 忽略内容标记前的空行
+        if (trimmed === '') {
+          i++;
+          continue;
+        }
+        // 未找到内容标记，但遇到了非空行，视作内容开始（兼容容错）
+        foundMarker = true;
+      }
+
+      contentLines.push(line);
+      i++;
+    }
+
+    // 去除尾部空行
+    while (contentLines.length > 0 && contentLines[contentLines.length - 1].trim() === '') {
+      contentLines.pop();
+    }
+
+    return { success: true, content: contentLines.join('\n'), nextIndex: i };
+  }
+
+  // 确认导入
+  function confirmImport(parseResult) {
+    const count = parseResult.cards.length;
+    const message = parseResult.format === 'demoMd2'
+      ? StringLoader.get('import.confirmTaskCards', '是否导入任务"{task}"下的 {count} 个卡片数据？')
+          .replace('{task}', parseResult.taskName).replace('{count}', count)
+      : StringLoader.get('import.confirmCards', '是否导入 {count} 个卡片数据？').replace('{count}', count);
+
+    Modal.confirm(
+      StringLoader.get('import.dialogTitle', '导入卡片数据'),
+      message,
+      () => {
+        applyImport(parseResult.cards);
+      },
+      { confirmText: StringLoader.get('modal.confirm', '确认'), cancelText: StringLoader.get('modal.cancel', '取消') }
+    );
+  }
+
+  // 应用导入
+  async function applyImport(cards) {
+    const activeTask = Sidebar.getActiveTask();
+    if (!activeTask) return;
+
+    const taskId = activeTask.id;
+    const fieldConfig = Content.getFieldConfig ? Content.getFieldConfig() : [];
+
+    // 收集当前任务中可见的卡片（未隐藏的固定卡片 + 自定义卡片）
+    // 被隐藏的固定卡片单独记录，导入时直接取消隐藏并写入，不弹重复提示
+    const visibleExistingCards = [];
+    const hiddenFixedCards = [];
+    const hiddenFields = activeTask.hiddenFields || [];
+    const customCards = activeTask.customCards || [];
+    const fieldLabels = activeTask.fieldLabels || {};
+
+    fieldConfig.forEach(field => {
+      const label = fieldLabels[field.key] || field.label;
+      if (hiddenFields.includes(field.key)) {
+        hiddenFixedCards.push({ key: field.key, label });
+      } else {
+        visibleExistingCards.push({ key: field.key, label, type: 'fixed' });
+      }
+    });
+    customCards.forEach(cc => {
+      visibleExistingCards.push({ key: cc.key, label: cc.label, type: 'custom' });
+    });
+
+    let importedCount = 0;
+    let skipAll = false;
+    let overwriteAll = false;
+    let renameAll = false;
+    const renameConflicts = [];
+    const fields = { ...(activeTask.fields || {}) };
+    let newCustomCards = [...customCards];
+    let newHiddenFields = [...hiddenFields];
+    let newCardOrder = [...(activeTask.cardOrder || [])];
+
+    for (const card of cards) {
+      const visibleExisting = visibleExistingCards.find(c => c.label === card.name);
+      const hiddenFixed = hiddenFixedCards.find(c => c.label === card.name);
+
+      if (visibleExisting) {
+        if (skipAll) continue;
+        if (overwriteAll) {
+          fields[visibleExisting.key] = card.content;
+          importedCount++;
+          continue;
+        }
+        if (renameAll) {
+          renameConflicts.push(card.name);
+          continue;
+        }
+
+        const action = await showDuplicateDialog(card.name);
+        if (action === 'skipAll') {
+          skipAll = true;
+          continue;
+        }
+        if (action === 'overwriteAll') {
+          overwriteAll = true;
+          fields[visibleExisting.key] = card.content;
+          importedCount++;
+          continue;
+        }
+        if (action === 'renameAll') {
+          renameAll = true;
+          renameConflicts.push(card.name);
+          continue;
+        }
+        if (action === 'skip') {
+          continue;
+        }
+        if (action === 'overwrite') {
+          fields[visibleExisting.key] = card.content;
+          importedCount++;
+          continue;
+        }
+        if (action === 'rename') {
+          renameConflicts.push(card.name);
+          continue;
+        }
+      } else if (hiddenFixed) {
+        // 隐藏的固定卡片：直接取消隐藏并写入内容
+        fields[hiddenFixed.key] = card.content;
+        newHiddenFields = newHiddenFields.filter(k => k !== hiddenFixed.key);
+        importedCount++;
+      } else {
+        // 新建自定义卡片
+        const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        newCustomCards.push({ key, label: card.name });
+        fields[key] = card.content;
+        newCardOrder.push(key);
+        visibleExistingCards.push({ key, label: card.name, type: 'custom' });
+        importedCount++;
+      }
+    }
+
+    // 更新任务数据
+    Sidebar.updateTaskFields(taskId, fields);
+    Sidebar.updateTaskCustomCards(taskId, newCustomCards);
+    Sidebar.updateTaskHiddenFields(taskId, newHiddenFields);
+    Sidebar.updateTaskCardOrder(taskId, newCardOrder);
+
+    // 重新渲染
+    Content.switchToTask(Sidebar.getActiveTask());
+
+    // 提示结果
+    if (renameConflicts.length > 0) {
+      showRenameListDialog(renameConflicts);
+    }
+    if (importedCount > 0) {
+      Content.showToast(StringLoader.get('import.success', '成功导入 {count} 个卡片').replace('{count}', importedCount));
+      if (typeof App !== 'undefined' && App.markDirty) App.markDirty();
+    } else if (renameConflicts.length === 0) {
+      Content.showToast(StringLoader.get('import.errorEmpty', '文件内容为空'));
+    }
+  }
+
+  // 显示重复卡片处理对话框
+  function showDuplicateDialog(cardName) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'import-dialog-overlay';
+
+      const box = document.createElement('div');
+      box.className = 'import-dialog-box import-duplicate-box';
+
+      const title = document.createElement('div');
+      title.className = 'import-dialog-title';
+      title.textContent = StringLoader.get('import.duplicateTitle', '发现同名卡片');
+      box.appendChild(title);
+
+      const msg = document.createElement('div');
+      msg.className = 'import-dialog-message';
+      msg.textContent = StringLoader.get('import.duplicateMessage', '卡片"{name}"已存在，请选择处理方式')
+        .replace('{name}', cardName);
+      box.appendChild(msg);
+
+      const actions = document.createElement('div');
+      actions.className = 'import-duplicate-actions';
+
+      const createBtn = (text, action) => {
+        const btn = document.createElement('button');
+        btn.className = 'import-duplicate-btn';
+        btn.textContent = text;
+        btn.addEventListener('click', () => {
+          overlay.remove();
+          resolve(action);
+        });
+        return btn;
+      };
+
+      actions.appendChild(createBtn(StringLoader.get('import.skip', '跳过'), 'skip'));
+      actions.appendChild(createBtn(StringLoader.get('import.skipAll', '全部跳过'), 'skipAll'));
+      actions.appendChild(createBtn(StringLoader.get('import.overwrite', '覆盖'), 'overwrite'));
+      actions.appendChild(createBtn(StringLoader.get('import.overwriteAll', '全部覆盖'), 'overwriteAll'));
+      actions.appendChild(createBtn(StringLoader.get('import.rename', '重命名'), 'rename'));
+      actions.appendChild(createBtn(StringLoader.get('import.renameAll', '全部重命名'), 'renameAll'));
+      box.appendChild(actions);
+
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+          resolve('skip');
+        }
+      });
+    });
+  }
+
+  // 显示需要重命名的卡片列表
+  function showRenameListDialog(conflicts) {
+    const overlay = document.createElement('div');
+    overlay.className = 'import-dialog-overlay';
+
+    const box = document.createElement('div');
+    box.className = 'import-dialog-box import-rename-box';
+
+    const title = document.createElement('div');
+    title.className = 'import-dialog-title';
+    title.textContent = StringLoader.get('import.renameTitle', '需要重命名的卡片');
+    box.appendChild(title);
+
+    const msg = document.createElement('div');
+    msg.className = 'import-dialog-message';
+    msg.textContent = StringLoader.get('import.renameMessage', '以下卡片与现有卡片重名，请复制后在源文件中修改名称后重新导入：');
+    box.appendChild(msg);
+
+    const list = document.createElement('textarea');
+    list.className = 'import-rename-list';
+    list.readOnly = true;
+    list.value = conflicts.join('\n');
+    box.appendChild(list);
+
+    const actions = document.createElement('div');
+    actions.className = 'import-dialog-actions';
+
+    const understandBtn = document.createElement('button');
+    understandBtn.className = 'import-dialog-btn import-dialog-btn-confirm';
+    understandBtn.textContent = StringLoader.get('import.understand', '了解');
+    understandBtn.addEventListener('click', () => overlay.remove());
+    actions.appendChild(understandBtn);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'import-dialog-btn import-dialog-btn-cancel';
+    copyBtn.textContent = StringLoader.get('import.copy', '复制');
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(conflicts.join('\n'));
+        Content.showToast(StringLoader.get('import.copySuccess', '已复制到剪贴板'));
+      } catch (e) {
+        Content.showToast(StringLoader.get('import.copyFailed', '复制失败'));
+      }
+    });
+    actions.appendChild(copyBtn);
+
+    box.appendChild(actions);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  // 显示错误提示
+  function showError(message) {
+    Modal.show({
+      title: StringLoader.get('import.errorTitle', '导入失败'),
+      message: message,
+      confirmText: StringLoader.get('modal.ok', '确定'),
+      showCancel: false
+    });
+  }
+
+  return { init };
+})();

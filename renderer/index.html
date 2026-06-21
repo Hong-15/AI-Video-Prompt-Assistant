@@ -18,6 +18,7 @@
           <button id="menuNewWindow" class="dropdown-item">新建窗口</button>
           <button id="menuCreateProject" class="dropdown-item">新建项目</button>
           <div class="dropdown-separator"></div>
+          <button id="menuImportProject" class="dropdown-item">导入项目数据</button>
           <button id="menuExport" class="dropdown-item dropdown-has-submenu">项目任务导出</button>
           <div id="menuExportSubmenu" class="dropdown-submenu" style="display:none;">
             <button id="menuExportMD" class="dropdown-item">导出为 Markdown</button>
@@ -83,6 +84,7 @@
       <!-- 提示词工作台 -->
       <div id="workspace" class="workspace" style="display:none;">
         <div class="workspace-header">
+          <button id="importDataBtn" class="import-data-btn" title="导入卡片数据">导入数据</button>
           <button id="addCustomCardBtn" class="add-custom-card-btn" title="添加自定义卡片">+ 自定义卡片</button>
         </div>
         <div id="inputGrid" class="input-grid"></div>
@@ -266,6 +268,7 @@
   <script src="scripts/toolbar.js"></script>
   <script src="scripts/sidebar.js"></script>
   <script src="scripts/content.js"></script>
+  <script src="scripts/import.js"></script>
   <script src="scripts/app.js"></script>
 </body>
 </html>

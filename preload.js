@@ -51,6 +51,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 导出文件
   exportFile: (options) => ipcRenderer.invoke('export-file', options),
 
+  // 导入文件（弹出打开对话框并读取内容）
+  importFile: () => ipcRenderer.invoke('import-file'),
+
   // 获取主题配置
   getThemeConfig: () => ipcRenderer.invoke('get-theme-config'),
 

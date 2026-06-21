@@ -7,6 +7,7 @@ const Toolbar = (function() {
   let _onResetCurrentLayout = null;
   let _onResetAllLayout = null;
   let _onExport = null;
+  let _onImport = null;
   let _onShortcutSettings = null;
   let _onAbout = null;
   let _onMoreSettings = null;
@@ -24,6 +25,7 @@ const Toolbar = (function() {
     _onResetCurrentLayout = callbacks.onResetCurrentLayout || null;
     _onResetAllLayout = callbacks.onResetAllLayout || null;
     _onExport = callbacks.onExport || null;
+    _onImport = callbacks.onImport || null;
     _onShortcutSettings = callbacks.onShortcutSettings || null;
     _onAbout = callbacks.onAbout || null;
     _onMoreSettings = callbacks.onMoreSettings || null;
@@ -94,6 +96,12 @@ const Toolbar = (function() {
     document.getElementById('menuCreateProject').addEventListener('click', () => {
       hideAllDropdowns();
       if (_onCreateProject) _onCreateProject();
+    });
+
+    // 导入项目数据
+    document.getElementById('menuImportProject').addEventListener('click', () => {
+      hideAllDropdowns();
+      if (_onImport) _onImport();
     });
 
     // 关闭当前窗口
@@ -266,6 +274,9 @@ const Toolbar = (function() {
     const elCreateProject = document.getElementById('menuCreateProject');
     if (elCreateProject) elCreateProject.textContent = StringLoader.get('menu.createProject', '新建项目');
 
+    const elImportProject = document.getElementById('menuImportProject');
+    if (elImportProject) elImportProject.textContent = StringLoader.get('menu.import', '导入项目数据');
+
     const elCloseWindow = document.getElementById('menuCloseWindow');
     if (elCloseWindow) elCloseWindow.textContent = StringLoader.get('menu.closeWindow', '关闭此窗口');
 
@@ -321,6 +332,13 @@ const Toolbar = (function() {
 
     const statusFolder = document.getElementById('statusFolderPath');
     if (statusFolder) statusFolder.title = StringLoader.get('status.clickToCopy', '点击复制路径');
+
+    // 导入数据按钮
+    const importDataBtn = document.getElementById('importDataBtn');
+    if (importDataBtn) {
+      importDataBtn.textContent = StringLoader.get('import.importData', '导入数据');
+      importDataBtn.title = StringLoader.get('import.importDataTitle', '导入卡片数据');
+    }
 
     // 自定义卡片按钮
     const addCustomCardBtn = document.getElementById('addCustomCardBtn');

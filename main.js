@@ -634,6 +634,28 @@ function setupIPC() {
     return { success: false, canceled: true };
   });
 
+  // 导入文件（弹出打开对话框并读取内容）
+  ipcMain.handle('import-file', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: strings.dialog?.importTitle || '选择导入文件',
+      properties: ['openFile'],
+      filters: [
+        { name: strings.dialog?.importFilter || 'Markdown / 文本文件', extensions: ['md', 'txt'] },
+        { name: strings.dialog?.allFiles || '所有文件', extensions: ['*'] }
+      ]
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      const filePath = result.filePaths[0];
+      try {
+        const content = await fsPromises.readFile(filePath, 'utf-8');
+        return { success: true, filePath, content };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+    return { success: false, canceled: true };
+  });
+
   // 获取主题配置
   ipcMain.handle('get-theme-config', async () => {
     const configPath = path.join(__dirname, 'config', 'theme.json');

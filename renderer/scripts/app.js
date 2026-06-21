@@ -36,10 +36,14 @@ const App = (function() {
       onResetCurrentLayout: handleResetCurrentLayout,
       onResetAllLayout: handleResetAllLayout,
       onExport: handleExport,
+      onImport: handleImportProject,
       onMoreSettings: showMoreSettings,
       onGlobalSearch: showGlobalSearch,
       onCreateProject: showCreateProjectModal
     });
+
+    // 5.1 初始化卡片数据导入
+    ImportManager.init();
 
     // 6. 初始化侧边栏拖动调整大小
     initResizeHandle();
@@ -452,6 +456,213 @@ const App = (function() {
     } catch (e) {
       console.error('导出失败:', e);
     }
+  }
+
+  // ========== 导入项目数据 ==========
+
+  async function handleImportProject() {
+    if (!_currentFolder) {
+      showNoFolderDialog();
+      return;
+    }
+
+    let fileResult;
+    try {
+      fileResult = await window.electronAPI.importFile();
+    } catch (e) {
+      console.error('选择导入文件失败:', e);
+      return;
+    }
+
+    if (!fileResult || !fileResult.success || fileResult.content === undefined) return;
+
+    const content = fileResult.content;
+    if (!content || content.trim().length === 0) {
+      Modal.show({
+        title: StringLoader.get('import.errorTitle', '导入失败'),
+        message: StringLoader.get('import.errorEmpty', '文件内容为空'),
+        showCancel: false,
+        confirmText: StringLoader.get('modal.ok', '确定')
+      });
+      return;
+    }
+
+    const parseResult = parseProjectExport(content);
+    if (!parseResult.success) {
+      Modal.show({
+        title: StringLoader.get('import.errorTitle', '导入失败'),
+        message: parseResult.error,
+        showCancel: false,
+        confirmText: StringLoader.get('modal.ok', '确定')
+      });
+      return;
+    }
+
+    Modal.confirm(
+      StringLoader.get('import.dialogTitle', '导入卡片数据'),
+      StringLoader.get('dialog.confirmImportProject', '将导入 {count} 个任务，当前项目中的任务不会被清空。确认导入？')
+        .replace('{count}', parseResult.tasks.length),
+      () => {
+        applyProjectImport(parseResult.tasks);
+      },
+      { confirmText: StringLoader.get('modal.confirm', '确认'), cancelText: StringLoader.get('modal.cancel', '取消') }
+    );
+  }
+
+  // 解析导出文件内容（支持 md 和 txt 格式）
+  function parseProjectExport(content) {
+    const lines = content.split(/\r?\n/);
+    const tasks = [];
+
+    let currentTask = null;
+    let currentCardName = null;
+    let currentCardContent = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+
+      // MD 格式：## 1. taskName 或 ## taskName
+      if (/^##\s/.test(trimmed)) {
+        if (currentTask) {
+          flushCard();
+          if (currentTask.cards.length > 0) tasks.push(currentTask);
+        }
+        const name = trimmed.replace(/^##\s+(?:\d+\.\s*)?/, '').trim();
+        if (name && !/^---$/.test(name)) {
+          currentTask = { name, cards: [] };
+        }
+        currentCardName = null;
+        currentCardContent = '';
+        continue;
+      }
+
+      // TXT 格式：【1. taskName】 或 【taskName】
+      if (/^【.+】$/.test(trimmed)) {
+        if (currentTask) {
+          flushCard();
+          if (currentTask.cards.length > 0) tasks.push(currentTask);
+        }
+        const name = trimmed.replace(/^【(?:\d+\.\s*)?/, '').replace(/】$/, '').trim();
+        if (name) {
+          currentTask = { name, cards: [] };
+        }
+        currentCardName = null;
+        currentCardContent = '';
+        continue;
+      }
+
+      // 分隔线
+      if (/^(---|\={10,})$/.test(trimmed)) continue;
+
+      if (!currentTask) continue;
+
+      // MD 格式卡片：**cardName**：content
+      const mdFieldMatch = trimmed.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
+      if (mdFieldMatch) {
+        flushCard();
+        currentCardName = mdFieldMatch[1].trim();
+        currentCardContent = mdFieldMatch[2];
+        continue;
+      }
+
+      // TXT 格式卡片：cardName：content
+      const txtFieldMatch = trimmed.match(/^(.+?)[：:]\s*(.*)$/);
+      if (txtFieldMatch && currentTask && !currentCardName) {
+        const possibleName = txtFieldMatch[1].trim();
+        // 排除时间、任务数等元信息行
+        if (!/^(导出时间|导出任务|项目任务|任务总数|Export Time|Total Tasks|Project Task)/i.test(possibleName)) {
+          flushCard();
+          currentCardName = possibleName;
+          currentCardContent = txtFieldMatch[2];
+          continue;
+        }
+      }
+
+      // 卡片内容的续行
+      if (currentCardName) {
+        currentCardContent += (currentCardContent ? '\n' : '') + lines[i];
+      }
+    }
+
+    // 最后一个任务
+    if (currentTask) {
+      flushCard();
+      if (currentTask.cards.length > 0) tasks.push(currentTask);
+    }
+
+    function flushCard() {
+      if (currentCardName && currentTask) {
+        currentTask.cards.push({ name: currentCardName, content: currentCardContent.trim() });
+      }
+      currentCardName = null;
+      currentCardContent = '';
+    }
+
+    if (tasks.length === 0) {
+      return { success: false, error: StringLoader.get('import.errorNoTask', '未找到任务项（## 任务名称）') };
+    }
+
+    return { success: true, tasks };
+  }
+
+  // 应用项目导入
+  async function applyProjectImport(tasks) {
+    const currentTasks = Sidebar.getTasks();
+    let importedCount = 0;
+
+    for (const taskData of tasks) {
+      const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const newTask = {
+        id: taskId,
+        name: taskData.name,
+        fields: {},
+        layout: {},
+        hiddenFields: [],
+        fieldLabels: {},
+        customCards: [],
+        cardOrder: []
+      };
+
+      // 按名称匹配到固定卡片 key
+      const fieldConfig = await window.electronAPI.getFieldConfig();
+      const isEnglish = _currentLanguage === 'en';
+
+      for (const card of taskData.cards) {
+        const field = fieldConfig.find(f => {
+          const label = isEnglish && f.labelEn ? f.labelEn : f.label;
+          return label === card.name;
+        });
+        if (field) {
+          newTask.fields[field.key] = card.content;
+        } else {
+          // 新建自定义卡片
+          const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          newTask.customCards.push({ key, label: card.name });
+          newTask.fields[key] = card.content;
+          newTask.cardOrder.push(key);
+        }
+      }
+
+      // 插入任务（添加到末尾）
+      const allTasks = [...currentTasks, newTask];
+      Sidebar.setTasks(allTasks);
+      importedCount++;
+    }
+
+    // 选中第一个导入的任务
+    if (importedCount > 0) {
+      const updatedTasks = Sidebar.getTasks();
+      const lastImported = updatedTasks[updatedTasks.length - 1];
+      if (lastImported) {
+        Sidebar.setActiveTask(lastImported.id);
+      }
+    }
+
+    markDirty();
+    Sidebar.render();
+    Content.showToast(
+      StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
+    );
   }
 
   // ========== 文件夹与任务管理 ==========
@@ -2117,7 +2328,7 @@ const App = (function() {
     input.focus();
   }
 
-  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage };
+  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty };
 })();
 
 // 启动应用

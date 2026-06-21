@@ -356,6 +356,48 @@ async function openLogFileReadOnly(fileName) {
   }
 }
 
+// 在指定目录中递归搜索文件（不阻塞主线程的异步遍历）
+async function searchFilesInFolder(folderPath, query) {
+  if (!folderPath || typeof query !== 'string') return [];
+  const lowerQuery = query.toLowerCase().trim();
+  if (!lowerQuery) return [];
+
+  const results = [];
+  const maxResults = 50;
+  const skipDirs = new Set(['node_modules', '.git', 'tmp_userdata', 'dist', 'build', 'logs']);
+
+  async function walk(dir) {
+    if (results.length >= maxResults) return;
+    let entries = [];
+    try {
+      entries = await fsPromises.readdir(dir, { withFileTypes: true });
+    } catch (e) {
+      return;
+    }
+    for (const entry of entries) {
+      if (results.length >= maxResults) return;
+      if (entry.name.startsWith('.')) continue;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (skipDirs.has(entry.name)) continue;
+        await walk(fullPath);
+      } else if (entry.isFile()) {
+        const relPath = path.relative(folderPath, fullPath);
+        if (entry.name.toLowerCase().includes(lowerQuery) || relPath.toLowerCase().includes(lowerQuery)) {
+          results.push({ name: entry.name, path: fullPath, relPath });
+        }
+      }
+    }
+  }
+
+  try {
+    await walk(folderPath);
+  } catch (e) {
+    console.error('[Main] 搜索文件失败:', e);
+  }
+  return results;
+}
+
 // IPC 处理
 function setupIPC() {
   // 渲染进程就绪（JS 初始化完成，已移除 visibility:hidden 锁）
@@ -416,6 +458,18 @@ function setupIPC() {
   // 获取日志目录绝对路径
   ipcMain.handle('get-log-dir', () => {
     return getLogDir();
+  });
+
+  // 在已打开文件夹中搜索文件
+  ipcMain.handle('search-files', async (event, folderPath, query) => {
+    return searchFilesInFolder(folderPath, query);
+  });
+
+  // 使用系统默认程序打开文件
+  ipcMain.handle('open-file', async (event, filePath) => {
+    const result = await shell.openPath(filePath);
+    if (result) throw new Error(result);
+    return true;
   });
 
   // 窗口控制

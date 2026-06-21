@@ -36,8 +36,8 @@ const App = (function() {
       onResetCurrentLayout: handleResetCurrentLayout,
       onResetAllLayout: handleResetAllLayout,
       onExport: handleExport,
-      onThemeChange: handleThemeChange,
       onMoreSettings: showMoreSettings,
+      onGlobalSearch: showGlobalSearch,
       onCreateProject: showCreateProjectModal
     });
 
@@ -782,6 +782,15 @@ const App = (function() {
       _currentLanguage = 'zh-CN';
     }
 
+    // 加载当前主题
+    let _currentTheme = 'default';
+    try {
+      const themeConfig = await window.electronAPI.getThemeConfig();
+      _currentTheme = (themeConfig && themeConfig.theme) || 'default';
+    } catch (e) {
+      _currentTheme = 'default';
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'more-settings-overlay';
 
@@ -813,6 +822,7 @@ const App = (function() {
 
     const menuItems = [
       { id: 'closeBehavior', label: 'moreSettings.menuCloseBehavior', defaultLabel: '关闭行为' },
+      { id: 'theme', label: 'moreSettings.menuTheme', defaultLabel: '主题' },
       { id: 'shortcuts', label: 'moreSettings.menuShortcuts', defaultLabel: '快捷键设置' },
       { id: 'language', label: 'moreSettings.menuLanguage', defaultLabel: '语言' },
       { id: 'logs', label: 'moreSettings.menuLogs', defaultLabel: '日志' },
@@ -883,6 +893,54 @@ const App = (function() {
     });
 
     content.appendChild(panelCloseBehavior);
+
+    // ===== 面板：主题 =====
+    const panelTheme = document.createElement('div');
+    panelTheme.className = 'more-settings-panel';
+    panelTheme.id = 'panelTheme';
+
+    const themeTitle = document.createElement('h3');
+    themeTitle.textContent = StringLoader.get('moreSettings.theme', '主题');
+    panelTheme.appendChild(themeTitle);
+
+    const themeDesc = document.createElement('p');
+    themeDesc.className = 'more-settings-desc';
+    themeDesc.textContent = StringLoader.get('moreSettings.themeDesc', '选择界面主题配色方案');
+    panelTheme.appendChild(themeDesc);
+
+    const themeOptions = [
+      { value: 'light', label: 'moreSettings.themeLight', defaultLabel: '浅色' },
+      { value: 'dark', label: 'moreSettings.themeDark', defaultLabel: '暗色' },
+      { value: 'default', label: 'moreSettings.themeDefault', defaultLabel: '默认' },
+      { value: 'system', label: 'moreSettings.themeSystem', defaultLabel: '跟随系统' }
+    ];
+
+    themeOptions.forEach(opt => {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'more-settings-option';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'appTheme';
+      radio.value = opt.value;
+      radio.checked = _currentTheme === opt.value;
+      radio.addEventListener('change', () => {
+        _currentTheme = opt.value;
+        handleThemeChange(opt.value);
+      });
+
+      const labelDiv = document.createElement('div');
+      labelDiv.className = 'more-settings-option-label';
+      const labelStrong = document.createElement('strong');
+      labelStrong.textContent = StringLoader.get(opt.label, opt.defaultLabel);
+      labelDiv.appendChild(labelStrong);
+
+      optDiv.appendChild(radio);
+      optDiv.appendChild(labelDiv);
+      panelTheme.appendChild(optDiv);
+    });
+
+    content.appendChild(panelTheme);
 
     // ===== 面板2：快捷键设置 =====
     const panelShortcuts = document.createElement('div');
@@ -1376,6 +1434,13 @@ const App = (function() {
     actions.appendChild(saveBtn);
 
     box.appendChild(actions);
+
+    // 右下角调整大小手柄
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'more-settings-resize-handle';
+    resizeHandle.title = StringLoader.get('moreSettings.resizeTip', '拖动调整大小');
+    box.appendChild(resizeHandle);
+
     overlay.appendChild(box);
 
     // 面板切换
@@ -1395,9 +1460,100 @@ const App = (function() {
     // 默认激活关闭行为
     switchPanel('closeBehavior');
 
+    function close() {
+      document.removeEventListener('mousemove', onMsDragMove);
+      document.removeEventListener('mouseup', onMsDragUp);
+      document.removeEventListener('mousemove', onMsResizeMove);
+      document.removeEventListener('mouseup', onMsResizeUp);
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove();
+      if (e.target === overlay) close();
     });
+
+    // 拖动：按住标题栏移动盒子
+    let msDragging = false;
+    let msDragStartX = 0;
+    let msDragStartY = 0;
+    let msBoxStartLeft = 0;
+    let msBoxStartTop = 0;
+
+    header.style.cursor = 'grab';
+    header.addEventListener('mousedown', (e) => {
+      if (e.target === closeBtn) return;
+      msDragging = true;
+      msDragStartX = e.clientX;
+      msDragStartY = e.clientY;
+      const rect = box.getBoundingClientRect();
+      msBoxStartLeft = rect.left;
+      msBoxStartTop = rect.top;
+      box.style.position = 'fixed';
+      box.style.left = rect.left + 'px';
+      box.style.top = rect.top + 'px';
+      box.style.transform = 'none';
+      box.style.margin = '0';
+      header.style.cursor = 'grabbing';
+    });
+
+    function onMsDragMove(e) {
+      if (!msDragging) return;
+      box.style.left = (msBoxStartLeft + e.clientX - msDragStartX) + 'px';
+      box.style.top = (msBoxStartTop + e.clientY - msDragStartY) + 'px';
+    }
+
+    function onMsDragUp() {
+      if (msDragging) {
+        msDragging = false;
+        header.style.cursor = 'grab';
+      }
+    }
+
+    // 调整大小：右下角把手
+    let msResizing = false;
+    let msResizeStartX = 0;
+    let msResizeStartY = 0;
+    let msResizeStartW = 0;
+    let msResizeStartH = 0;
+    const MIN_W = 420;
+    const MIN_H = 340;
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      msResizing = true;
+      msResizeStartX = e.clientX;
+      msResizeStartY = e.clientY;
+      const rect = box.getBoundingClientRect();
+      msResizeStartW = rect.width;
+      msResizeStartH = rect.height;
+      if (!box.style.position || box.style.position === '') {
+        box.style.position = 'fixed';
+        box.style.left = rect.left + 'px';
+        box.style.top = rect.top + 'px';
+        box.style.width = rect.width + 'px';
+        box.style.height = rect.height + 'px';
+        box.style.transform = 'none';
+        box.style.margin = '0';
+      }
+    });
+
+    function onMsResizeMove(e) {
+      if (!msResizing) return;
+      const newW = Math.max(MIN_W, msResizeStartW + e.clientX - msResizeStartX);
+      const newH = Math.max(MIN_H, msResizeStartH + e.clientY - msResizeStartY);
+      box.style.width = newW + 'px';
+      box.style.height = newH + 'px';
+    }
+
+    function onMsResizeUp() {
+      msResizing = false;
+    }
+
+    document.addEventListener('mousemove', onMsDragMove);
+    document.addEventListener('mouseup', onMsDragUp);
+    document.addEventListener('mousemove', onMsResizeMove);
+    document.addEventListener('mouseup', onMsResizeUp);
 
     document.body.appendChild(overlay);
   }
@@ -1607,6 +1763,281 @@ const App = (function() {
 
     // 新窗口打开
     openNewBtn.onclick = () => doCreateProject(true);
+  }
+
+  /**
+   * 显示全局搜索面板：半模态、可拖动，支持搜索当前文件夹文件与应用操作
+   */
+  function showGlobalSearch() {
+    if (document.getElementById('globalSearchOverlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'globalSearchOverlay';
+    overlay.className = 'global-search-overlay';
+
+    const box = document.createElement('div');
+    box.className = 'global-search-box';
+    box.id = 'globalSearchBox';
+
+    // 标题栏（拖动把手）
+    const header = document.createElement('div');
+    header.className = 'global-search-header';
+
+    const title = document.createElement('span');
+    title.className = 'global-search-title';
+    title.textContent = StringLoader.get('globalSearch.title', '全局搜索');
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'global-search-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.title = StringLoader.get('modal.close', '关闭');
+    closeBtn.addEventListener('click', close);
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    box.appendChild(header);
+
+    // 搜索输入框
+    const inputWrap = document.createElement('div');
+    inputWrap.className = 'global-search-input-wrap';
+
+    const searchIcon = document.createElement('span');
+    searchIcon.className = 'global-search-icon';
+    searchIcon.textContent = '🔍';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'global-search-input';
+    input.placeholder = StringLoader.get('globalSearch.placeholder', '输入关键词搜索文件或操作...');
+    input.autocomplete = 'off';
+
+    inputWrap.appendChild(searchIcon);
+    inputWrap.appendChild(input);
+    box.appendChild(inputWrap);
+
+    // 分类标签
+    const tabs = document.createElement('div');
+    tabs.className = 'global-search-tabs';
+
+    const tabItems = [
+      { id: 'all', label: StringLoader.get('globalSearch.tabAll', '所有') },
+      { id: 'files', label: StringLoader.get('globalSearch.tabFiles', '文件') },
+      { id: 'actions', label: StringLoader.get('globalSearch.tabActions', '操作') }
+    ];
+
+    let activeTab = 'all';
+
+    tabItems.forEach(tab => {
+      const btn = document.createElement('button');
+      btn.className = 'global-search-tab' + (tab.id === activeTab ? ' active' : '');
+      btn.textContent = tab.label;
+      btn.dataset.tab = tab.id;
+      btn.addEventListener('click', () => {
+        activeTab = tab.id;
+        updateTabs();
+        renderResults();
+      });
+      tabs.appendChild(btn);
+    });
+
+    function updateTabs() {
+      Array.from(tabs.children).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === activeTab);
+      });
+    }
+
+    box.appendChild(tabs);
+
+    // 结果列表
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'global-search-results';
+    box.appendChild(resultsContainer);
+
+    // 状态栏
+    const statusBar = document.createElement('div');
+    statusBar.className = 'global-search-status';
+    box.appendChild(statusBar);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // 拖动逻辑
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    header.addEventListener('mousedown', (e) => {
+      if (e.target === closeBtn) return;
+      isDragging = true;
+      const rect = box.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      box.style.position = 'fixed';
+      box.style.left = rect.left + 'px';
+      box.style.top = rect.top + 'px';
+      box.style.transform = 'none';
+      box.style.margin = '0';
+    });
+
+    function onMouseMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      box.style.left = (e.clientX - dragOffsetX) + 'px';
+      box.style.top = (e.clientY - dragOffsetY) + 'px';
+    }
+
+    function onMouseUp() {
+      isDragging = false;
+    }
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+
+    function close() {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+    // 搜索数据
+    let fileResults = [];
+    let actionResults = [];
+    let searchTimer = null;
+
+    const actionItems = [
+      { id: 'openFolder', label: 'globalSearch.actionOpenFolder', defaultLabel: '打开文件夹', keywords: 'open folder 打开文件夹', action: () => handleOpenFolder() },
+      { id: 'createProject', label: 'globalSearch.actionCreateProject', defaultLabel: '新建项目', keywords: 'new project 新建项目', action: () => showCreateProjectModal() },
+      { id: 'moreSettings', label: 'globalSearch.actionMoreSettings', defaultLabel: '更多设置', keywords: 'settings 更多设置', action: () => showMoreSettings() },
+      { id: 'resetCurrentLayout', label: 'globalSearch.actionResetCurrentLayout', defaultLabel: '当前任务布局恢复默认', keywords: 'reset layout 布局 恢复默认', action: () => handleResetCurrentLayout() },
+      { id: 'resetAllLayout', label: 'globalSearch.actionResetAllLayout', defaultLabel: '全局任务布局恢复默认', keywords: 'reset all layout 全局布局', action: () => handleResetAllLayout() },
+      { id: 'exportMD', label: 'globalSearch.actionExportMD', defaultLabel: '导出为 Markdown', keywords: 'export markdown 导出', action: () => handleExport('md') },
+      { id: 'exportTXT', label: 'globalSearch.actionExportTXT', defaultLabel: '导出为 文本文件', keywords: 'export txt 导出', action: () => handleExport('txt') },
+      { id: 'toggleSidebar', label: 'globalSearch.actionToggleSidebar', defaultLabel: '展开/隐藏侧边栏', keywords: 'sidebar 侧边栏', action: () => toggleSidebar() },
+      { id: 'quitApp', label: 'globalSearch.actionQuitApp', defaultLabel: '退出软件', keywords: 'quit exit 退出', action: () => window.electronAPI.quitApp() }
+    ];
+
+    function getActionLabel(item) {
+      return StringLoader.get(item.label, item.defaultLabel);
+    }
+
+    function searchActions(query) {
+      const lower = query.toLowerCase().trim();
+      if (!lower) return [];
+      return actionItems.filter(item => {
+        const label = getActionLabel(item).toLowerCase();
+        return label.includes(lower) || item.keywords.toLowerCase().includes(lower);
+      });
+    }
+
+    async function performSearch(query) {
+      fileResults = [];
+      actionResults = searchActions(query);
+      if (_currentFolder && (activeTab === 'all' || activeTab === 'files')) {
+        try {
+          fileResults = await window.electronAPI.searchFiles(_currentFolder, query);
+        } catch (e) {
+          console.error('搜索文件失败:', e);
+        }
+      }
+      renderResults();
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderResults() {
+      resultsContainer.innerHTML = '';
+
+      const showFiles = activeTab === 'all' || activeTab === 'files';
+      const showActions = activeTab === 'all' || activeTab === 'actions';
+      const filesToShow = showFiles ? fileResults : [];
+      const actionsToShow = showActions ? actionResults : [];
+      const total = filesToShow.length + actionsToShow.length;
+
+      if (total === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'global-search-empty';
+        empty.textContent = input.value.trim()
+          ? StringLoader.get('globalSearch.noResults', '未找到匹配项')
+          : StringLoader.get('globalSearch.typeToSearch', '输入关键词开始搜索');
+        resultsContainer.appendChild(empty);
+        statusBar.textContent = '';
+        return;
+      }
+
+      if (filesToShow.length > 0) {
+        const fileHeader = document.createElement('div');
+        fileHeader.className = 'global-search-section-header';
+        fileHeader.textContent = StringLoader.get('globalSearch.sectionFiles', '文件');
+        resultsContainer.appendChild(fileHeader);
+
+        filesToShow.forEach(file => {
+          const item = document.createElement('div');
+          item.className = 'global-search-result-item';
+          item.innerHTML =
+            '<span class="global-search-result-icon">📄</span>' +
+            '<span class="global-search-result-info">' +
+              '<span class="global-search-result-name">' + escapeHtml(file.name) + '</span>' +
+              '<span class="global-search-result-path">' + escapeHtml(file.relPath) + '</span>' +
+            '</span>';
+          item.addEventListener('click', async () => {
+            try {
+              await window.electronAPI.openFile(file.path);
+              close();
+            } catch (err) {
+              console.error('打开文件失败:', err);
+            }
+          });
+          resultsContainer.appendChild(item);
+        });
+      }
+
+      if (actionsToShow.length > 0) {
+        const actionHeader = document.createElement('div');
+        actionHeader.className = 'global-search-section-header';
+        actionHeader.textContent = StringLoader.get('globalSearch.sectionActions', '操作');
+        resultsContainer.appendChild(actionHeader);
+
+        actionsToShow.forEach(action => {
+          const item = document.createElement('div');
+          item.className = 'global-search-result-item';
+          item.innerHTML =
+            '<span class="global-search-result-icon">⚡</span>' +
+            '<span class="global-search-result-info">' +
+              '<span class="global-search-result-name">' + escapeHtml(getActionLabel(action)) + '</span>' +
+            '</span>';
+          item.addEventListener('click', () => {
+            close();
+            action.action();
+          });
+          resultsContainer.appendChild(item);
+        });
+      }
+
+      statusBar.textContent = StringLoader.get('globalSearch.resultCount', '共 {count} 条结果').replace('{count}', total);
+    }
+
+    input.addEventListener('input', () => {
+      if (searchTimer) clearTimeout(searchTimer);
+      const query = input.value;
+      searchTimer = setTimeout(() => performSearch(query), 200);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close();
+    });
+
+    renderResults();
+    input.focus();
   }
 
   return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage };

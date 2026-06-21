@@ -35,6 +35,7 @@
     "themeSystem": "Follow System",
     "shortcutSettings": "Shortcut Settings",
     "moreSettings": "More Settings",
+    "globalSearch": "Global Search",
     "about": "About",
     "winMinimize": "Minimize",
     "winMaximize": "Maximize",
@@ -175,6 +176,7 @@
   "moreSettings": {
     "title": "More Settings",
     "menuCloseBehavior": "Close Behavior",
+    "menuTheme": "Theme",
     "menuShortcuts": "Shortcut Settings",
     "menuLanguage": "Language",
     "menuLogs": "Logs",
@@ -196,7 +198,14 @@
     "closeBtn": "Close",
     "restartTitle": "Language Changed",
     "restartMsg": "Language settings have been changed. A restart is required to take effect. Restart now?",
-    "restartConfirm": "Restart Now"
+    "restartConfirm": "Restart Now",
+    "theme": "Theme",
+    "themeDesc": "Select interface color scheme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeDefault": "Default",
+    "themeSystem": "Follow System",
+    "resizeTip": "Drag to resize"
   },
   "logs": {
     "title": "Operation Logs",
@@ -215,6 +224,27 @@
     "expired": "Expired",
     "languageZh": "Chinese",
     "languageEn": "English"
+  },
+  "globalSearch": {
+    "title": "Global Search",
+    "placeholder": "Type to search files or actions...",
+    "tabAll": "All",
+    "tabFiles": "Files",
+    "tabActions": "Actions",
+    "sectionFiles": "Files",
+    "sectionActions": "Actions",
+    "typeToSearch": "Type to start searching",
+    "noResults": "No matches found",
+    "resultCount": "{count} results",
+    "actionOpenFolder": "Open Folder",
+    "actionCreateProject": "New Project",
+    "actionMoreSettings": "More Settings",
+    "actionResetCurrentLayout": "Reset Current Task Layout",
+    "actionResetAllLayout": "Reset All Task Layouts",
+    "actionExportMD": "Export as Markdown",
+    "actionExportTXT": "Export as Text",
+    "actionToggleSidebar": "Toggle Sidebar",
+    "actionQuitApp": "Quit Software"
   },
   "createProject": {
     "title": "New Project",

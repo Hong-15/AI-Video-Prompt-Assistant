@@ -134,3 +134,326 @@ Extra Data: {
   "href": ""
 }
 ============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:49:59.450Z
+Action Type: click
+Trigger Element: BUTTON #menuSettingsBtn.toolbar-btn
+Element Text: 设置
+Mouse Coordinates: (1023, 29)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:00.296Z
+Action Type: click
+Trigger Element: BUTTON #menuMoreSettings.dropdown-item
+Element Text: 更多设置
+Mouse Coordinates: (913, 109)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:02.672Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 快捷键设置
+Mouse Coordinates: (342, 258)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:03.144Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 语言
+Mouse Coordinates: (314, 297)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:03.560Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 日志
+Mouse Coordinates: (305, 339)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:04.384Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 语言
+Mouse Coordinates: (306, 325)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:05.764Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 快捷键设置
+Mouse Coordinates: (329, 271)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:06.556Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 关闭行为
+Mouse Coordinates: (342, 222)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:08.406Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-menu-item
+Element Text: 关于
+Mouse Coordinates: (376, 372)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:09.390Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-help-btn
+Element Text: ?
+Mouse Coordinates: (312, 604)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:18.734Z
+Action Type: click
+Trigger Element: SPAN.more-settings-copy-link
+Element Text: https://gitee.com/spaceHong/AI-Video-Prompt-Assistant/issues
+Mouse Coordinates: (797, 500)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:39.927Z
+Action Type: click
+Trigger Element: BUTTON.more-settings-close-btn
+Element Text: ✕
+Mouse Coordinates: (890, 152)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:41.580Z
+Action Type: click
+Trigger Element: BUTTON #menuSettingsBtn.toolbar-btn
+Element Text: 设置
+Mouse Coordinates: (1005, 28)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:44.583Z
+Action Type: click
+Trigger Element: BUTTON #menuSettingsBtn.toolbar-btn
+Element Text: 设置
+Mouse Coordinates: (1001, 19)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:44.933Z
+Action Type: click
+Trigger Element: BUTTON #menuSettingsBtn.toolbar-btn
+Element Text: 设置
+Mouse Coordinates: (1003, 20)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:50.649Z
+Action Type: click
+Trigger Element: BUTTON #menuFileBtn.toolbar-btn
+Element Text: 文件
+Mouse Coordinates: (89, 23)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:53.330Z
+Action Type: click
+Trigger Element: BUTTON #menuSettingsBtn.toolbar-btn
+Element Text: 设置
+Mouse Coordinates: (999, 14)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:54.579Z
+Action Type: click
+Trigger Element: BUTTON #menuFileBtn.toolbar-btn
+Element Text: 文件
+Mouse Coordinates: (85, 22)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================
+
+
+======================== User Action ========================
+Action Time: 2026-06-21T08:50:55.564Z
+Action Type: click
+Trigger Element: BUTTON #menuQuitApp.dropdown-item
+Element Text: 退出软件
+Mouse Coordinates: (95, 276)
+Input Value: (none)
+Key Info: (none)
+Current Path: (no folder opened)
+Current Task: (none)
+Window Size: 1200x762
+Extra Data: {
+  "href": ""
+}
+============================================================

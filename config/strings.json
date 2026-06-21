@@ -34,6 +34,7 @@
     "themeSystem": "跟随系统",
     "shortcutSettings": "快捷键设置",
     "moreSettings": "更多设置",
+    "globalSearch": "全局搜索",
     "about": "关于",
     "winMinimize": "最小化",
     "winMaximize": "最大化",
@@ -174,6 +175,7 @@
   "moreSettings": {
     "title": "更多设置",
     "menuCloseBehavior": "关闭行为",
+    "menuTheme": "主题",
     "menuShortcuts": "快捷键设置",
     "menuLanguage": "语言",
     "menuLogs": "日志",
@@ -195,7 +197,14 @@
     "closeBtn": "关闭",
     "restartTitle": "语言变更",
     "restartMsg": "语言设置已更改，需要重启应用才能生效。是否立即重启？",
-    "restartConfirm": "立即重启"
+    "restartConfirm": "立即重启",
+    "theme": "主题",
+    "themeDesc": "选择界面主题配色方案",
+    "themeLight": "浅色",
+    "themeDark": "暗色",
+    "themeDefault": "默认",
+    "themeSystem": "跟随系统",
+    "resizeTip": "拖动调整大小"
   },
   "logs": {
     "title": "操作日志",
@@ -214,6 +223,27 @@
     "expired": "已过期",
     "languageZh": "中文",
     "languageEn": "英文"
+  },
+  "globalSearch": {
+    "title": "全局搜索",
+    "placeholder": "输入关键词搜索文件或操作...",
+    "tabAll": "所有",
+    "tabFiles": "文件",
+    "tabActions": "操作",
+    "sectionFiles": "文件",
+    "sectionActions": "操作",
+    "typeToSearch": "输入关键词开始搜索",
+    "noResults": "未找到匹配项",
+    "resultCount": "共 {count} 条结果",
+    "actionOpenFolder": "打开文件夹",
+    "actionCreateProject": "新建项目",
+    "actionMoreSettings": "更多设置",
+    "actionResetCurrentLayout": "当前任务布局恢复默认",
+    "actionResetAllLayout": "全局任务布局恢复默认",
+    "actionExportMD": "导出为 Markdown",
+    "actionExportTXT": "导出为 文本文件",
+    "actionToggleSidebar": "展开/隐藏侧边栏",
+    "actionQuitApp": "退出软件"
   },
   "createProject": {
     "title": "新建项目",

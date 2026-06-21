@@ -99,6 +99,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 获取日志目录绝对路径
   getLogDir: () => ipcRenderer.invoke('get-log-dir'),
 
+  // 在指定文件夹中搜索文件
+  searchFiles: (folderPath, query) => ipcRenderer.invoke('search-files', folderPath, query),
+
+  // 使用系统默认程序打开文件
+  openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
+
   // 监听文件夹打开事件
   onFolderOpened: (callback) => {
     ipcRenderer.on('folder-opened', (event, folderPath) => callback(folderPath));

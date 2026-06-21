@@ -7,10 +7,10 @@ const Toolbar = (function() {
   let _onResetCurrentLayout = null;
   let _onResetAllLayout = null;
   let _onExport = null;
-  let _onThemeChange = null;
   let _onShortcutSettings = null;
   let _onAbout = null;
   let _onMoreSettings = null;
+  let _onGlobalSearch = null;
   let _onCreateProject = null;
   let _dropdowns = [];
   let _submenus = [];         // 子菜单引用
@@ -24,10 +24,10 @@ const Toolbar = (function() {
     _onResetCurrentLayout = callbacks.onResetCurrentLayout || null;
     _onResetAllLayout = callbacks.onResetAllLayout || null;
     _onExport = callbacks.onExport || null;
-    _onThemeChange = callbacks.onThemeChange || null;
     _onShortcutSettings = callbacks.onShortcutSettings || null;
     _onAbout = callbacks.onAbout || null;
     _onMoreSettings = callbacks.onMoreSettings || null;
+    _onGlobalSearch = callbacks.onGlobalSearch || null;
     _onCreateProject = callbacks.onCreateProject || null;
 
     // 从字符串资源更新工具栏文本
@@ -138,34 +138,10 @@ const Toolbar = (function() {
       toggleDropdown(menuSettingsDropdown);
     });
 
-    // 主题 → 子菜单
-    const menuTheme = document.getElementById('menuTheme');
-    const menuThemeSubmenu = document.getElementById('menuThemeSubmenu');
-    _submenus.push(menuThemeSubmenu);
-    setupSubmenuTrigger(menuTheme, menuThemeSubmenu, menuSettingsDropdown);
-
-    document.getElementById('menuThemeLight').addEventListener('click', () => {
+    // 全局搜索
+    document.getElementById('menuGlobalSearch').addEventListener('click', () => {
       hideAllDropdowns();
-      hideAllSubmenus();
-      if (_onThemeChange) _onThemeChange('light');
-    });
-
-    document.getElementById('menuThemeDark').addEventListener('click', () => {
-      hideAllDropdowns();
-      hideAllSubmenus();
-      if (_onThemeChange) _onThemeChange('dark');
-    });
-
-    document.getElementById('menuThemeDefault').addEventListener('click', () => {
-      hideAllDropdowns();
-      hideAllSubmenus();
-      if (_onThemeChange) _onThemeChange('default');
-    });
-
-    document.getElementById('menuThemeSystem').addEventListener('click', () => {
-      hideAllDropdowns();
-      hideAllSubmenus();
-      if (_onThemeChange) _onThemeChange('system');
+      if (_onGlobalSearch) _onGlobalSearch();
     });
 
     // 更多设置
@@ -304,20 +280,8 @@ const Toolbar = (function() {
     if (elResetAll) elResetAll.textContent = StringLoader.get('menu.resetAllLayout', '全局任务工作台布局恢复默认');
 
     // 设置菜单项
-    const elTheme = document.getElementById('menuTheme');
-    if (elTheme) elTheme.textContent = StringLoader.get('toolbar.theme', '主题');
-
-    const elThemeLight = document.getElementById('menuThemeLight');
-    if (elThemeLight) elThemeLight.textContent = StringLoader.get('toolbar.themeLight', '浅色');
-
-    const elThemeDark = document.getElementById('menuThemeDark');
-    if (elThemeDark) elThemeDark.textContent = StringLoader.get('toolbar.themeDark', '暗色');
-
-    const elThemeDefault = document.getElementById('menuThemeDefault');
-    if (elThemeDefault) elThemeDefault.textContent = StringLoader.get('toolbar.themeDefault', '默认');
-
-    const elThemeSystem = document.getElementById('menuThemeSystem');
-    if (elThemeSystem) elThemeSystem.textContent = StringLoader.get('toolbar.themeSystem', '跟随系统');
+    const elGlobalSearch = document.getElementById('menuGlobalSearch');
+    if (elGlobalSearch) elGlobalSearch.textContent = StringLoader.get('toolbar.globalSearch', '全局搜索');
 
     const elMoreSettings = document.getElementById('menuMoreSettings');
     if (elMoreSettings) elMoreSettings.textContent = StringLoader.get('toolbar.moreSettings', '更多设置');

@@ -5,6 +5,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   winMinimize: () => ipcRenderer.send('win-minimize'),
   winMaximize: () => ipcRenderer.send('win-maximize'),
   winClose: () => ipcRenderer.send('win-close'),
+  // 打开教学窗口
+  openTutorial: () => ipcRenderer.send('open-tutorial'),
+
+  // 关闭当前窗口
   closeCurrentWindow: () => ipcRenderer.send('close-current-window'),
   closeProject: () => ipcRenderer.send('close-project'),
   quitApp: () => ipcRenderer.send('quit-app'),

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>教学 / Tutorial — 如何编写标准输入文件</title>
+<style>
+  :root {
+    --bg-primary: #0b0b1a;
+    --bg-secondary: #12122a;
+    --bg-tertiary: #1a1a3e;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0c0;
+    --text-muted: #666688;
+    --border-color: #2a2a4a;
+    --border-active: #5b5bf0;
+    --accent: #7c7cff;
+    --white5: rgba(255,255,255,0.05);
+    --white10: rgba(255,255,255,0.08);
+    --white15: rgba(255,255,255,0.12);
+    --scrollbar-size: 6px;
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: rgba(255,255,255,0.15);
+    --scrollbar-thumb-hover: rgba(255,255,255,0.25);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: var(--bg-primary); color: var(--text-primary); font-family: 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; font-size: 14px; line-height: 1.7; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+
+  /* 标题栏 */
+  .tutorial-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 20px; border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary); flex-shrink: 0;
+    -webkit-app-region: drag; user-select: none;
+  }
+  .tutorial-header-group { display: flex; align-items: center; gap: 16px; }
+  .tutorial-header h1 { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .tutorial-header-actions { display: flex; gap: 8px; -webkit-app-region: no-drag; }
+  .tutorial-header-btn { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+  .tutorial-header-btn:hover { background: var(--white10); color: var(--text-primary); }
+
+  /* 语言切换 */
+  .lang-toggle { display: flex; gap: 2px; -webkit-app-region: no-drag; }
+  .lang-btn {
+    padding: 3px 14px; border-radius: 5px; border: 1px solid var(--border-color);
+    background: transparent; cursor: pointer; font-size: 12px; font-weight: 500;
+    color: var(--text-muted); transition: all 0.15s;
+  }
+  .lang-btn.active { background: var(--border-active); color: #fff; border-color: var(--border-active); }
+  .lang-btn:hover:not(.active) { background: var(--white10); color: var(--text-primary); }
+
+  /* 主体 */
+  .tutorial-body { flex: 1; overflow-y: auto; padding: 24px 28px; }
+  .tutorial-body::-webkit-scrollbar { width: var(--scrollbar-size); height: var(--scrollbar-size); }
+  .tutorial-body::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  .tutorial-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: var(--scrollbar-size); }
+  .tutorial-body::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+  .tutorial-body section { display: none; }
+  .tutorial-body section.active { display: block; }
+
+  .tutorial-body h2 { font-size: 18px; color: var(--accent); margin: 28px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); }
+  .tutorial-body h2:first-child { margin-top: 0; }
+  .tutorial-body h3 { font-size: 15px; color: var(--text-primary); margin: 20px 0 8px; }
+  .tutorial-body p { margin: 6px 0; color: var(--text-secondary); }
+  .tutorial-body ul,.tutorial-body ol { margin: 8px 0 8px 20px; color: var(--text-secondary); }
+  .tutorial-body li { margin: 4px 0; }
+  .tutorial-body strong { color: var(--text-primary); }
+  .tutorial-body code { background: var(--white10); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--accent); }
+  .tutorial-body pre { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px; margin: 10px 0; overflow-x: auto; font-size: 13px; line-height: 1.6; color: var(--text-primary); font-family: 'Cascadia Code','Fira Code','Consolas',monospace; }
+  .tutorial-body table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+  .tutorial-body th { background: var(--white10); border: 1px solid var(--border-color); padding: 8px 12px; text-align: left; font-weight: 600; color: var(--text-primary); }
+  .tutorial-body td { border: 1px solid var(--border-color); padding: 8px 12px; color: var(--text-secondary); }
+  .tutorial-body td:first-child { color: var(--accent); font-family: monospace; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="tutorial-header">
+  <div class="tutorial-header-group">
+    <h1 id="tutorialTitle">教学：如何编写标准输入文件</h1>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langZh">中文</button>
+      <button class="lang-btn" id="langEn">English</button>
+    </div>
+  </div>
+  <div class="tutorial-header-actions">
+    <button class="tutorial-header-btn" id="closeBtn" title="关闭 / Close (Esc)">✕</button>
+  </div>
+</div>
+
+<div class="tutorial-body">
+
+  <!-- ======================== 中文版 ======================== -->
+  <section class="active" id="secZh">
+
+<h2>一、什么是标准输入文件</h2>
+<p>标准输入文件是一个 <code>.md</code> 文件，你可以用任意文本编辑器手动编写，然后通过菜单 <strong>文件 → 导入项目数据</strong> 导入到 AI_Helper，批量创建任务和卡片。</p>
+<p>它的本质是一个结构化的 Markdown 文件：<code>##</code> 标记任务，<code>**卡片名**：</code> 标记卡片及内容。</p>
+
+<h2>二、基本格式规则</h2>
+
+<h3>1. 任务 — 用 <code>## </code> 标记</h3>
+<p>每个任务以 <code>## </code> 开头，后可跟可选编号和任务名称。一个 <code>##</code> 就是一个任务。</p>
+<pre>## 1. 赛博朋克城市
+## 2. 森林精灵</pre>
+
+<h3>2. 卡片 — 用 <code>**卡片名**：</code> 标记</h3>
+<p>粗体包裹卡片名称，紧跟冒号（<code>：</code> 或 <code>:</code>），<strong>冒号后同行写内容</strong>。卡片名必须与标准卡片名称完全一致。</p>
+<pre>**主体特征**：一位穿着黑色风衣的赛博格侦探。
+**场景环境**：雨夜的霓虹街道，全息广告牌闪烁。
+**光影色彩**：冷色调为主，高对比度。</pre>
+
+<h3>3. 多行内容</h3>
+<p>不以 <code>##</code> 或 <code>**</code> 开头的行，自动作为上一张卡片的续行内容。</p>
+<pre>**场景环境**：雨夜的霓虹街道。
+全息广告牌在林立的高楼间闪烁。
+地面倒映着紫色和蓝色的光。</pre>
+
+<h2>三、10 个标准卡片名称</h2>
+<table>
+  <tr><th>#</th><th>卡片名称</th><th>描述</th></tr>
+  <tr><td>1</td><td>主体特征</td><td>画面主体的外貌、姿势、材质</td></tr>
+  <tr><td>2</td><td>场景环境</td><td>背景、地点、环境氛围</td></tr>
+  <tr><td>3</td><td>光影色彩</td><td>光源方向、色调、对比度</td></tr>
+  <tr><td>4</td><td>艺术风格</td><td>画风、流派、渲染风格</td></tr>
+  <tr><td>5</td><td>镜头景别</td><td>构图、景别、拍摄角度</td></tr>
+  <tr><td>6</td><td>镜头运动</td><td>摄影机运动方式</td></tr>
+  <tr><td>7</td><td>时间节奏</td><td>帧率、慢动作、延时</td></tr>
+  <tr><td>8</td><td>动态事件</td><td>画面中的动作、事件</td></tr>
+  <tr><td>9</td><td>技术参数</td><td>分辨率、画幅比、对焦</td></tr>
+  <tr><td>10</td><td>负面排除</td><td>不希望出现的元素</td></tr>
+</table>
+<p>也可以用<strong>自定义卡片</strong>（如"声音设计"），名称自定，导入时自动创建。</p>
+
+<h2>四、完整示例</h2>
+
+<h3>单个任务</h3>
+<pre>## 1. 赛博朋克雨夜
+
+**主体特征**：一位穿着黑色风衣的赛博格侦探，左眼是红色机械义眼，右臂露出银色金属骨骼。
+
+**场景环境**：雨夜的霓虹街道，全息广告牌在林立的高楼间闪烁，地面倒映着紫色和蓝色的光。
+
+**光影色彩**：冷色调为主，霓虹灯的红紫色光作为主光源，雨中反光营造迷离氛围。
+
+**艺术风格**：赛博朋克风格，高对比度，电影级调色，Blade Runner 风格美学。
+
+**镜头景别**：中景，半身构图，低角度仰拍。
+
+**镜头运动**：从人物背后缓慢环绕至正面，手持微晃动。
+
+**时间节奏**：慢动作，每秒 60 帧。
+
+**动态事件**：人物点燃一支烟，烟雾在细雨中缓缓上升。
+
+**技术参数**：4K，宽银幕 21:9，浅景深，电影级色彩分级。
+
+**负面排除**：无阳光，无噪点，无模糊，无文字，无水印。</pre>
+
+<h3>多个任务</h3>
+<pre>## 1. 赛博朋克雨夜
+
+**主体特征**：赛博格侦探，黑风衣，红色义眼。
+
+**场景环境**：雨夜霓虹街道，全息广告牌。
+
+**光影色彩**：冷色调，霓虹红紫光，高对比度。
+
+## 2. 森林精灵
+
+**主体特征**：精灵少女，绿色长发及腰，尖耳朵，穿着树叶编织的衣裳。
+
+**场景环境**：清晨的魔法森林，阳光透过树冠形成束状光束。
+
+**光影色彩**：暖金色为主，丁达尔光束穿过树叶。
+
+**艺术风格**：奇幻风格，吉卜力美学，柔和色系。</pre>
+
+<h3>TXT 格式（也支持导入）</h3>
+<pre>【1. 赛博城市】
+
+主体特征：机械武士站立在霓虹灯下，全身液态装甲。
+
+场景环境：赛博朋克风格的未来城市，高楼林立。
+
+光影色彩：青橙对比色，体积光穿过雨幕。</pre>
+
+<h2>五、常见错误</h2>
+<ul>
+  <li><strong>卡片名冒号后换行写内容</strong> — 内容必须与冒号在同一行</li>
+  <li><strong>卡片名拼写错误</strong> — 如"光影氛围"应为"光影色彩"</li>
+  <li><strong>误用 <code>###</code> 三级标题</strong> — 那是卡片导入格式（工作台拖拽），不是项目导入格式</li>
+  <li><strong>误用 <code>**内容**</code> 独占一行</strong> — 那也是卡片导入格式</li>
+  <li><strong>添加 <code>#</code> 一级标题</strong> 或元信息行 — 解析器可能误解析</li>
+</ul>
+
+<h2>六、如何导入</h2>
+<ol>
+  <li>用任意文本编辑器编写 <code>.md</code> 或 <code>.txt</code> 文件</li>
+  <li>在 AI_Helper 菜单栏点击 <strong>文件 → 导入项目数据</strong></li>
+  <li>选择文件即可导入</li>
+</ol>
+
+<h2>七、让 AI 帮你生成</h2>
+<p>将菜单栏 <strong>AI规范</strong> 中的规范内容复制为 System Prompt 发给 ChatGPT / Claude 等 AI，AI 就能按正确格式生成 <code>.md</code> 文件，你保存后导入即可。</p>
+
+  </section>
+
+  <!-- ======================== English ======================== -->
+  <section id="secEn">
+
+<h2>1. What is a Standard Input File</h2>
+<p>A standard input file is a <code>.md</code> file that you write with any text editor, then import via <strong>File → Import Project Data</strong> to batch-create tasks and cards in AI_Helper.</p>
+<p>It is structured Markdown: <code>##</code> marks tasks, <code>**CardName**：content</code> marks cards.</p>
+
+<h2>2. Format Rules</h2>
+
+<h3>1. Task — marked by <code>## </code></h3>
+<p>Each task starts with <code>## </code>, followed by an optional number and the task name.</p>
+<pre>## 1. Cyberpunk City
+## 2. Forest Elf</pre>
+
+<h3>2. Card — marked by <code>**CardName**：</code></h3>
+<p>Card name in bold, followed by a colon (<code>：</code> or <code>:</code>), with content on the <strong>same line</strong>. Card names must match the standard names exactly (in Chinese).</p>
+<pre>**主体特征**：A cyborg detective in a black trench coat.
+**场景环境**：Neon-lit streets on a rainy night.
+**光影色彩**：Cool tones, high contrast.</pre>
+
+<h3>3. Multi-line content</h3>
+<p>Lines not starting with <code>##</code> or <code>**</code> are appended to the previous card as continuation.</p>
+<pre>**场景环境**：Neon-lit streets.
+Holographic billboards flicker among skyscrapers.
+Ground reflects purple and blue light.</pre>
+
+<h2>3. Standard Card Names (10 Dimensions)</h2>
+<table>
+  <tr><th>#</th><th>Card Name</th><th>Description</th></tr>
+  <tr><td>1</td><td>主体特征</td><td>Subject — appearance, pose, material</td></tr>
+  <tr><td>2</td><td>场景环境</td><td>Scene — background, location, atmosphere</td></tr>
+  <tr><td>3</td><td>光影色彩</td><td>Lighting — light direction, tone, contrast</td></tr>
+  <tr><td>4</td><td>艺术风格</td><td>Style — art style, genre, rendering</td></tr>
+  <tr><td>5</td><td>镜头景别</td><td>Shot Scale — composition, shot size, angle</td></tr>
+  <tr><td>6</td><td>镜头运动</td><td>Camera Movement — camera motion</td></tr>
+  <tr><td>7</td><td>时间节奏</td><td>Time &amp; Rhythm — frame rate, slow motion</td></tr>
+  <tr><td>8</td><td>动态事件</td><td>Action — events, changes in frame</td></tr>
+  <tr><td>9</td><td>技术参数</td><td>Technical — resolution, aspect ratio, focus</td></tr>
+  <tr><td>10</td><td>负面排除</td><td>Negative — elements to exclude</td></tr>
+</table>
+<p>Custom cards (e.g. "Sound Design") are also supported — auto-created on import.</p>
+
+<h2>4. Examples</h2>
+
+<h3>Single Task</h3>
+<pre>## 1. Cyberpunk Rainy Night
+
+**主体特征**：A cyborg detective in a black trench coat, left eye replaced with a red mechanical prosthetic, right arm exposing silver metal skeleton.
+
+**场景环境**：Neon-lit streets on a rainy night, holographic billboards flickering among skyscrapers, ground reflecting purple and blue light.
+
+**光影色彩**：Predominantly cool tones, red-purple neon light as the main light source, rain reflections creating a hazy atmosphere.
+
+**艺术风格**：Cyberpunk style, high contrast, cinematic color grading, Blade Runner aesthetic.
+
+**镜头景别**：Medium shot, half-body composition, low-angle shot.
+
+**镜头运动**：Slow orbit from behind the character to the front, subtle handheld shake.
+
+**时间节奏**：Slow motion, 60 fps.
+
+**动态事件**：The character lights a cigarette, smoke rising through drizzle.
+
+**技术参数**：4K, widescreen 21:9, shallow depth of field, cinematic color grading.
+
+**负面排除**：No sunlight, no noise, no blur, no text, no watermark.</pre>
+
+<h3>Multiple Tasks</h3>
+<pre>## 1. Cyberpunk Rainy Night
+
+**主体特征**：Cyborg detective, black trench coat, red prosthetic eye.
+
+**场景环境**：Rainy neon street, holographic billboards.
+
+**光影色彩**：Cool tones, neon red-purple light, high contrast.
+
+## 2. Forest Elf
+
+**主体特征**：Elf maiden, long green hair, pointed ears, leaf dress.
+
+**场景环境**：Morning magical forest, sunlight through the canopy.
+
+**光影色彩**：Warm golden tones, god rays through leaves.
+
+**艺术风格**：Fantasy style, Ghibli aesthetic, soft palette.</pre>
+
+<h3>TXT format (also supported)</h3>
+<pre>【1. Cyberpunk City】
+
+主体特征：A mechanical warrior in liquid armor under neon lights.
+
+场景环境：Futuristic cyberpunk city, skyscrapers, holographic ads.
+
+光影色彩：Teal-orange contrast, volumetric light through rain.</pre>
+
+<h2>5. Common Mistakes</h2>
+<ul>
+  <li><strong>Putting content on a new line after the colon</strong> — content must be on the same line as <code>**card**：</code></li>
+  <li><strong>Misspelling card names</strong> — names must match the Chinese standard exactly</li>
+  <li><strong>Using <code>###</code> headings</strong> — that's the card-level import format, not project import</li>
+  <li><strong>Using <code>**content**</code> on its own line</strong> — also the card-level format</li>
+  <li><strong>Adding <code>#</code> headings</strong> or metadata lines</li>
+</ul>
+
+<h2>6. How to Import</h2>
+<ol>
+  <li>Write your <code>.md</code> or <code>.txt</code> file in any text editor</li>
+  <li>In AI_Helper, click <strong>File → Import Project Data</strong></li>
+  <li>Select your file to import</li>
+</ol>
+
+<h2>7. Let AI Generate for You</h2>
+<p>Copy the spec from <strong>AI Spec</strong> in the menu bar as a System Prompt for ChatGPT / Claude. The AI will output correctly formatted <code>.md</code> files — save and import!</p>
+
+  </section>
+
+</div>
+
+<script>
+  const secZh = document.getElementById('secZh');
+  const secEn = document.getElementById('secEn');
+  const btnZh = document.getElementById('langZh');
+  const btnEn = document.getElementById('langEn');
+  const title = document.getElementById('tutorialTitle');
+
+  btnZh.addEventListener('click', () => {
+    secZh.classList.add('active');
+    secEn.classList.remove('active');
+    btnZh.classList.add('active');
+    btnEn.classList.remove('active');
+    title.textContent = '教学：如何编写标准输入文件';
+  });
+
+  btnEn.addEventListener('click', () => {
+    secEn.classList.add('active');
+    secZh.classList.remove('active');
+    btnEn.classList.add('active');
+    btnZh.classList.remove('active');
+    title.textContent = 'Tutorial: How to Write a Standard Input File';
+  });
+
+  document.getElementById('closeBtn').addEventListener('click', () => window.close());
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.close(); });
+</script>
+</body>
+</html>

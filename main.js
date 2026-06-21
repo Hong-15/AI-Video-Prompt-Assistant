@@ -684,6 +684,29 @@ function setupIPC() {
     newWin.show();
   });
 
+  // 打开教学窗口
+  ipcMain.on('open-tutorial', () => {
+    const tutorialWin = new BrowserWindow({
+      width: 800,
+      height: 700,
+      minWidth: 500,
+      minHeight: 400,
+      title: '教学 — 如何编写标准输入文件',
+      icon: path.join(__dirname, 'assets', 'H.jpg'),
+      backgroundColor: '#0b0b1a',
+      frame: false,
+      autoHideMenuBar: true,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false
+      }
+    });
+    tutorialWin.loadFile(path.join(__dirname, 'renderer', 'tutorial.html'));
+    tutorialWin.show();
+    // 移除菜单栏
+    tutorialWin.setMenuBarVisibility(false);
+  });
+
   // 获取字符串资源
   ipcMain.handle('get-strings', () => {
     return strings;

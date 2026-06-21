@@ -99,6 +99,12 @@ const Toolbar = (function() {
       if (_onCreateProject) _onCreateProject();
     });
 
+    // 教学
+    document.getElementById('menuTutorial').addEventListener('click', () => {
+      hideAllDropdowns();
+      window.electronAPI.openTutorial();
+    });
+
     // 关闭项目
     document.getElementById('menuCloseProject').addEventListener('click', () => {
       hideAllDropdowns();
@@ -286,7 +292,7 @@ const Toolbar = (function() {
 
     const elTutorial = document.getElementById('menuTutorial');
     if (elTutorial) {
-      elTutorial.textContent = StringLoader.get('menu.tutorial', '教学') + '（' + StringLoader.get('menu.tutorialPlaceholder', '暂未开放') + '）';
+      elTutorial.textContent = StringLoader.get('menu.tutorial', '教学');
     }
 
     const elCreateProject = document.getElementById('menuCreateProject');

@@ -621,6 +621,22 @@ const Content = (function() {
     }
   }
 
+  // 完全清除所有内部状态（关闭项目时调用）
+  function clearAllState() {
+    _currentTaskId = null;
+    _inputElements = {};
+    _cards = [];
+    _hiddenFields = [];
+    _fieldLabels = {};
+    _customCards = [];
+    _cardOrder = [];
+    _dragState = null;
+    const grid = document.getElementById('inputGrid');
+    if (grid) grid.innerHTML = '';
+    const promptBox = document.getElementById('promptBox');
+    if (promptBox) promptBox.textContent = '';
+  }
+
   // 恢复当前任务所有卡片的布局为默认（同时清除隐藏和重命名）
   function resetCurrentTaskLayout() {
     _cards.forEach(card => {
@@ -976,6 +992,7 @@ const Content = (function() {
     addCustomCard: handleAddCustomCard,
     hasActiveTask: () => _currentTaskId !== null,
     getCurrentTaskId: () => _currentTaskId,
-    getFieldConfig: () => _fieldConfig
+    getFieldConfig: () => _fieldConfig,
+    clearAllState
   };
 })();

@@ -602,6 +602,177 @@ body.window-zoom-out {
   background: var(--scrollbar-thumb-hover);
 }
 
+/* ========== 侧边栏 - 无项目视图 ========== */
+.task-list-no-project {
+  padding: 12px;
+}
+
+.no-project-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-project-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.no-project-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 9px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
+}
+
+.no-project-action-btn:hover {
+  background: var(--white10);
+  border-color: var(--border-active);
+}
+
+.no-project-action-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.no-project-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 8px 0;
+}
+
+.no-project-list-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.no-project-search {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 10px;
+  margin-bottom: 4px;
+}
+
+.no-project-search svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.no-project-search input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 7px 8px;
+  width: 100%;
+  font-size: 13px;
+  outline: none;
+}
+
+.no-project-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.no-project-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-project-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background var(--transition-speed);
+  position: relative;
+}
+
+.recent-project-item:hover {
+  background: var(--white5);
+}
+
+.recent-project-item:hover .recent-project-remove {
+  opacity: 1;
+}
+
+.recent-project-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 11px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.recent-project-info {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.recent-project-name {
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-project-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.recent-project-remove {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-speed), color var(--transition-speed);
+  flex-shrink: 0;
+}
+
+.recent-project-remove:hover {
+  color: var(--danger);
+  background: var(--white5);
+}
+
 /* ========== 空状态 ========== */
 .empty-state {
   display: flex;

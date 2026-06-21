@@ -279,6 +279,7 @@ async function handleOpenFolder(win) {
       return;
     }
     currentFolderPath = folderPath;
+    addRecentProject(currentFolderPath);
     ensureProjectIcon(currentFolderPath);
     win.webContents.send('folder-opened', currentFolderPath);
   }
@@ -305,6 +306,7 @@ async function handleOpenFolderNew() {
     }
     const newWin = createWindow();
     currentFolderPath = folderPath;
+    addRecentProject(currentFolderPath);
     ensureProjectIcon(currentFolderPath);
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', currentFolderPath);
@@ -649,6 +651,7 @@ function setupIPC() {
         return null;
       }
       currentFolderPath = folderPath;
+      addRecentProject(currentFolderPath);
       ensureProjectIcon(currentFolderPath);
       return currentFolderPath;
     }
@@ -868,10 +871,65 @@ function setupIPC() {
   ipcMain.on('open-folder-new-window', (event, folderPath) => {
     const newWin = createWindow();
     currentFolderPath = folderPath;
+    addRecentProject(folderPath);
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', folderPath);
     });
     newWin.show();
+  });
+
+  // ========== 最近项目管理 ==========
+  function getRecentProjectsPath() {
+    return path.join(__dirname, 'config', 'recent-projects.json');
+  }
+
+  function readRecentProjects() {
+    const p = getRecentProjectsPath();
+    try {
+      const raw = fs.readFileSync(p, 'utf-8');
+      return JSON.parse(raw);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function writeRecentProjects(projects) {
+    const p = getRecentProjectsPath();
+    try {
+      fs.writeFileSync(p, JSON.stringify(projects, null, 2), 'utf-8');
+    } catch (e) {
+      console.error('写入最近项目失败:', e);
+    }
+  }
+
+  function addRecentProject(folderPath) {
+    const projects = readRecentProjects();
+    const existing = projects.findIndex(p => p.path === folderPath);
+    const entry = { path: folderPath, lastOpened: Date.now() };
+    if (existing >= 0) {
+      projects[existing] = entry;
+    } else {
+      projects.unshift(entry);
+      // 最多保留 20 条
+      if (projects.length > 20) {
+        projects.length = 20;
+      }
+    }
+    writeRecentProjects(projects);
+  }
+
+  ipcMain.handle('get-recent-projects', () => {
+    return readRecentProjects();
+  });
+
+  ipcMain.handle('add-recent-project', (event, folderPath) => {
+    addRecentProject(folderPath);
+    return true;
+  });
+
+  ipcMain.on('remove-recent-project', (event, folderPath) => {
+    const projects = readRecentProjects().filter(p => p.path !== folderPath);
+    writeRecentProjects(projects);
   });
 
   // 保存语言配置

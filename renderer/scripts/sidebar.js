@@ -1,5 +1,6 @@
 // 侧边栏模块
 // 负责左侧提示词任务栏：任务列表的增删改查、右键菜单、排序
+// 同时负责"无项目打开"时的空状态视图（打开项目、新建项目、最近项目）
 
 const Sidebar = (function() {
   let _tasks = [];
@@ -8,9 +9,13 @@ const Sidebar = (function() {
   let _onTaskDelete = null;
   let _beforeAddTask = null;
   let _onInsertTask = null;
+  let _onOpenFolder = null;
+  let _onCreateProject = null;
+  let _onOpenRecentProject = null;
   let _contextMenu = null;
   let _contextSubmenu = null;
   let _submenuTimer = null;
+  let _hasProject = false;
 
   // 初始化侧边栏
   function init(callbacks) {
@@ -18,6 +23,9 @@ const Sidebar = (function() {
     _onTaskDelete = callbacks.onTaskDelete;
     _beforeAddTask = callbacks.beforeAddTask || null;
     _onInsertTask = callbacks.onInsertTask || null;
+    _onOpenFolder = callbacks.onOpenFolder || null;
+    _onCreateProject = callbacks.onCreateProject || null;
+    _onOpenRecentProject = callbacks.onOpenRecentProject || null;
 
     // 新建任务按钮
     const addBtn = document.getElementById('addTaskBtn');
@@ -45,6 +53,161 @@ const Sidebar = (function() {
       hideContextMenu();
     });
   }
+
+  // ========== 无项目视图 ==========
+
+  // 显示"无项目打开"视图
+  function showNoProjectView(recentProjects) {
+    _hasProject = false;
+    const taskList = document.getElementById('taskList');
+    const sidebarHeader = document.querySelector('.sidebar-header');
+
+    if (sidebarHeader) sidebarHeader.style.display = 'none';
+
+    taskList.innerHTML = '';
+    taskList.classList.add('task-list-no-project');
+
+    const noProjView = document.createElement('div');
+    noProjView.className = 'no-project-view';
+
+    // 操作按钮组
+    const actions = document.createElement('div');
+    actions.className = 'no-project-actions';
+
+    // 打开文件夹
+    const openBtn = document.createElement('button');
+    openBtn.className = 'no-project-action-btn';
+    openBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+    const openLabel = document.createElement('span');
+    openLabel.textContent = StringLoader.get('sidebar.openFolder', '打开文件夹');
+    openBtn.appendChild(openLabel);
+    openBtn.addEventListener('click', () => {
+      if (_onOpenFolder) _onOpenFolder();
+    });
+
+    // 新建项目
+    const newBtn = document.createElement('button');
+    newBtn.className = 'no-project-action-btn';
+    newBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    const newLabel = document.createElement('span');
+    newLabel.textContent = StringLoader.get('sidebar.createProject', '新建项目');
+    newBtn.appendChild(newLabel);
+    newBtn.addEventListener('click', () => {
+      if (_onCreateProject) _onCreateProject();
+    });
+
+    actions.appendChild(openBtn);
+    actions.appendChild(newBtn);
+    noProjView.appendChild(actions);
+
+    // 最近项目列表
+    if (recentProjects && recentProjects.length > 0) {
+      const listHeader = document.createElement('div');
+      listHeader.className = 'no-project-list-header';
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'no-project-list-title';
+      titleSpan.textContent = StringLoader.get('sidebar.recentProjects', '最近项目');
+      listHeader.appendChild(titleSpan);
+
+      // 搜索框
+      const searchBox = document.createElement('div');
+      searchBox.className = 'no-project-search';
+      searchBox.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+      const searchInput = document.createElement('input');
+      searchInput.type = 'text';
+      searchInput.placeholder = StringLoader.get('sidebar.searchProjects', '搜索项目');
+      searchInput.addEventListener('input', () => {
+        filterRecentProjects(searchInput.value.toLowerCase(), recentProjects);
+      });
+      searchBox.appendChild(searchInput);
+
+      noProjView.appendChild(listHeader);
+      noProjView.appendChild(searchBox);
+
+      // 项目列表容器
+      const projectList = document.createElement('div');
+      projectList.className = 'no-project-list';
+      projectList.id = 'recentProjectList';
+      renderRecentProjectList(projectList, recentProjects);
+      noProjView.appendChild(projectList);
+    }
+
+    taskList.appendChild(noProjView);
+  }
+
+  function renderRecentProjectList(container, projects) {
+    container.innerHTML = '';
+    projects.forEach(proj => {
+      const item = document.createElement('div');
+      item.className = 'recent-project-item';
+      item.title = proj.path;
+
+      const folderName = proj.path.split(/[\\/]/).pop() || proj.path;
+      const initials = folderName.slice(0, 2).toUpperCase();
+      const hue = (hashString(proj.path) % 360);
+      const avatarColor = `hsl(${hue}, 55%, 45%)`;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'recent-project-avatar';
+      avatar.style.backgroundColor = avatarColor;
+      avatar.textContent = initials;
+
+      const info = document.createElement('div');
+      info.className = 'recent-project-info';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'recent-project-name';
+      nameEl.textContent = folderName;
+
+      const pathEl = document.createElement('div');
+      pathEl.className = 'recent-project-path';
+      pathEl.textContent = proj.path;
+
+      info.appendChild(nameEl);
+      info.appendChild(pathEl);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'recent-project-remove';
+      removeBtn.innerHTML = '&#215;';
+      removeBtn.title = StringLoader.get('sidebar.removeFromRecent', '从列表中移除');
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.electronAPI.removeRecentProject(proj.path);
+        item.remove();
+      });
+
+      item.appendChild(avatar);
+      item.appendChild(info);
+      item.appendChild(removeBtn);
+
+      item.addEventListener('click', () => {
+        if (_onOpenRecentProject) _onOpenRecentProject(proj.path);
+      });
+
+      container.appendChild(item);
+    });
+  }
+
+  function filterRecentProjects(query, allProjects) {
+    const container = document.getElementById('recentProjectList');
+    if (!container) return;
+    const filtered = allProjects.filter(p => {
+      const name = (p.path.split(/[\\/]/).pop() || '').toLowerCase();
+      return name.includes(query) || p.path.toLowerCase().includes(query);
+    });
+    renderRecentProjectList(container, filtered);
+  }
+
+  function hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash);
+  }
+
+  // ========== 任务操作 ==========
 
   // 生成唯一 ID
   function generateId() {
@@ -185,6 +348,17 @@ const Sidebar = (function() {
   function setTasks(tasks, activeTaskId) {
     _tasks = tasks || [];
     _activeTaskId = activeTaskId || (_tasks.length > 0 ? _tasks[0].id : null);
+
+    // 恢复项目视图
+    if (!_hasProject) {
+      const taskList = document.getElementById('taskList');
+      const sidebarHeader = document.querySelector('.sidebar-header');
+      taskList.classList.remove('task-list-no-project');
+      taskList.innerHTML = '';
+      if (sidebarHeader) sidebarHeader.style.display = '';
+      _hasProject = true;
+    }
+
     render();
     const active = getActiveTask();
     if (_onTaskChange) _onTaskChange(active);
@@ -722,6 +896,19 @@ const Sidebar = (function() {
           mainContent.classList.toggle('sidebar-collapsed');
         }
       }
-    }
+    },
+
+    // 无项目视图
+    showNoProjectView,
+    showProjectView: () => {
+      _hasProject = true;
+      const taskList = document.getElementById('taskList');
+      const sidebarHeader = document.querySelector('.sidebar-header');
+      taskList.classList.remove('task-list-no-project');
+      taskList.innerHTML = '';
+      if (sidebarHeader) sidebarHeader.style.display = '';
+      render();
+    },
+    hasProject: () => _hasProject
   };
 })();

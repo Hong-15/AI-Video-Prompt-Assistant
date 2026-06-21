@@ -26,7 +26,10 @@ const App = (function() {
       onTaskChange: handleTaskChange,
       onTaskDelete: handleTaskDelete,
       beforeAddTask: checkFolderBeforeAddTask,
-      onInsertTask: handleInsertTask
+      onInsertTask: handleInsertTask,
+      onOpenFolder: handleOpenFolder,
+      onCreateProject: showCreateProjectModal,
+      onOpenRecentProject: handleOpenRecentProject
     });
 
     // 5. 初始化工具栏
@@ -128,6 +131,14 @@ const App = (function() {
     const existingFolder = await window.electronAPI.getCurrentFolder();
     if (existingFolder) {
       await handleFolderOpened(existingFolder);
+    } else {
+      // 没有打开项目，显示无项目视图
+      try {
+        const recentProjects = await window.electronAPI.getRecentProjects();
+        Sidebar.showNoProjectView(recentProjects);
+      } catch (e) {
+        Sidebar.showNoProjectView([]);
+      }
     }
 
     // 10. 注册全局键盘快捷键
@@ -950,6 +961,9 @@ const App = (function() {
     updateSaveStatus(true);
     updateStatusTaskCount();
 
+    // 添加到最近项目
+    try { await window.electronAPI.addRecentProject(folderPath); } catch (e) {}
+
     // 尝试加载数据
     const data = await FileManager.loadData(folderPath);
     if (data && data.tasks && data.tasks.length > 0) {
@@ -961,14 +975,55 @@ const App = (function() {
   }
 
   // 处理关闭项目
-  function handleProjectClosed() {
+  async function handleProjectClosed() {
+    // 先保存当前数据
+    if (_currentFolder && _isDirty) {
+      await autoSave();
+    }
+
     _currentFolder = null;
     _isDirty = false;
     FileManager.setCurrentFolder(null);
-    Sidebar.setTasks([], null);  // 会触发 handleTaskChange(null) 清空工作区
+
+    // 清除 Content 的所有内部状态（JSON 引用、DOM 元素等）
+    Content.clearAllState();
+
+    // 隐藏工作台，显示空状态
+    document.getElementById('workspace').style.display = 'none';
+    const emptyState = document.getElementById('emptyState');
+    emptyState.style.display = 'flex';
+    updateEmptyState(false);
+
     updateStatusFolderPath(null);
     updateSaveStatus(false);
-    updateEmptyState(false);
+    updateStatusTaskName('');
+    updateStatusCardName('');
+    updateStatusTaskCount();
+
+    // 显示无项目视图
+    try {
+      const recentProjects = await window.electronAPI.getRecentProjects();
+      Sidebar.showNoProjectView(recentProjects);
+    } catch (e) {
+      Sidebar.showNoProjectView([]);
+    }
+  }
+
+  // 打开最近项目
+  async function handleOpenRecentProject(folderPath) {
+    if (!folderPath) return;
+    // 验证项目合法性
+    const isValid = await window.electronAPI.loadData(folderPath);
+    if (!isValid || !isValid.tasks) {
+      Modal.show({
+        title: StringLoader.get('dialog.invalidProject', '项目不合法'),
+        message: StringLoader.get('dialog.invalidProject', '项目不合法，请打开合法项目'),
+        confirmText: '确定',
+        showCancel: false
+      });
+      return;
+    }
+    await handleFolderOpened(folderPath);
   }
 
   function updateEmptyState(hasFolder) {

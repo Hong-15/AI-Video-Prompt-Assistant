@@ -76,7 +76,7 @@ async function loadWindowConfig() {
     minWidth: 900,
     minHeight: 600,
     showDebounceMs: 333,
-    showReadyTimeoutMs: 300,
+    showReadyTimeoutMs: 2000,
     closeSaveDelayMs: 500,
     closeForceTimeoutMs: 1000,
     beforeQuitSaveTimeoutMs: 3000,

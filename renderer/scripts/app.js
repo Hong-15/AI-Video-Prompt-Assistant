@@ -1384,15 +1384,19 @@ const App = (function() {
 
 // 启动应用
 document.addEventListener('DOMContentLoaded', () => {
-  App.init().then(() => {
+  // 持有 App.init() 的 Promise，供 onPrepareShow 等待 UI 全部就绪后再通知主进程显示窗口。
+  // 若不等待 init，ready-to-show 可能先于 init 完成触发，用户会看到不完整的 UI 刷新过程。
+  const initPromise = App.init().then(() => {
     window.electronAPI.rendererReady();
   });
 
-  // 监听主进程准备显示窗口的信号，确保至少完成一次 rAF/paint 后再通知主进程显示
+  // 监听主进程准备显示窗口的信号，等待 init 完成 + 两次 rAF 确保首帧合成后才能回复
   window.electronAPI.onPrepareShow(() => {
-    requestAnimationFrame(() => {
+    initPromise.then(() => {
       requestAnimationFrame(() => {
-        window.electronAPI.showReady();
+        requestAnimationFrame(() => {
+          window.electronAPI.showReady();
+        });
       });
     });
   });

@@ -5,14 +5,16 @@
 > 下载：https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0
 >
 > 百度网盘（备用）：https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong 提取码: hong
+>
+> AI 规则文件：[AI数据输出格式规范.md](AI数据输出格式规范.md) | [AI_Data_Output_Format_Spec.md](AI_Data_Output_Format_Spec.md)
 
 ---
 
-[中文](#中文) | [English](#english)
+[中文](#中文) | [English](#english) | [AI规范](#ai规范) | [AI Spec](#ai-spec)
 
 ---
 
-<a name="中文"></a>
+<a id="中文"></a>
 
 ## 中文
 
@@ -198,6 +200,112 @@ MIT
 
 ---
 
+<a id="ai规范"></a>
+
+## AI 数据输出格式规范（中文）
+
+> **用途：** 将此文档作为 System Prompt 发给 AI（ChatGPT / Claude / Gemini 等），AI 将按标准格式输出提示词数据。用户保存为 `.md` 或 `.txt` 后可直接导入 AI_Helper。
+
+---
+
+### 输出格式
+
+```
+## {任务名称}
+
+**{卡片名称}**：{内容}
+```
+
+规则：
+- `## ` 后**必须有一个空格**，编号可选（`## 1. 赛博朋克城市` 或 `## 赛博朋克城市`）
+- `**{卡片名称}**` 用粗体包裹，冒号后同行写内容
+- 一个 `## ` 表示一个任务，任务间互不干扰
+- 不以 `## ` 或 `**` 开头的行，自动作为上一张卡片的续行
+
+---
+
+### 标准卡片名称
+
+| 序号 | 卡片名称 | 该维度应描述的内容 |
+|------|---------|------------------|
+| 1 | 主体特征 | 画面主体的外貌、种族、体型、服装、姿势、材质质感、面部细节 |
+| 2 | 场景环境 | 地点类型、空间尺度、环境元素、天气、氛围 |
+| 3 | 光影色彩 | 主光源方向与类型、色温基调、辅助光、对比度、特殊光效 |
+| 4 | 艺术风格 | 画风流派、渲染风格、色彩方案、参考艺术家 |
+| 5 | 镜头景别 | 取景范围、画幅比例、拍摄角度、构图法则 |
+| 6 | 镜头运动 | 摄影机运动方式、运动速度和节奏 |
+| 7 | 时间节奏 | 帧率、慢动作/延时/正常速度、时间流逝感 |
+| 8 | 动态事件 | 画面中正在发生的具体动作、变化过程、行为逻辑 |
+| 9 | 技术参数 | 分辨率、采样器、CFG 值、步数、LoRA 权重等 |
+| 10 | 负面排除 | 不希望出现的元素，用否定式描述（无/不要/排除） |
+
+> 超出以上维度的需求，可用自定义卡片名。
+
+---
+
+### 完整示例
+
+```markdown
+## 1. 赛博朋克雨夜
+
+**主体特征**：穿着黑色风衣的赛博格侦探，左眼红色机械义眼，右臂银色金属骨骼，短发被雨水打湿。
+
+**场景环境**：雨夜霓虹街道，全息广告牌闪烁，地面倒映紫色和蓝色光，远处悬浮车飞过。
+
+**光影色彩**：冷色调为主，霓虹红紫光为主光源，雨中反光，高对比度。
+
+**艺术风格**：赛博朋克风格，高对比度，电影级调色，Blade Runner 美学。
+
+**镜头景别**：中景，半身构图，低角度仰拍，三分法。
+
+**镜头运动**：从人物背后缓慢环绕至正面，手持微晃动。
+
+**时间节奏**：慢动作，60fps，雨滴速度减慢为正常 1/2。
+
+**动态事件**：人物取烟点燃，烟雾在雨中升起，霓虹在烟雾中折射光晕。
+
+**技术参数**：4K，21:9 宽银幕，浅景深 f/1.4。
+
+**负面排除**：无阳光，无自然植被，无噪点，无模糊，无文字，无水印，无卡通渲染。
+```
+
+---
+
+### 严格禁止
+
+1. 禁止使用 `# ` 一级标题
+2. 禁止添加"导出时间"、"任务总数"等元信息
+3. 禁止在冒号之后换行写内容
+4. 禁止使用非标准卡片名
+5. 禁止在 `##` 后漏掉空格
+6. 禁止使用 `---` 分隔线
+
+---
+
+### 多任务输出
+
+```markdown
+## 1. 赛博朋克雨夜
+
+**主体特征**：赛博格侦探，黑风衣，红色义眼。
+
+**场景环境**：雨夜霓虹街道，全息广告牌。
+
+**光影色彩**：冷色调为主，霓虹红紫光，高对比度。
+
+## 2. 森林精灵
+
+**主体特征**：精灵少女，绿色长发及腰，尖耳朵，树叶藤蔓编织衣裳。
+
+**场景环境**：清晨魔法森林，阳光穿过树冠形成光束。
+
+**光影色彩**：暖金色，丁达尔光束，柔和光斑。
+
+**艺术风格**：奇幻风格，吉卜力美学，柔和色系，手绘质感。
+```
+
+---
+
 <a name="english"></a>
 
 ## English
@@ -213,7 +321,7 @@ MIT
 | Scenario | Action |
 |----------|--------|
 | Use without install | Download `resource.zip` → extract → enter `win-unpacked` → double-click `AI提示词助手.exe` |
-| Install to PC | Download `AI提示词助手 Setup x.x.x.exe` → install → desktop shortcut |
+| Install to PC (admin required) | Download `AI提示词助手 Setup x.x.x.exe` → install → desktop shortcut |
 | Process running, no window | Kill all Electron processes in Task Manager → relaunch with `--force` |
 | "Another instance is running" | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json` → reopen |
 | Where's the data | `userData.json` in the project folder you selected |
@@ -385,3 +493,109 @@ Stack: Electron 34 + vanilla HTML/CSS/JS, electron-builder (NSIS).
 ### License
 
 MIT
+
+---
+
+<a id="ai-spec"></a>
+
+## AI Output Format Spec (English)
+
+> **Usage:** Send this document as a System Prompt to any AI (ChatGPT / Claude / Gemini). The AI will output prompt data in a standard format. Save as `.md` or `.txt` to import directly into AI_Helper.
+
+---
+
+### Output Format
+
+```
+## {Task Name}
+
+**{Card Name}**：{Content}
+```
+
+Rules:
+- `## ` **must** be followed by a space, then the task name. Numbering is optional.
+- `**{Card Name}**` in bold, colon immediately after, content on the same line.
+- Each `## ` block = one task. Tasks are independent.
+- Lines not starting with `## ` or `**` are treated as continuation of the previous card.
+
+---
+
+### Standard Card Names
+
+| # | Card Name | What to describe |
+|---|-----------|-----------------|
+| 1 | 主体特征 | Subject appearance, race, build, clothing, pose, material texture, facial details |
+| 2 | 场景环境 | Location type, spatial scale, environmental elements, weather, atmosphere |
+| 3 | 光影色彩 | Key light direction/type, color temperature, fill light, contrast, special effects |
+| 4 | 艺术风格 | Art style, rendering style, color scheme, reference artists |
+| 5 | 镜头景别 | Shot size, aspect ratio, camera angle, composition |
+| 6 | 镜头运动 | Camera movement type, speed and rhythm |
+| 7 | 时间节奏 | Frame rate, slow-mo/timelapse/normal, sense of time passing |
+| 8 | 动态事件 | Specific actions happening in frame, change process, behavior logic |
+| 9 | 技术参数 | Resolution, sampler, CFG, steps, LoRA weights etc. |
+| 10 | 负面排除 | Unwanted elements, described negatively (no/avoid/exclude) |
+
+> For dimensions beyond the above, use custom card names.
+
+---
+
+### Full Example
+
+```markdown
+## 1. Cyberpunk Rainy Night
+
+**主体特征**：A cyberpunk detective in a black trench coat, left eye is a red mechanical implant, right arm exposed silver metallic skeleton, short hair wet from rain.
+
+**场景环境**：Rainy neon street at night, holographic billboards flickering between towering buildings, ground reflecting purple and blue light, flying cars in the distance.
+
+**光影色彩**：Cool tones dominant, neon red-purple as key light, rain reflections for hazy atmosphere, high contrast.
+
+**艺术风格**：Cyberpunk aesthetic, high contrast, cinematic color grading, Blade Runner style.
+
+**镜头景别**：Medium shot, half-body composition, low angle, rule of thirds.
+
+**镜头运动**：Slow orbit from behind to front, handheld micro-shake for documentary feel.
+
+**时间节奏**：Slow motion, 60fps, raindrops at 1/2 normal speed.
+
+**动态事件**：Detective pulls out a cigarette, lights it, smoke rises slowly in the rain, neon lights refract through the smoke.
+
+**技术参数**：4K, 21:9 widescreen, shallow DoF f/1.4.
+
+**负面排除**：No sunlight, no vegetation, no noise, no blur, no text, no watermark, no cartoon rendering.
+```
+
+---
+
+### Strictly Forbidden
+
+1. No `# ` level-1 headings
+2. No metadata lines ("export time", "task count", etc.)
+3. No line breaks after the colon in `**Card Name**：`
+4. No non-standard card names (see table above)
+5. No missing space after `##`
+6. No `---` separators
+
+---
+
+### Multi-Task Output
+
+```markdown
+## 1. Cyberpunk Rainy Night
+
+**主体特征**：Cyberpunk detective, black trench coat, red cybernetic eye.
+
+**场景环境**：Neon street at night, holographic billboards.
+
+**光影色彩**：Cool tones, neon red-purple, high contrast.
+
+## 2. Forest Elf
+
+**主体特征**：Elf maiden, long green hair to waist, pointed ears, clothes of leaves and vines.
+
+**场景环境**：Magical forest at dawn, sunlight piercing through canopy in beams.
+
+**光影色彩**：Warm gold, crepuscular rays, soft light spots on grass.
+
+**艺术风格**：Fantasy style, Ghibli aesthetic, soft palette, hand-painted texture.
+```

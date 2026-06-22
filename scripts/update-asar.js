@@ -54,14 +54,12 @@ console.log(`[update-asar] 完成 (${size} KB)`);
 const electronExe = path.join(ROOT, 'dist', 'win-unpacked', 'electron.exe');
 const renamedExe = path.join(ROOT, 'dist', 'win-unpacked', 'AI提示词助手.exe');
 try {
-  if (fs.existsSync(renamedExe)) fs.unlinkSync(renamedExe);
-  fs.copyFileSync(electronExe, renamedExe);
-  console.log('[update-asar] electron.exe → AI提示词助手.exe');
-} catch (err) {
-  // 如果 electron.exe 不存在（首次构建时可能还没下载），跳过
   if (fs.existsSync(electronExe)) {
-    console.log(`[update-asar] 重命名失败: ${err.message}`);
+    fs.copyFileSync(electronExe, renamedExe);
+    console.log('[update-asar] electron.exe → AI提示词助手.exe');
   }
+} catch (err) {
+  console.log(`[update-asar] 重命名失败: ${err.message}`);
 }
 
 function copyDirSync(src, dst) {

@@ -98,6 +98,46 @@ function stopWatchdog() {
   if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
 }
 
+// ========== 可写配置目录（asar 只读，运行时配置存到 userData） ==========
+const CONFIG_DIR = path.join(app.getPath('userData'), 'config');
+
+function getUserConfigPath(filename) {
+  return path.join(CONFIG_DIR, filename);
+}
+
+/** 确保 userData 下有配置文件，不存在时从 asar 复制默认值 */
+async function ensureUserConfig(filename, defaultContent) {
+  const userPath = getUserConfigPath(filename);
+  try {
+    await fsPromises.access(userPath);
+  } catch (e) {
+    // 不存在 → 从 asar 复制
+    const asarPath = path.join(__dirname, 'config', filename);
+    try {
+      const content = await fsPromises.readFile(asarPath, 'utf-8');
+      await fsPromises.mkdir(CONFIG_DIR, { recursive: true });
+      await fsPromises.writeFile(userPath, content, 'utf-8');
+    } catch (err) {
+      // asar 中也没有 → 写入默认值
+      if (defaultContent !== undefined) {
+        await fsPromises.mkdir(CONFIG_DIR, { recursive: true });
+        await fsPromises.writeFile(userPath, defaultContent, 'utf-8');
+      }
+    }
+  }
+}
+
+/** 启动时初始化所有可写配置文件 */
+async function initUserDataConfigs() {
+  await Promise.all([
+    ensureUserConfig('settings.json', JSON.stringify({ closeBehavior: 'exit' }, null, 2)),
+    ensureUserConfig('theme.json', JSON.stringify({ theme: 'default' }, null, 2)),
+    ensureUserConfig('shortcuts.json', '{}'),
+    ensureUserConfig('language.json', JSON.stringify({ language: 'zh' }, null, 2)),
+    ensureUserConfig('recent-projects.json', '[]'),
+  ]);
+}
+
 // ========== 预加载配置到内存缓存（避免 IPC 调用时重复读盘） ==========
 const configCache = {
   fieldConfig: null,
@@ -120,11 +160,16 @@ async function readJsonFile(relativePath, fallback) {
 
 // 预加载所有会在 IPC 中被请求的配置文件（在 app.whenReady 启动流程中调用）
 async function preloadConfigs() {
-  const [fieldConfig, shortcuts, urls] = await Promise.all([
+  const [fieldConfig, urls] = await Promise.all([
     readJsonFile('config/fieldConfig.json', []),
-    readJsonFile('config/shortcuts.json', {}),
     readJsonFile('config/urls.json', {})
   ]);
+  // shortcuts 从可写目录读取（持久化快捷键配置）
+  let shortcuts = {};
+  try {
+    const raw = await fsPromises.readFile(getUserConfigPath('shortcuts.json'), 'utf-8');
+    shortcuts = JSON.parse(raw);
+  } catch (e) { /* 使用默认空对象 */ }
   configCache.fieldConfig = fieldConfig;
   configCache.shortcuts = shortcuts;
   configCache.urls = urls;
@@ -138,7 +183,7 @@ const isChineseMode = process.argv.includes('--cn') || process.argv.includes('cn
 
 // 加载设置（异步，避免阻塞主进程）
 async function loadSettings() {
-  const settingsPath = path.join(__dirname, 'config', 'settings.json');
+  const settingsPath = getUserConfigPath('settings.json');
   try {
     await fsPromises.access(settingsPath);
     const raw = await fsPromises.readFile(settingsPath, 'utf-8');
@@ -154,7 +199,7 @@ async function loadSettings() {
 
 // 加载主题配置，判断是否为暗色主题并缓存颜色（异步，避免阻塞主进程）
 async function loadTheme() {
-  const themePath = path.join(__dirname, 'config', 'theme.json');
+  const themePath = getUserConfigPath('theme.json');
   try {
     await fsPromises.access(themePath);
     const raw = await fsPromises.readFile(themePath, 'utf-8');
@@ -266,7 +311,7 @@ function debouncedShowWindow(win) {
 
 // 保存设置（异步，避免阻塞主进程）
 async function saveSettings(settings) {
-  const settingsPath = path.join(__dirname, 'config', 'settings.json');
+  const settingsPath = getUserConfigPath('settings.json');
   try {
     await fsPromises.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
     return true;
@@ -841,7 +886,7 @@ function setupIPC() {
 
   // 保存快捷键配置（同时更新缓存）
   ipcMain.handle('save-shortcuts-config', async (event, config) => {
-    const configPath = path.join(__dirname, 'config', 'shortcuts.json');
+    const configPath = getUserConfigPath('shortcuts.json');
     try {
       await fsPromises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
       configCache.shortcuts = config; // 更新缓存
@@ -899,7 +944,7 @@ function setupIPC() {
 
   // 保存主题配置（同时更新缓存和主进程主题状态）
   ipcMain.handle('save-theme-config', async (event, config) => {
-    const configPath = path.join(__dirname, 'config', 'theme.json');
+    const configPath = getUserConfigPath('theme.json');
     try {
       await fsPromises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
       configCache.theme = config; // 更新缓存
@@ -981,7 +1026,7 @@ function setupIPC() {
 
   // ========== 最近项目管理 ==========
   function getRecentProjectsPath() {
-    return path.join(__dirname, 'config', 'recent-projects.json');
+    return getUserConfigPath('recent-projects.json');
   }
 
   async function readRecentProjects() {
@@ -1045,7 +1090,7 @@ function setupIPC() {
 
   // 保存语言配置（同时更新缓存）
   ipcMain.handle('save-language', async (event, lang) => {
-    const langPath = path.join(__dirname, 'config', 'language.json');
+    const langPath = getUserConfigPath('language.json');
     try {
       const langConfig = { language: lang };
       await fsPromises.writeFile(langPath, JSON.stringify(langConfig, null, 2), 'utf-8');
@@ -1284,6 +1329,8 @@ app.on('second-instance', (_event, argv) => {
 app.whenReady().then(async () => {
   await loadWindowConfig();
   await loadStrings();
+  // 初始化 userData 下的可写配置（从 asar 复制默认值）
+  await initUserDataConfigs();
   await loadSettings();
   await loadTheme();
   // 并行预加载其余配置文件到内存缓存，后续 IPC 调用直接返回缓存数据

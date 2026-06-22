@@ -104,6 +104,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 记录用户操作到本地日志
   logUserAction: (action) => ipcRenderer.send('log-user-action', action),
 
+  // 记录应用事件日志（任务操作、文件操作等语义事件）
+  logAppEvent: (category, action, detail) => ipcRenderer.send('log-app-event', { category, action, detail }),
+
   // 获取日志文件列表
   getLogFiles: () => ipcRenderer.invoke('get-log-files'),
 

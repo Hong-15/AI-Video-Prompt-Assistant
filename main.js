@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron')
 const path = require('path');
 const fs = require('fs');
 const fsPromises = fs.promises;
-const { initLogger, logAction, getLogDir, isValidLogFileName } = require('./logger');
+const { initLogger, logAction, log, logError, logWarn, logInfo, logDebug, getLogDir, isValidLogFileName, LogLevel } = require('./logger');
 
 // 尽早移除默认菜单栏，避免 Electron 启动时创建默认菜单（提升启动性能）
 // 参考：Electron 性能最佳实践第 8 条
@@ -73,8 +73,10 @@ function forceTakeover(existingLock) {
     try {
       process.kill(existingLock.pid, 'SIGTERM');
       console.log('[Lock] 已发送 SIGTERM 到旧进程 PID:', existingLock.pid);
+      logWarn('LOCK', '强制接管：已终止旧进程', { pid: String(existingLock.pid) });
     } catch (e) {
       console.error('[Lock] 无法终止旧进程:', e.message);
+      logError('LOCK', '强制接管失败：无法终止旧进程', { pid: String(existingLock.pid), error: e.message });
     }
   }
   deleteLockFile();
@@ -84,6 +86,7 @@ function startWatchdog(window) {
   watchdogTimer = setTimeout(() => {
     if (!window || window.isDestroyed() || !window.isVisible()) {
       console.error('[Watchdog] 窗口超时未显示，自毁防止僵尸');
+      logError('LOCK', '看门狗触发：窗口超时未显示，执行自毁');
       isQuitting = true;
       app.quit();
     }
@@ -136,6 +139,7 @@ async function initUserDataConfigs() {
     ensureUserConfig('language.json', JSON.stringify({ language: 'zh' }, null, 2)),
     ensureUserConfig('recent-projects.json', '[]'),
   ]);
+  logInfo('CONFIG', '可写配置文件初始化完成');
 }
 
 // ========== 预加载配置到内存缓存（避免 IPC 调用时重复读盘） ==========
@@ -367,6 +371,7 @@ function createWindow(parentFolderPath) {
 
   // 等首帧合成完成后再显示窗口
   win.once('ready-to-show', () => {
+    logInfo('WINDOW', '窗口首帧渲染完成，准备显示', { id: String(win.id) });
     showAfterComposed(win);
   });
 
@@ -375,6 +380,7 @@ function createWindow(parentFolderPath) {
   let closeTimeout = null;
   win.on('close', (e) => {
     if (isQuitting || isRestarting) return; // 退出/重启中，不拦截，让窗口自然关闭
+    logInfo('WINDOW', '窗口关闭请求（X 按钮）', { id: String(win.id), closeBehavior, hasProject: Boolean(currentFolderPath) });
     if (currentFolderPath && !win.isDestroyed()) {
       e.preventDefault();
       win.webContents.send('save-before-close');
@@ -418,6 +424,7 @@ async function handleOpenFolder(win) {
     currentFolderPath = folderPath;
     await addRecentProject(currentFolderPath);
     ensureProjectIcon(currentFolderPath);
+    logInfo('FILE', '打开文件夹成功', { path: currentFolderPath });
     win.webContents.send('folder-opened', currentFolderPath);
   }
 }
@@ -445,6 +452,7 @@ async function handleOpenFolderNew() {
     currentFolderPath = folderPath;
     await addRecentProject(currentFolderPath);
     ensureProjectIcon(currentFolderPath);
+    logInfo('FILE', '打开文件夹成功（新窗口）', { path: currentFolderPath });
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', currentFolderPath);
     });
@@ -463,6 +471,7 @@ async function validateProject(folderPath) {
     // 必须有 tasks 数组
     return data && Array.isArray(data.tasks);
   } catch (e) {
+    logWarn('FILE', '验证项目失败', { path: folderPath, error: e.message });
     return false;
   }
 }
@@ -477,6 +486,7 @@ async function loadUserData(folderPath) {
   } catch (e) {
     if (e.code !== 'ENOENT') {
       console.error('加载数据失败:', e);
+      logError('FILE', '加载项目数据失败', { path: filePath, error: e.message });
     }
   }
   return null;
@@ -487,9 +497,11 @@ async function saveUserData(folderPath, data) {
   const filePath = path.join(folderPath, 'userData.json');
   try {
     await fsPromises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    logInfo('FILE', '保存项目数据成功', { path: filePath, taskCount: String(data.tasks ? data.tasks.length : 0) });
     return true;
   } catch (e) {
     console.error('保存数据失败:', e);
+    logError('FILE', '保存项目数据失败', { path: filePath, error: e.message });
     return false;
   }
 }
@@ -657,6 +669,14 @@ function setupIPC() {
     });
   });
 
+  // 记录应用事件日志（任务操作、文件操作等语义事件）
+  ipcMain.on('log-app-event', (event, { category, action, detail }) => {
+    if (!category || !action) return;
+    logInfo(category, action, detail || '').catch((err) => {
+      console.error('[Main] 记录应用事件失败:', err);
+    });
+  });
+
   // 获取日志文件列表（含是否在 7 天内的标记）
   ipcMain.handle('get-log-files', async () => {
     const logDir = getLogDir();
@@ -672,17 +692,21 @@ function setupIPC() {
     const result = [];
 
     for (const file of files) {
-      if (!isValidLogFileName(file)) continue;
+      // 兼容新旧两种命名格式
+      let match = file.match(/^(\d{4}-\d{2}-\d{2})_(zh-CN|en)\.txt$/);  // 新格式：yyyy-MM-dd_lang.txt
+      if (!match) {
+        match = file.match(/^(\d{4}-\d{2}-\d{2})_\d{2}-\d{2}-\d{2}-\d{3}_(zh-CN|en)\.txt$/);  // 旧格式
+      }
+      if (!match) continue;
+
       const filePath = path.join(logDir, file);
       try {
         const stat = await fsPromises.stat(filePath);
         if (!stat.isFile()) continue;
-        const match = file.match(/^(\d{4}-\d{2}-\d{2})_(\d{2}-\d{2}-\d{2}-\d{3})_(zh-CN|en)\.txt$/);
         result.push({
           fileName: file,
-          date: match ? match[1] : '',
-          time: match ? match[2] : '',
-          language: match ? match[3] : 'unknown',
+          date: match[1],
+          language: match[2],
           size: stat.size,
           isWithin7Days: (now - stat.mtime.getTime()) <= maxAgeMs
         });
@@ -756,6 +780,7 @@ function setupIPC() {
 
   // 文件菜单：关闭项目（清除工作目录，通知渲染进程重置）
   ipcMain.on('close-project', (event) => {
+    logInfo('FILE', '关闭当前项目', { path: currentFolderPath || '(无)' });
     currentFolderPath = null;
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win && !win.isDestroyed()) {
@@ -765,6 +790,7 @@ function setupIPC() {
 
   // 文件菜单：退出应用（保存后完全退出）
   ipcMain.on('quit-app', () => {
+    logInfo('LIFECYCLE', '用户触发退出应用（菜单）');
     closeBehavior = 'exit';
     isQuitting = true;  // 先标记退出，防止 close 事件拦截窗口关闭
     if (currentFolderPath && mainWindow && !mainWindow.isDestroyed()) {
@@ -796,6 +822,7 @@ function setupIPC() {
       currentFolderPath = folderPath;
       await addRecentProject(currentFolderPath);
       ensureProjectIcon(currentFolderPath);
+      logInfo('FILE', '打开文件夹成功（渲染进程请求）', { path: currentFolderPath });
       return currentFolderPath;
     }
     return null;
@@ -823,6 +850,7 @@ function setupIPC() {
 
   // 创建新窗口
   ipcMain.on('new-window', () => {
+    logInfo('WINDOW', '创建新窗口（用户触发）');
     const newWin = createWindow();
     newWin.show();
   });
@@ -1095,15 +1123,18 @@ function setupIPC() {
       const langConfig = { language: lang };
       await fsPromises.writeFile(langPath, JSON.stringify(langConfig, null, 2), 'utf-8');
       configCache.language = langConfig; // 更新缓存
+      logInfo('LANGUAGE', '语言设置已更改', { language: lang });
       return true;
     } catch (e) {
       console.error('保存语言配置失败:', e);
+      logError('LANGUAGE', '保存语言配置失败', { error: e.message });
       return false;
     }
   });
 
   // 重启应用（先保存再重启）
   ipcMain.on('restart-app', () => {
+    logInfo('LIFECYCLE', '用户触发重启应用');
     if (currentFolderPath && mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('save-before-close');
       setTimeout(() => {
@@ -1277,6 +1308,7 @@ const isForceMode = process.argv.includes('--force');
 // --force 模式：强制杀死旧进程，跳过单实例锁
 if (isForceMode) {
   console.log('[Lock] --force 模式：强制接管');
+  logInfo('LOCK', '--force 模式启动，强制接管锁');
   forceTakeover(readLockFile());
 }
 
@@ -1286,9 +1318,11 @@ if (!isForceMode) {
   if (existingLock) {
     if (!isPidAlive(existingLock.pid)) {
       console.log('[Lock] 过期锁（进程已死），清理 PID:', existingLock.pid);
+      logInfo('LOCK', '清理过期锁（旧进程已死）', { pid: String(existingLock.pid) });
       deleteLockFile();
     } else if (Date.now() - existingLock.ts > LOCK_STALE_MS) {
       console.log('[Lock] 僵尸锁（超时未响应），强制清理 PID:', existingLock.pid);
+      logWarn('LOCK', '检测到僵尸锁（超时未响应），强制清理', { pid: String(existingLock.pid), ageMs: String(Date.now() - existingLock.ts) });
       forceTakeover(existingLock);
     }
   }
@@ -1301,25 +1335,31 @@ if (!gotTheLock) {
   const lock = readLockFile();
   if (lock && isPidAlive(lock.pid) && Date.now() - lock.ts > LOCK_STALE_MS) {
     console.log('[Lock] 自动检测到僵尸实例，强制接管并重启');
+    logWarn('LOCK', '单实例锁已被占用，自动检测到僵尸，强制接管并重启', { pid: String(lock.pid) });
     forceTakeover(lock);
     app.relaunch({ args: process.argv.slice(1).filter(a => a !== '--force').concat(['--force']) });
     app.exit(0);
   } else {
     console.log('[Lock] 已有实例在运行，退出');
+    logInfo('LOCK', '单实例锁已被占用，退出');
     app.quit();
   }
 } else {
+  logInfo('LOCK', '单实例锁获取成功');
+  logInfo('LIFECYCLE', '应用启动', { version: app.getVersion(), platform: process.platform, pid: String(process.pid) });
 
 app.on('second-instance', (_event, argv) => {
   // 如果第二实例带了 --force，说明存在僵尸需要重启
   if (argv && argv.includes('--force')) {
     console.log('[Lock] 收到 --force 第二实例，准备重启');
+    logInfo('LOCK', '收到 --force 第二实例，准备重启');
     isQuitting = true;
     app.quit();
     return;
   }
   // 正常情况：恢复并聚焦已有窗口
   if (mainWindow) {
+    logInfo('LIFECYCLE', '收到第二实例，恢复已有窗口');
     if (mainWindow.isMinimized()) mainWindow.restore();
     if (!mainWindow.isVisible()) mainWindow.show();
     mainWindow.focus();
@@ -1337,6 +1377,7 @@ app.whenReady().then(async () => {
   await preloadConfigs();
   // 初始化用户操作日志模块（确保 logs 目录存在并清理过期日志）
   await initLogger();
+  logInfo('LIFECYCLE', '应用就绪，初始化完成');
   setupIPC();
   mainWindow = createWindow();
 
@@ -1352,7 +1393,11 @@ app.whenReady().then(async () => {
 
 // 应用退出前强制保存（兜底，防止 close 事件未触发）
 app.on('before-quit', (event) => {
-  if (isRestarting) return; // 重启时不保存，跳过
+  if (isRestarting) {
+    logInfo('LIFECYCLE', '应用重启中，跳过 before-quit 保存');
+    return; // 重启时不保存，跳过
+  }
+  logInfo('LIFECYCLE', '应用即将退出（before-quit）', { folderPath: currentFolderPath || '(无)' });
   if (currentFolderPath && mainWindow && !mainWindow.isDestroyed()) {
     event.preventDefault();
     mainWindow.webContents.send('save-before-close');
@@ -1365,12 +1410,14 @@ app.on('before-quit', (event) => {
 });
 
 app.on('window-all-closed', () => {
+  logInfo('LIFECYCLE', '所有窗口已关闭');
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 app.on('activate', () => {
+  logInfo('LIFECYCLE', '应用激活（macOS dock 点击）');
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow();
     writeLockFile();
@@ -1380,6 +1427,7 @@ app.on('activate', () => {
 
 // 退出时清理锁文件
 app.on('will-quit', () => {
+  logInfo('LIFECYCLE', '应用退出（will-quit），清理资源');
   isQuitting = false;
   stopWatchdog();
   deleteLockFile();

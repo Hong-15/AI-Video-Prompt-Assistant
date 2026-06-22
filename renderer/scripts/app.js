@@ -255,6 +255,18 @@ const App = (function() {
     };
   }
 
+  /**
+   * 记录应用语义事件（任务操作、文件操作等）
+   * @param {string} category - 分类，如 'TASK' / 'FILE' / 'PROJECT' 等
+   * @param {string} action - 操作描述
+   * @param {Object|string} [detail] - 附加详情
+   */
+  function logAppEvent(category, action, detail) {
+    if (window.electronAPI && window.electronAPI.logAppEvent) {
+      window.electronAPI.logAppEvent(category, action, detail);
+    }
+  }
+
   // ========== 主题管理 ==========
 
   async function loadTheme() {
@@ -359,6 +371,7 @@ const App = (function() {
     } catch (e) {
       console.error('保存主题配置失败:', e);
     }
+    logAppEvent('THEME', '切换主题', { theme });
   }
 
   // ========== 全局键盘快捷键 ==========
@@ -394,6 +407,7 @@ const App = (function() {
     switch (action) {
       case 'save':
         autoSave();
+        logAppEvent('FILE', '快捷键：保存');
         break;
       case 'newTask':
         if (checkFolderBeforeAddTask()) {
@@ -405,6 +419,7 @@ const App = (function() {
         const activeTask = Sidebar.getActiveTask();
         if (activeTask) {
           Sidebar.showDeleteConfirm(activeTask);
+          logAppEvent('TASK', '快捷键：删除任务', { taskId: activeTask.id, taskName: activeTask.name });
         }
         break;
       case 'renameTask':
@@ -412,6 +427,7 @@ const App = (function() {
         const renameTask = Sidebar.getActiveTask();
         if (renameTask) {
           Sidebar.showRenameDialog(renameTask);
+          logAppEvent('TASK', '快捷键：重命名任务', { taskId: renameTask.id, taskName: renameTask.name });
         }
         break;
       case 'duplicateTask':
@@ -419,10 +435,12 @@ const App = (function() {
         const dupTask = Sidebar.getActiveTask();
         if (dupTask) {
           Sidebar.duplicateTask(dupTask.id);
+          logAppEvent('TASK', '快捷键：复制任务', { taskId: dupTask.id, taskName: dupTask.name });
         }
         break;
       case 'clearAll':
         if (Content.clearAllInputs) Content.clearAllInputs();
+        logAppEvent('TASK', '快捷键：清空所有输入');
         break;
       case 'copyPreview':
         if (Content.copyPreview) Content.copyPreview();
@@ -447,15 +465,19 @@ const App = (function() {
         break;
       case 'openFolder':
         Toolbar.triggerOpenFolder();
+        logAppEvent('FILE', '快捷键：打开文件夹');
         break;
       case 'createProject':
         Toolbar.triggerCreateProject();
+        logAppEvent('PROJECT', '快捷键：新建项目');
         break;
       case 'closeProject':
         window.electronAPI.closeProject();
+        logAppEvent('FILE', '快捷键：关闭项目');
         break;
       case 'importProject':
         Toolbar.triggerImportProject();
+        logAppEvent('IMPORT', '快捷键：导入项目');
         break;
       case 'exportMD':
         handleExport('md');
@@ -471,9 +493,11 @@ const App = (function() {
         break;
       case 'resetTaskLayout':
         if (Content.resetCurrentTaskLayout) Content.resetCurrentTaskLayout();
+        logAppEvent('TASK', '快捷键：重置当前任务布局');
         break;
       case 'resetAllLayouts':
         if (Sidebar.resetAllLayouts) Sidebar.resetAllLayouts();
+        logAppEvent('TASK', '快捷键：重置所有任务布局');
         break;
       default:
         console.warn('未知快捷键操作:', action);
@@ -626,6 +650,7 @@ const App = (function() {
 
       if (result.success) {
         const filePath = result.filePath;
+        logAppEvent('EXPORT', `导出${format === 'md' ? 'Markdown' : '文本'}成功`, { path: filePath, taskCount: String(data.tasks.length) });
         const maxLen = 80;
         const displayPath = filePath.length > maxLen
           ? filePath.substring(0, 30) + '...' + filePath.substring(filePath.length - 40)
@@ -904,6 +929,7 @@ const App = (function() {
       Content.showToast(
         StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
       );
+      logAppEvent('IMPORT', '导入项目数据成功', { importedCount: String(importedCount), totalTasks: String(allTasks.length) });
     } else if (renameConflicts.length === 0) {
       Content.showToast(StringLoader.get('import.errorEmpty', '文件内容为空'));
     }
@@ -1059,9 +1085,11 @@ const App = (function() {
     const data = await FileManager.loadData(folderPath);
     if (data && data.tasks && data.tasks.length > 0) {
       Sidebar.setTasks(data.tasks, data.activeTaskId);
+      logAppEvent('FILE', '打开项目', { path: folderPath, taskCount: String(data.tasks.length) });
     } else {
       Sidebar.setTasks([], null);
       updateEmptyState(true);
+      logAppEvent('FILE', '打开项目（空项目）', { path: folderPath });
     }
   }
 
@@ -1072,6 +1100,7 @@ const App = (function() {
       await autoSave();
     }
 
+    logAppEvent('FILE', '关闭项目', { path: _currentFolder || '' });
     _currentFolder = null;
     _isDirty = false;
     FileManager.setCurrentFolder(null);
@@ -1103,6 +1132,7 @@ const App = (function() {
   // 打开最近项目
   async function handleOpenRecentProject(folderPath) {
     if (!folderPath) return;
+    logAppEvent('FILE', '打开最近项目', { path: folderPath });
     // 验证项目合法性
     const isValid = await window.electronAPI.loadData(folderPath);
     if (!isValid || !isValid.tasks) {
@@ -1162,6 +1192,9 @@ const App = (function() {
     updateStatusTaskName(task ? task.name : '');
     updateStatusCardName('');
     updateStatusTaskCount();
+    if (task) {
+      logAppEvent('TASK', '切换任务', { taskId: task.id, taskName: task.name });
+    }
   }
 
   // 插入模板任务（右键菜单新建任务子菜单）
@@ -1199,10 +1232,12 @@ const App = (function() {
     updateStatusCardName('');
     updateStatusTaskCount();
     markDirty();
+    logAppEvent('TASK', template === 'empty' ? '新建任务（空模板）' : '新建任务（默认模板）', { taskId: task.id, taskName: task.name });
   }
 
   // 任务删除
   function handleTaskDelete(taskId) {
+    logAppEvent('TASK', '删除任务', { taskId });
     updateStatusTaskCount();
     markDirty();
   }
@@ -1272,6 +1307,7 @@ const App = (function() {
     if (result) {
       _isDirty = false;
       updateSaveStatus(true);
+      logAppEvent('FILE', '保存项目数据', { path: _currentFolder, taskCount: String(tasks.length) });
     }
   }
 
@@ -2031,6 +2067,7 @@ const App = (function() {
 
       try {
         await window.electronAPI.saveSettings({ closeBehavior: _currentCloseBehavior });
+        logAppEvent('SETTINGS', '保存设置', { closeBehavior: _currentCloseBehavior });
         if (langChanged) {
           await window.electronAPI.saveLanguage(_currentLanguage);
         }
@@ -2059,6 +2096,7 @@ const App = (function() {
 
       // 语言变更后提示重启
       if (langChanged) {
+        logAppEvent('LANGUAGE', '语言设置已更改', { language: _currentLanguage });
         Modal.show({
           title: StringLoader.get('moreSettings.restartTitle', '语言变更'),
           message: StringLoader.get('moreSettings.restartMsg', '语言设置已更改，需要重启应用才能生效。是否立即重启？'),
@@ -2397,6 +2435,8 @@ const App = (function() {
       // 关闭模态窗口
       closeModal();
 
+      logAppEvent('PROJECT', '创建项目成功', { path: result.path, template: _selectedTemplate, newWindow: String(openInNewWindow) });
+
       if (openInNewWindow) {
         // 在新窗口中打开
         window.electronAPI.openFolderInNewWindow(result.path);
@@ -2418,6 +2458,7 @@ const App = (function() {
    */
   async function showAiSpec() {
     const currentLang = (_currentLanguage || 'zh-CN').startsWith('en') ? 'en' : 'zh';
+    logAppEvent('FILE', '查看AI规范文档', { language: currentLang });
 
     const overlay = document.createElement('div');
     overlay.className = 'ai-spec-overlay';
@@ -2538,6 +2579,7 @@ const App = (function() {
    */
   function showGlobalSearch() {
     if (document.getElementById('globalSearchOverlay')) return;
+    logAppEvent('SEARCH', '打开全局搜索');
 
     const overlay = document.createElement('div');
     overlay.id = 'globalSearchOverlay';

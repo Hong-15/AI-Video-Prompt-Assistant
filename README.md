@@ -2,9 +2,9 @@
 
 > 仓库：<https://github.com/Hong-15/AI-Video-Prompt-Assistant>
 >
-> 下载：<https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0>
+> 下载：<https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/1.0.01>
 >
-> 百度网盘（备用）：<https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong> 提取码: hong
+> 百度网盘（备用）：<https://pan.baidu.com/s/1Ycq5SScVy8stdj4tyM87QA?pwd=hong> 提取码: hong
 >
 > AI 规则文件：[AI数据输出格式规范.md](AI数据输出格式规范.md) | [AI\_Data\_Output\_Format\_Spec.md](AI_Data_Output_Format_Spec.md)
 

@@ -2488,6 +2488,8 @@ const App = (function() {
     const mdContent = document.createElement('div');
     mdContent.className = 'ai-spec-markdown';
     mdContent.textContent = StringLoader.get('aiSpec.loading', '加载中...');
+    // 保存原始纯文本用于复制功能
+    let rawSpecText = '';
     body.appendChild(mdContent);
     box.appendChild(body);
 
@@ -2518,7 +2520,7 @@ const App = (function() {
     copyBtn.className = 'ai-spec-copy-btn';
     copyBtn.textContent = StringLoader.get('import.copy', '复制');
     copyBtn.addEventListener('click', () => {
-      const text = mdContent.textContent;
+      const text = rawSpecText || mdContent.textContent;
       navigator.clipboard.writeText(text).then(() => {
         const original = copyBtn.textContent;
         copyBtn.textContent = StringLoader.get('import.copySuccess', '已复制到剪贴板');
@@ -2545,11 +2547,15 @@ const App = (function() {
       try {
         const content = await window.electronAPI.readAiSpec(lang);
         if (content) {
-          mdContent.textContent = content;
+          mdContent.innerHTML = content;
+          // 从HTML中提取纯文本用于复制
+          rawSpecText = mdContent.textContent;
         } else {
+          rawSpecText = '';
           mdContent.textContent = StringLoader.get('aiSpec.loadFailed', '加载规范文件失败');
         }
       } catch (e) {
+        rawSpecText = '';
         mdContent.textContent = StringLoader.get('aiSpec.loadFailed', '加载规范文件失败');
       }
     }

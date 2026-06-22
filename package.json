@@ -1,6 +1,6 @@
 {
   "name": "ai-prompt-helper",
-  "version": "1.0.0",
+  "version": "1.0.01",
   "description": "AI提示词助手 - AI Prompt Helper",
   "main": "main.js",
   "scripts": {

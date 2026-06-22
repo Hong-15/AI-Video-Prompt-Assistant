@@ -889,17 +889,157 @@ function setupIPC() {
   });
 
   // 获取维度配置
-  // 读取 AI 规范文件
-  ipcMain.handle('read-ai-spec', async (event, lang) => {
-    const fileName = lang === 'en' ? 'AI_Data_Output_Format_Spec.md' : 'AI数据输出格式规范.md';
-    const specPath = path.join(__dirname, fileName);
-    try {
-      const content = await fsPromises.readFile(specPath, 'utf-8');
-      return content;
-    } catch (e) {
-      console.error('读取AI规范文件失败:', e);
-      return null;
+  // AI规范 Markdown 内容模板（编译时内联，打包后不依赖 .md 文件）
+  const AI_SPEC_MD_ZH = "# AI 数据输出格式规范\n\n> **用途：** 将此文档作为 System Prompt 发给 AI（ChatGPT / Claude / Gemini 等），AI 将按照标准格式输出提示词数据。用户保存为 `.md` 或 `.txt` 后可直接导入 AI_Helper。\n>\n> **你的身份：** 你是一个提示词生成助手。当用户要求你生成 AI 绘画 / AI 视频的提示词或补充提示词时，你必须严格按以下格式输出。\n\n---\n\n## 输出格式\n\n```\n## {任务名称}\n\n**{卡片名称}**：{内容}\n```\n\n规则：\n- `## ` 后面**必须有一个空格**，然后跟任务名称。编号可选，如 `## 1. 赛博朋克城市` 或 `## 赛博朋克城市`。\n- `**{卡片名称}**` 用粗体包裹，后面紧跟冒号（`：` 或 `:`），冒号后**同一行**写内容。\n- 一个 `## ` 表示一个任务，任务之间互不干扰。\n- 不以 `## ` 或 `**` 开头的行，自动作为上一张卡片的续行内容。\n\n---\n\n## 标准卡片名称（必须使用以下中文名称）\n\n| 序号 | 卡片名称 | 该维度应描述的内容 |\n|------|---------|------------------|\n| 1 | 主体特征 | 画面主体的外貌、种族、体型、服装、姿势、材质质感、面部细节 |\n| 2 | 场景环境 | 地点类型、空间尺度、环境元素（建筑/自然/室内）、天气、氛围 |\n| 3 | 光影色彩 | 主光源方向与类型、色温基调、辅助光、对比度、特殊光效（体积光/逆光/反射） |\n| 4 | 艺术风格 | 画风流派（写实/赛博朋克/奇幻/水墨等）、渲染风格、色彩方案、参考艺术家 |\n| 5 | 镜头景别 | 取景范围（特写/中景/远景）、画幅比例、拍摄角度（仰拍/俯拍/平视）、构图法则 |\n| 6 | 镜头运动 | 摄影机运动方式（推/拉/摇/移/跟/升/降/手持晃动）、运动速度和节奏 |\n| 7 | 时间节奏 | 视频的帧率（24/30/60fps）、慢动作/延时/正常速度、时间流逝感 |\n| 8 | 动态事件 | 画面中正在发生的具体动作、变化过程、行为逻辑、运动规律 |\n| 9 | 技术参数 | 分辨率（1080p/4K/8K）、采样器、CFG 值、步数、LoRA 权重等 |\n| 10 | 负面排除 | 不希望出现的元素、风格、特征，用否定式描述（无/不要/排除） |\n\n> 如果用户的需求涉及以上标准维度以外的内容，可以使用**自定义卡片名称**（如\"声音设计\"、\"特效元素\"），名称自定。\n\n---\n\n## 完整示例\n\n用户要求：请帮我生成一个赛博朋克雨夜场景\n\n你的输出：\n\n```markdown\n## 赛博朋克雨夜\n\n**主体特征**：一位穿着黑色风衣的赛博格侦探，左眼是红色机械义眼，右臂露出银色金属骨骼，短发被雨水打湿。皮肤有细微的金属纹理，指尖偶尔闪过蓝色电流。\n\n**场景环境**：雨夜的霓虹街道，全息广告牌在林立的高楼间闪烁，地面倒映着紫色和蓝色的光，远处有悬浮车飞过。街道两侧是密集的招牌和电缆，蒸汽从地下通风口升起。\n\n**光影色彩**：冷色调为主，霓虹灯的红紫色光作为主光源，雨中反光营造迷离氛围。高对比度，阴影区域偏蓝，远处有微弱的暖色路灯点缀。\n\n**艺术风格**：赛博朋克风格，高对比度，电影级调色，Blade Runner 风格美学，胶片的微颗粒感和色散。\n\n**镜头景别**：中景，半身构图，低角度仰拍，三分法构图，突出人物的孤独感和城市的压迫感。\n\n**镜头运动**：从人物背后缓慢环绕至正面再回到背面，手持微晃动增加纪实感，环绕速度缓慢。\n\n**时间节奏**：慢动作，每秒 60 帧，雨滴下落速度减慢为正常的 1/2，营造凝滞感。\n\n**动态事件**：人物从怀中取出烟盒，点燃一支烟，烟雾在细雨中缓缓上升，霓虹灯光在烟雾中折射出光晕。\n\n**技术参数**：4K 分辨率，宽银幕 21:9 画幅比，浅景深 f/1.4，锐利对焦，电影级色彩分级 Rec.2020。\n\n**负面排除**：无阳光，无自然植被，无噪点，无模糊，无文字，无水印，无卡通化渲染。\n```\n\n---\n\n## 严格禁止\n\n1. 禁止使用 `# ` 一级标题。\n2. 禁止添加\"导出时间\"、\"任务总数\"等元信息行。\n3. 禁止在 `**{卡片名}**：` 的冒号之后换行写内容 —— 内容必须与冒号同一行。\n4. 禁止在卡片名中使用非标准名称（标准名称见上方表格）。\n5. 禁止在 `##` 后面漏掉空格（正确的写法是 `## 任务名`）。\n6. 禁止使用 `---` 分隔线。\n\n---\n\n## 多任务输出\n\n如果需要生成多个不同主题的提示词，每个任务单独一段 `## `：\n\n```markdown\n## 赛博朋克雨夜\n\n**主体特征**：赛博格侦探，黑风衣，红色义眼。\n\n**场景环境**：雨夜霓虹街道，全息广告牌。\n\n**光影色彩**：冷色调为主，霓虹红紫光，高对比度。\n\n## 森林精灵\n\n**主体特征**：精灵少女，绿色长发及腰，尖耳朵，穿着树叶和藤蔓编织的衣裳。\n\n**场景环境**：清晨的魔法森林，阳光透过树冠形成束状光束。\n\n**光影色彩**：暖金色为主，丁达尔光束穿过树叶，柔和的光斑洒在草地上。\n\n**艺术风格**：奇幻风格，吉卜力美学，柔和色系，手绘质感。\n```\n";
+  const AI_SPEC_MD_EN = "# AI Data Output Format Specification\n\n> **Purpose:** Send this document as a System Prompt to an AI (ChatGPT / Claude / Gemini, etc.). The AI will output prompt data in the standard format. The user can save it as `.md` or `.txt` and import directly into AI_Helper.\n>\n> **Your role:** You are a prompt generation assistant. When the user asks you to generate prompts or supplementary prompts for AI image/video generation, you MUST output strictly in the following format.\n\n---\n\n## Output Format\n\n```\n## {Task Name}\n\n**{Card Name}**：{content}\n```\n\nRules:\n- `## ` MUST have a space after the hashes, followed by the task name. Numbering is optional (e.g. `## 1. Cyberpunk City` or `## Cyberpunk City`).\n- `**{Card Name}**` wrapped in bold, followed immediately by a colon (`：` or `:`) with content on the **same line**.\n- Each `## ` represents one task. Tasks are independent of each other.\n- Lines NOT starting with `## ` or `**` are automatically appended to the previous card as continuation.\n\n---\n\n## Standard Card Names (must use these exact Chinese names)\n\n| # | Card Name | What to Describe in This Dimension |\n|---|-----------|-----------------------------------|\n| 1 | 主体特征 | Main subject: appearance, race, build, clothing, pose, material texture, facial details |\n| 2 | 场景环境 | Location type, spatial scale, environmental elements (architecture/nature/indoor), weather, atmosphere |\n| 3 | 光影色彩 | Primary light direction and type, color temperature, fill light, contrast, special lighting effects (volumetric light/backlight/reflections) |\n| 4 | 艺术风格 | Art style (realistic/cyberpunk/fantasy/ink-wash, etc.), rendering style, color scheme, reference artists |\n| 5 | 镜头景别 | Framing range (close-up/medium/wide), aspect ratio, camera angle (low/high/eye-level), composition rules |\n| 6 | 镜头运动 | Camera movement (push/pull/pan/tilt/track/crane/handheld), movement speed and rhythm |\n| 7 | 时间节奏 | Video frame rate (24/30/60fps), slow motion/time-lapse/normal speed, sense of time passing |\n| 8 | 动态事件 | Specific actions happening in the frame, change processes, behavioral logic, motion principles |\n| 9 | 技术参数 | Resolution (1080p/4K/8K), sampler, CFG scale, steps, LoRA weights, etc. |\n| 10 | 负面排除 | Elements, styles, or features to exclude — use negative phrasing (no/avoid/exclude) |\n\n> If the user's request involves dimensions beyond the 10 standards above, you may use **custom card names** (e.g. \"Sound Design\", \"VFX Elements\").\n\n---\n\n## Complete Example\n\nUser request: \"Generate a cyberpunk rainy night scene\"\n\nYour output:\n\n```markdown\n## Cyberpunk Rainy Night\n\n**主体特征**：A cyborg detective in a black trench coat, left eye replaced with a red mechanical prosthetic, right arm exposing silver metal skeleton, short hair damp from rain. Subtle metallic texture on skin, occasional blue electrical sparks at fingertips.\n\n**场景环境**：Neon-lit streets on a rainy night, holographic billboards flickering among towering skyscrapers, ground reflecting purple and blue light, hover cars passing in the distance. Dense signage and cables lining both sides of the street, steam rising from underground vents.\n\n**光影色彩**：Predominantly cool tones, red-purple neon light as the main light source, rain reflections creating a hazy atmosphere. High contrast, shadows tinted blue, faint warm street lamps in the distance.\n\n**艺术风格**：Cyberpunk style, high contrast, cinematic color grading, Blade Runner aesthetic, subtle film grain and chromatic aberration.\n\n**镜头景别**：Medium shot, half-body composition, low-angle shot, rule-of-thirds framing, emphasizing the character's isolation and the city's oppressive scale.\n\n**镜头运动**：Slow orbit from behind the character to the front and back, subtle handheld shake for documentary realism, slow orbital speed.\n\n**时间节奏**：Slow motion, 60 fps, raindrops falling at 1/2 normal speed, creating a sense of suspension.\n\n**动态事件**：The character takes out a cigarette case, lights a cigarette, smoke rising slowly through the drizzle, neon light refracting into halos through the smoke.\n\n**技术参数**：4K resolution, widescreen 21:9 aspect ratio, shallow depth of field f/1.4, sharp focus, cinematic color grading Rec.2020.\n\n**负面排除**：No sunlight, no natural vegetation, no noise, no blur, no text, no watermark, no cartoonish rendering.\n```\n\n---\n\n## Strictly Forbidden\n\n1. Do NOT use `# ` level-1 headings.\n2. Do NOT add metadata lines such as \"Export Time\" or \"Total Tasks\".\n3. Do NOT put content on a new line after the colon in `**{Card Name}**：` — content MUST be on the same line.\n4. Do NOT use non-standard card names (see the table above for the 10 standard names).\n5. Do NOT omit the space after `##` (the correct pattern is `## Task Name`).\n6. Do NOT use `---` separator lines.\n\n---\n\n## Multi-Task Output\n\nWhen generating prompts for multiple different themes, use one `## ` block per task:\n\n```markdown\n## Cyberpunk Rainy Night\n\n**主体特征**：Cyborg detective, black trench coat, red prosthetic eye.\n\n**场景环境**：Rainy neon streets, holographic billboards.\n\n**光影色彩**：Cool tones, neon red-purple light, high contrast.\n\n## Forest Elf\n\n**主体特征**：Elf maiden, long green hair reaching the waist, pointed ears, wearing a dress woven from leaves and vines.\n\n**场景环境**：Morning magical forest, sunlight piercing through the canopy in beams.\n\n**光影色彩**：Warm golden tones, god rays through leaves, soft light spots on grass.\n\n**艺术风格**：Fantasy style, Ghibli aesthetic, soft color palette, hand-painted texture.\n```\n";
+
+  // AI规范 HTML 缓存（首次访问时由 mdToHtml 转换并缓存）
+  const aiSpecHtmlCache = { zh: null, en: null };
+
+  function mdToHtml(md) {
+    // 1. 转义 HTML 实体
+    let html = md
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // 2. 提取代码块，用占位符替换
+    const codeBlocks = [];
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+      codeBlocks.push({ lang, code: code.trimEnd() });
+      return `%%CODEBLOCK_${codeBlocks.length - 1}%%`;
+    });
+
+    // 3. 行内代码（在代码块处理之后）
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // 4. 粗体
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+    // 5. 表格处理（多行表格转换为HTML）
+    html = html.replace(/((\|.+?\|\n)(\|[-:| ]+\|\n)((?:\|.+?\|\n?)+))/g, (match) => {
+      const lines = match.trim().split('\n');
+      let tableHtml = '<table>';
+      const headerCells = lines[0].split('|').filter(c => c.trim() !== '');
+      tableHtml += '<thead><tr>' + headerCells.map(c => `<th>${c.trim()}</th>`).join('') + '</tr></thead>';
+      tableHtml += '<tbody>';
+      for (let i = 2; i < lines.length; i++) {
+        const cells = lines[i].split('|').filter(c => c.trim() !== '');
+        tableHtml += '<tr>' + cells.map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
+      }
+      tableHtml += '</tbody></table>';
+      return tableHtml;
+    });
+
+    // 6. 分割为块处理
+    const blocks = html.split('\n');
+    const result = [];
+    let inList = false;
+    let listType = '';
+    let inBlockquote = false;
+
+    for (let i = 0; i < blocks.length; i++) {
+      let line = blocks[i];
+
+      // 水平分割线
+      if (/^-{3,}$/.test(line.trim())) {
+        if (inBlockquote) { result.push('</blockquote>'); inBlockquote = false; }
+        if (inList) { result.push(listType === 'ol' ? '</ol>' : '</ul>'); inList = false; }
+        result.push('<hr>');
+        continue;
+      }
+
+      // 标题
+      const hMatch = line.match(/^(#{1,6})\s+(.+)$/);
+      if (hMatch) {
+        if (inBlockquote) { result.push('</blockquote>'); inBlockquote = false; }
+        if (inList) { result.push(listType === 'ol' ? '</ol>' : '</ul>'); inList = false; }
+        const level = hMatch[1].length;
+        result.push(`<h${level}>${hMatch[2]}</h${level}>`);
+        continue;
+      }
+
+      // 引用
+      if (line.trim().startsWith('&gt;')) {
+        if (!inBlockquote) {
+          inBlockquote = true;
+          result.push('<blockquote>');
+        }
+        // 去掉 &gt; 前缀（可能带一个空格）
+        let quoteContent = line.trim().slice(4); // '&gt;'.length = 4
+        if (quoteContent.startsWith(' ')) quoteContent = quoteContent.slice(1);
+        if (quoteContent.length > 0) {
+          result.push(`<p>${quoteContent}</p>`);
+        }
+        continue;
+      }
+
+      // 有序列表
+      const olMatch = line.trim().match(/^(\d+)[.)]\s+(.+)$/);
+      if (olMatch) {
+        if (inBlockquote) { result.push('</blockquote>'); inBlockquote = false; }
+        if (!inList || listType !== 'ol') {
+          if (inList) result.push(listType === 'ol' ? '</ol>' : '</ul>');
+          inList = true;
+          listType = 'ol';
+          result.push('<ol>');
+        }
+        result.push(`<li>${olMatch[2]}</li>`);
+        continue;
+      }
+
+      // 无序列表
+      const ulMatch = line.trim().match(/^[-*+]\s+(.+)$/);
+      if (ulMatch) {
+        if (inBlockquote) { result.push('</blockquote>'); inBlockquote = false; }
+        if (!inList || listType !== 'ul') {
+          if (inList) result.push(listType === 'ol' ? '</ol>' : '</ul>');
+          inList = true;
+          listType = 'ul';
+          result.push('<ul>');
+        }
+        result.push(`<li>${ulMatch[1]}</li>`);
+        continue;
+      }
+
+      // 空行
+      if (line.trim() === '') {
+        if (inBlockquote) { result.push('</blockquote>'); inBlockquote = false; }
+        if (inList) { result.push(listType === 'ol' ? '</ol>' : '</ul>'); inList = false; }
+        continue;
+      }
+
+      // 普通段落
+      if (inBlockquote) { result.push('</blockquote>'); inBlockquote = false; }
+      if (inList) { result.push(listType === 'ol' ? '</ol>' : '</ul>'); inList = false; }
+
+      const cbMatch = line.match(/%%CODEBLOCK_(\d+)%%/);
+      if (cbMatch) {
+        const cb = codeBlocks[parseInt(cbMatch[1])];
+        result.push(`<pre><code>${cb.code}</code></pre>`);
+      } else {
+        result.push(`<p>${line}</p>`);
+      }
     }
+
+    if (inBlockquote) result.push('</blockquote>');
+    if (inList) result.push(listType === 'ol' ? '</ol>' : '</ul>');
+
+    return result.join('\n');
+  }
+
+  // 读取 AI 规范文件（预编译为 HTML 并缓存，不实时渲染）
+
+  // 读取 AI 规范（从内联模板转换，不依赖 .md 文件）
+  ipcMain.handle('read-ai-spec', async (event, lang) => {
+    const cacheKey = lang === 'en' ? 'en' : 'zh';
+    if (aiSpecHtmlCache[cacheKey]) {
+      return aiSpecHtmlCache[cacheKey];
+    }
+    const rawMd = cacheKey === 'en' ? AI_SPEC_MD_EN : AI_SPEC_MD_ZH;
+    const html = mdToHtml(rawMd);
+    aiSpecHtmlCache[cacheKey] = html;
+    return html;
   });
 
   // 获取维度配置（从预加载缓存返回）

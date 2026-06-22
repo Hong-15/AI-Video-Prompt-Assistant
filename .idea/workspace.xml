@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="文档更新" />
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="文档更新">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -79,15 +82,7 @@
       <updated>1781929276099</updated>
       <workItem from="1781929277579" duration="39889000" />
       <workItem from="1782015916369" duration="37241000" />
-      <workItem from="1782087497270" duration="18210000" />
-    </task>
-    <task id="LOCAL-00020" summary="参考桌面的 demo.html 的结构 (没说风格)重构 新建项目的全模态窗口,使用默认模板,就是当前任务新建任务的时候所有的默认的卡片,使用空模板的时候,创建新任务的时候,时候一张卡片(调用一次自定义卡片创建的卡片);补充,自定义卡片的输入框,搞一个提示词: 开始创造世界吧!(设置中英两种) !!!! 补充,之后的新建,不是空模板(这里要做优化)">
-      <option name="closed" value="true" />
-      <created>1781976876181</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1781976876181</updated>
+      <workItem from="1782087497270" duration="19683000" />
     </task>
     <task id="LOCAL-00021" summary="新增功能:在任意任务项右键的时候,菜单栏加一个新建任务,新建任务有子菜单,在上方插入空模版任务,在上方插入默认模板任务,在下方插入空模版任务,在下方插入默认模板任务;将文件-&gt;创建新项目,改成,新建项目">
       <option name="closed" value="true" />
@@ -473,7 +468,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782113453796</updated>
     </task>
-    <option name="localTasksCounter" value="69" />
+    <task id="LOCAL-00069" summary="文档更新">
+      <option name="closed" value="true" />
+      <created>1782113819607</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1782113819607</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

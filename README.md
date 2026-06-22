@@ -1,6 +1,10 @@
 # AI 提示词助手 | AI Prompt Helper
 
-> 仓库：https://gitee.com/spaceHong/AI-Video-Prompt-Assistant
+> 仓库：https://github.com/Hong-15/AI-Video-Prompt-Assistant
+>
+> 下载：https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0
+>
+> 百度网盘（备用）：https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong 提取码: hong
 
 ---
 
@@ -47,7 +51,7 @@
 
 #### 安装版
 
-下载 `AI提示词助手 Setup x.x.x.exe`，双击运行。默认安装路径 `C:\Program Files\AI提示词助手`，可选创建桌面快捷方式。
+下载 `AI提示词助手 Setup x.x.x.exe`，双击运行（**需要管理员权限**，因为默认安装到 `C:\Program Files`）。可选创建桌面快捷方式。
 
 卸载：控制面板 → 程序和功能 → AI提示词助手 → 卸载。同时会删除 `%APPDATA%\ai-prompt-helper\`。
 
@@ -198,6 +202,12 @@ MIT
 
 ## English
 
+> Repo: https://github.com/Hong-15/AI-Video-Prompt-Assistant
+>
+> Download: https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0
+>
+> Baidu Pan (mirror): https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong  Key: hong
+
 ### Quick Start
 
 | Scenario | Action |
@@ -233,7 +243,7 @@ The `win-unpacked` folder is a complete Electron runtime:
 
 #### Installer
 
-Download `AI提示词助手 Setup x.x.x.exe`, run it. Default path: `C:\Program Files\AI提示词助手`. Optional desktop shortcut.
+Download `AI提示词助手 Setup x.x.x.exe`, run it (**requires admin** — installs to `C:\Program Files`). Optional desktop shortcut.
 
 Uninstall: Control Panel → Programs and Features → AI提示词助手. Also removes `%APPDATA%\ai-prompt-helper\`.
 

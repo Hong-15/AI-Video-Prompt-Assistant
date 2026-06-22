@@ -40,9 +40,61 @@ let closeBehavior = 'exit'; // 'exit' | 'tray' | 'taskbar'
 let isRestarting = false; // 重启标志，跳过 before-quit 数据保存
 let isDarkTheme = true; // 是否暗色主题
 let showDebounceTimer = null; // 显示防抖
-let windowConfig = null; // 窗口配置缓存
+let windowConfig = {}; // 窗口配置缓存
 let themeColors = null; // 主题颜色缓存
 let traceWindow = null; // 测试模式调试器窗口
+let watchdogTimer = null; // 窗口看门狗定时器
+
+// ========== 进程锁：防止僵尸进程 / 死锁，支持外部终结 ==========
+const LOCK_FILE = path.join(app.getPath('userData'), '.app-lock.json');
+const WATCHDOG_MS = 15000;       // 窗口超时未显示 → 自毁
+const LOCK_STALE_MS = 45000;     // 锁文件超过此时间视为僵尸
+
+function isPidAlive(pid) {
+  try { process.kill(pid, 0); return true; }
+  catch (e) { return false; }
+}
+function readLockFile() {
+  try { return JSON.parse(fs.readFileSync(LOCK_FILE, 'utf-8')); }
+  catch (e) { return null; }
+}
+function writeLockFile() {
+  try { fs.writeFileSync(LOCK_FILE, JSON.stringify({ pid: process.pid, ts: Date.now() }), 'utf-8'); }
+  catch (e) { console.error('[Lock] 写入锁文件失败:', e.message); }
+}
+function deleteLockFile() {
+  try { if (fs.existsSync(LOCK_FILE)) fs.unlinkSync(LOCK_FILE); }
+  catch (e) { console.error('[Lock] 删除锁文件失败:', e.message); }
+}
+/** 强制杀死旧进程并清除锁 */
+function forceTakeover(existingLock) {
+  if (existingLock && isPidAlive(existingLock.pid)) {
+    try {
+      process.kill(existingLock.pid, 'SIGTERM');
+      console.log('[Lock] 已发送 SIGTERM 到旧进程 PID:', existingLock.pid);
+    } catch (e) {
+      console.error('[Lock] 无法终止旧进程:', e.message);
+    }
+  }
+  deleteLockFile();
+}
+/** 设置看门狗：窗口未显示则自毁 */
+function startWatchdog(window) {
+  watchdogTimer = setTimeout(() => {
+    if (!window || window.isDestroyed() || !window.isVisible()) {
+      console.error('[Watchdog] 窗口超时未显示，自毁防止僵尸');
+      app.quit();
+    }
+  }, WATCHDOG_MS);
+  if (window) {
+    window.once('show', () => {
+      if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+    });
+  }
+}
+function stopWatchdog() {
+  if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+}
 
 // ========== 预加载配置到内存缓存（避免 IPC 调用时重复读盘） ==========
 const configCache = {
@@ -242,7 +294,7 @@ function createWindow(parentFolderPath) {
       nodeIntegration: false,
       backgroundThrottling: false
     },
-    show: false
+    show: true
   });
 
   // 显式设置背景色，确保未合成区域显示为应用主题色而非白色
@@ -1170,14 +1222,53 @@ function createTraceWindow() {
   });
 }
 
-// ========== 单实例锁：防止多实例运行 ==========
-const gotTheLock = app.requestSingleInstanceLock();
+// ========== 单实例锁 + 防僵尸 + 外部终结后门 ==========
+const isForceMode = process.argv.includes('--force');
+
+// --force 模式：强制杀死旧进程，跳过单实例锁
+if (isForceMode) {
+  console.log('[Lock] --force 模式：强制接管');
+  forceTakeover(readLockFile());
+}
+
+// 先清理过期锁（僵尸进程留下的）
+if (!isForceMode) {
+  const existingLock = readLockFile();
+  if (existingLock) {
+    if (!isPidAlive(existingLock.pid)) {
+      console.log('[Lock] 过期锁（进程已死），清理 PID:', existingLock.pid);
+      deleteLockFile();
+    } else if (Date.now() - existingLock.ts > LOCK_STALE_MS) {
+      console.log('[Lock] 僵尸锁（超时未响应），强制清理 PID:', existingLock.pid);
+      forceTakeover(existingLock);
+    }
+  }
+}
+
+const gotTheLock = isForceMode ? true : app.requestSingleInstanceLock();
+
 if (!gotTheLock) {
-  app.quit();
+  // 最后兜底：检测到旧实例可能是僵尸，自动杀旧进程并重启自身
+  const lock = readLockFile();
+  if (lock && isPidAlive(lock.pid) && Date.now() - lock.ts > LOCK_STALE_MS) {
+    console.log('[Lock] 自动检测到僵尸实例，强制接管并重启');
+    forceTakeover(lock);
+    app.relaunch({ args: process.argv.slice(1).filter(a => a !== '--force').concat(['--force']) });
+    app.exit(0);
+  } else {
+    console.log('[Lock] 已有实例在运行，退出');
+    app.quit();
+  }
 } else {
 
-app.on('second-instance', () => {
-  // 第二实例启动时，恢复并聚焦已有窗口（尤其托盘模式下的隐藏窗口）
+app.on('second-instance', (_event, argv) => {
+  // 如果第二实例带了 --force，说明存在僵尸需要重启
+  if (argv && argv.includes('--force')) {
+    console.log('[Lock] 收到 --force 第二实例，准备重启');
+    app.quit();
+    return;
+  }
+  // 正常情况：恢复并聚焦已有窗口
   if (mainWindow) {
     if (mainWindow.isMinimized()) mainWindow.restore();
     if (!mainWindow.isVisible()) mainWindow.show();
@@ -1196,6 +1287,11 @@ app.whenReady().then(async () => {
   await initLogger();
   setupIPC();
   mainWindow = createWindow();
+
+  // 写入锁文件 + 启动看门狗
+  writeLockFile();
+  startWatchdog(mainWindow);
+
   // 测试模式额外打开 chrome://tracing 调试器窗口
   if (isTestMode) {
     createTraceWindow();
@@ -1223,7 +1319,15 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     mainWindow = createWindow();
+    writeLockFile();
+    startWatchdog(mainWindow);
   }
+});
+
+// 退出时清理锁文件
+app.on('will-quit', () => {
+  stopWatchdog();
+  deleteLockFile();
 });
 
 } // end if (gotTheLock)

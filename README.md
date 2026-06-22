@@ -17,7 +17,7 @@
 | 场景 | 操作 |
 |------|------|
 | 免安装直接用 | 下载 `resource.zip` → 解压 → 进 `win-unpacked` → 双击 `AI提示词助手.exe` |
-| 安装到电脑 | 下载 `AI提示词助手 Setup x.x.x.exe` → 双击安装 → 桌面快捷方式打开 |
+| 安装到电脑（需管理员权限） | 下载 `AI提示词助手 Setup x.x.x.exe` → 双击安装 → 桌面快捷方式打开 |
 | 有进程但没窗口 | 任务管理器结束所有 Electron 进程 → 快捷方式后加 `--force` 重新打开 |
 | 提示"已有实例在运行" | 直接删掉 `%APPDATA%\ai-prompt-helper\.app-lock.json` → 再打开 |
 | 数据存在哪 | 你打开项目时选的那个文件夹里的 `userData.json` |

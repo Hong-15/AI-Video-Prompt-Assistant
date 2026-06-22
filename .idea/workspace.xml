@@ -1,56 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="文档更新">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/AI_Helper.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/_b64.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/_b64_full.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/_test_new_file.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Cache/Cache_Data/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Cache/Cache_Data/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Cache/Cache_Data/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Cache/Cache_Data/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Cache/Cache_Data/f_000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Cache/Cache_Data/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Code Cache/js/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Code Cache/js/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Code Cache/wasm/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Code Cache/wasm/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnGraphiteCache/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnGraphiteCache/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnGraphiteCache/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnGraphiteCache/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnGraphiteCache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnWebGPUCache/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnWebGPUCache/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnWebGPUCache/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnWebGPUCache/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/DawnWebGPUCache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Dictionaries/en-US-10-1.bdic" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/GPUCache/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/GPUCache/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/GPUCache/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/GPUCache/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/GPUCache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Local State" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Local Storage/leveldb/CURRENT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Local Storage/leveldb/LOCK" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Local Storage/leveldb/LOG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Local Storage/leveldb/LOG.old" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Local Storage/leveldb/MANIFEST-000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Network/Network Persistent State" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Network/NetworkDataMigrated" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Network/Trust Tokens" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Network/Trust Tokens-journal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Preferences" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Shared Dictionary/cache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Shared Dictionary/cache/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Shared Dictionary/db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tmp_userdata/Shared Dictionary/db-journal" beforeDir="false" />
-    </list>
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="文档更新" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -128,15 +79,7 @@
       <updated>1781929276099</updated>
       <workItem from="1781929277579" duration="39889000" />
       <workItem from="1782015916369" duration="37241000" />
-      <workItem from="1782087497270" duration="17875000" />
-    </task>
-    <task id="LOCAL-00019" summary="更多设置：缩小保存按钮 + 行高，改名为应用&#10;英文模式新建任务默认模板使用英文&#10;导出文件：字段名跟随语言，文件名加时间戳">
-      <option name="closed" value="true" />
-      <created>1781975913134</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1781975913134</updated>
+      <workItem from="1782087497270" duration="18210000" />
     </task>
     <task id="LOCAL-00020" summary="参考桌面的 demo.html 的结构 (没说风格)重构 新建项目的全模态窗口,使用默认模板,就是当前任务新建任务的时候所有的默认的卡片,使用空模板的时候,创建新任务的时候,时候一张卡片(调用一次自定义卡片创建的卡片);补充,自定义卡片的输入框,搞一个提示词: 开始创造世界吧!(设置中英两种) !!!! 补充,之后的新建,不是空模板(这里要做优化)">
       <option name="closed" value="true" />
@@ -522,7 +465,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782112921812</updated>
     </task>
-    <option name="localTasksCounter" value="68" />
+    <task id="LOCAL-00068" summary="文档更新">
+      <option name="closed" value="true" />
+      <created>1782113453796</created>
+      <option name="number" value="00068" />
+      <option name="presentableId" value="LOCAL-00068" />
+      <option name="project" value="LOCAL" />
+      <updated>1782113453796</updated>
+    </task>
+    <option name="localTasksCounter" value="69" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

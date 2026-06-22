@@ -168,7 +168,12 @@ const App = (function() {
     await initKeyboardShortcuts();
 
     // 11. 注册全局用户操作监听，用于本地日志记录
-    initUserActionLogger();
+    // 使用 requestIdleCallback 延迟到浏览器空闲时初始化，避免阻塞首帧渲染
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => initUserActionLogger(), { timeout: 2000 });
+    } else {
+      setTimeout(() => initUserActionLogger(), 0);
+    }
   }
 
   // ========== 用户操作日志 ==========

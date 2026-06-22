@@ -2,11 +2,11 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage, shell } = 
 const path = require('path');
 const fs = require('fs');
 const fsPromises = fs.promises;
-const os = require('os');
-const util = require('util');
-const { exec } = require('child_process');
-const execAsync = util.promisify(exec);
 const { initLogger, logAction, getLogDir, isValidLogFileName } = require('./logger');
+
+// 尽早移除默认菜单栏，避免 Electron 启动时创建默认菜单（提升启动性能）
+// 参考：Electron 性能最佳实践第 8 条
+Menu.setApplicationMenu(null);
 
 // 字符串资源加载（根据语言配置，异步避免阻塞主进程）
 let strings = {};
@@ -268,7 +268,7 @@ async function handleOpenFolder(win) {
 
   if (!result.canceled && result.filePaths.length > 0) {
     const folderPath = result.filePaths[0];
-    if (!validateProject(folderPath)) {
+    if (!(await validateProject(folderPath))) {
       await dialog.showMessageBox(win, {
         type: 'warning',
         title: strings.dialog?.invalidProject || '项目不合法',
@@ -279,7 +279,7 @@ async function handleOpenFolder(win) {
       return;
     }
     currentFolderPath = folderPath;
-    addRecentProject(currentFolderPath);
+    await addRecentProject(currentFolderPath);
     ensureProjectIcon(currentFolderPath);
     win.webContents.send('folder-opened', currentFolderPath);
   }
@@ -294,7 +294,7 @@ async function handleOpenFolderNew() {
 
   if (!result.canceled && result.filePaths.length > 0) {
     const folderPath = result.filePaths[0];
-    if (!validateProject(folderPath)) {
+    if (!(await validateProject(folderPath))) {
       await dialog.showMessageBox({
         type: 'warning',
         title: strings.dialog?.invalidProject || '项目不合法',
@@ -306,7 +306,7 @@ async function handleOpenFolderNew() {
     }
     const newWin = createWindow();
     currentFolderPath = folderPath;
-    addRecentProject(currentFolderPath);
+    await addRecentProject(currentFolderPath);
     ensureProjectIcon(currentFolderPath);
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', currentFolderPath);
@@ -315,13 +315,13 @@ async function handleOpenFolderNew() {
   }
 }
 
-// 验证项目文件夹是否合法（必须有可用的 userData.json）
-function validateProject(folderPath) {
+// 验证项目文件夹是否合法（必须有可用的 userData.json）【异步，避免阻塞主进程】
+async function validateProject(folderPath) {
   try {
     const filePath = path.join(folderPath, 'userData.json');
-    const stat = fs.statSync(filePath);
+    const stat = await fsPromises.stat(filePath);
     if (!stat.isFile()) return false;
-    const raw = fs.readFileSync(filePath, 'utf-8');
+    const raw = await fsPromises.readFile(filePath, 'utf-8');
     const data = JSON.parse(raw);
     // 必须有 tasks 数组
     return data && Array.isArray(data.tasks);
@@ -357,20 +357,20 @@ async function saveUserData(folderPath, data) {
   }
 }
 
-// 将 H.ico 复制到项目文件夹，返回 ico 路径
-function writeIconToProject(folderPath) {
+// 将 H.ico 复制到项目文件夹，返回 ico 路径【异步，避免阻塞主进程】
+async function writeIconToProject(folderPath) {
   const srcPath = path.join(__dirname, 'assets', 'H.ico');
   const destPath = path.join(folderPath, '_icon.ico');
 
   try {
     // 如果目标已存在且比源文件新，跳过
-    const srcStat = fs.statSync(srcPath);
+    const srcStat = await fsPromises.stat(srcPath);
     try {
-      const destStat = fs.statSync(destPath);
+      const destStat = await fsPromises.stat(destPath);
       if (destStat.mtimeMs >= srcStat.mtimeMs) return destPath;
     } catch (_) {}
 
-    fs.copyFileSync(srcPath, destPath);
+    await fsPromises.copyFile(srcPath, destPath);
     return destPath;
   } catch (e) {
     console.error('复制项目图标失败:', e.message);
@@ -381,7 +381,7 @@ function writeIconToProject(folderPath) {
 // 通过 desktop.ini 让项目文件夹在资源管理器中显示应用图标
 // 仅在打开/新建项目时调用，无 ico 资源时不做处理
 async function ensureProjectIcon(folderPath) {
-  const icoPath = writeIconToProject(folderPath);
+  const icoPath = await writeIconToProject(folderPath);
   if (!icoPath) return; // 无 ico 资源，不做处理
 
   const iniContent = `[.ShellClassInfo]\r\nIconResource=${icoPath},0\r\n`;
@@ -404,7 +404,11 @@ async function ensureProjectIcon(folderPath) {
 
     // Windows: desktop.ini / _icon.ico 设为隐藏+系统，文件夹设为只读以启用图标
     // 注意：userData.json 不应该被隐藏，否则用户在资源管理器中看不到它
+    // 按需加载 child_process，避免启动时加载不常用的模块
     try {
+      const util = require('util');
+      const { exec } = require('child_process');
+      const execAsync = util.promisify(exec);
       await execAsync(`attrib +s +h "${iniPath}"`);
       await execAsync(`attrib +s +h "${icoPath}"`);
       await execAsync(`attrib -r "${folderPath}"`);
@@ -429,6 +433,7 @@ async function openLogFileReadOnly(fileName) {
     throw new Error('Log file not found');
   }
 
+  const os = require('os');
   const tempDir = path.join(os.tmpdir(), 'ai_helper_logs');
   await fsPromises.mkdir(tempDir, { recursive: true });
   const tempName = `${Date.now()}_${fileName}`;
@@ -446,6 +451,9 @@ async function openLogFileReadOnly(fileName) {
     // macOS 回退：使用原生文本编辑器 open -t
     if (process.platform === 'darwin') {
       try {
+        const util = require('util');
+        const { exec } = require('child_process');
+        const execAsync = util.promisify(exec);
         await execAsync(`open -t ${JSON.stringify(tempPath)}`);
         return;
       } catch (e) {
@@ -640,7 +648,7 @@ function setupIPC() {
     });
     if (!result.canceled && result.filePaths.length > 0) {
       const folderPath = result.filePaths[0];
-      if (!validateProject(folderPath)) {
+      if (!(await validateProject(folderPath))) {
         await dialog.showMessageBox(mainWindow, {
           type: 'warning',
           title: strings.dialog?.invalidProject || '项目不合法',
@@ -651,7 +659,7 @@ function setupIPC() {
         return null;
       }
       currentFolderPath = folderPath;
-      addRecentProject(currentFolderPath);
+      await addRecentProject(currentFolderPath);
       ensureProjectIcon(currentFolderPath);
       return currentFolderPath;
     }
@@ -703,7 +711,7 @@ function setupIPC() {
     });
     tutorialWin.loadFile(path.join(__dirname, 'renderer', 'tutorial.html'));
     tutorialWin.show();
-    // 移除菜单栏
+    // 尽早移除菜单栏
     tutorialWin.setMenuBarVisibility(false);
   });
 
@@ -907,7 +915,7 @@ function setupIPC() {
   ipcMain.on('open-folder-new-window', (event, folderPath) => {
     const newWin = createWindow();
     currentFolderPath = folderPath;
-    addRecentProject(folderPath);
+    addRecentProject(folderPath).catch(err => console.error('添加到最近项目失败:', err));
     newWin.once('ready-to-show', () => {
       newWin.webContents.send('folder-opened', folderPath);
     });
@@ -919,27 +927,27 @@ function setupIPC() {
     return path.join(__dirname, 'config', 'recent-projects.json');
   }
 
-  function readRecentProjects() {
+  async function readRecentProjects() {
     const p = getRecentProjectsPath();
     try {
-      const raw = fs.readFileSync(p, 'utf-8');
+      const raw = await fsPromises.readFile(p, 'utf-8');
       return JSON.parse(raw);
     } catch (e) {
       return [];
     }
   }
 
-  function writeRecentProjects(projects) {
+  async function writeRecentProjects(projects) {
     const p = getRecentProjectsPath();
     try {
-      fs.writeFileSync(p, JSON.stringify(projects, null, 2), 'utf-8');
+      await fsPromises.writeFile(p, JSON.stringify(projects, null, 2), 'utf-8');
     } catch (e) {
       console.error('写入最近项目失败:', e);
     }
   }
 
-  function addRecentProject(folderPath) {
-    const projects = readRecentProjects();
+  async function addRecentProject(folderPath) {
+    const projects = await readRecentProjects();
     const existing = projects.findIndex(p => p.path === folderPath);
     const entry = { path: folderPath, lastOpened: Date.now() };
     if (existing >= 0) {
@@ -951,21 +959,21 @@ function setupIPC() {
         projects.length = 20;
       }
     }
-    writeRecentProjects(projects);
+    await writeRecentProjects(projects);
   }
 
-  ipcMain.handle('get-recent-projects', () => {
-    return readRecentProjects();
+  ipcMain.handle('get-recent-projects', async () => {
+    return await readRecentProjects();
   });
 
-  ipcMain.handle('add-recent-project', (event, folderPath) => {
-    addRecentProject(folderPath);
+  ipcMain.handle('add-recent-project', async (event, folderPath) => {
+    await addRecentProject(folderPath);
     return true;
   });
 
-  ipcMain.on('remove-recent-project', (event, folderPath) => {
-    const projects = readRecentProjects().filter(p => p.path !== folderPath);
-    writeRecentProjects(projects);
+  ipcMain.on('remove-recent-project', async (event, folderPath) => {
+    const projects = (await readRecentProjects()).filter(p => p.path !== folderPath);
+    await writeRecentProjects(projects);
   });
 
   // 检查目录是否存在
@@ -1171,8 +1179,6 @@ app.whenReady().then(async () => {
   await loadTheme();
   // 初始化用户操作日志模块（确保 logs 目录存在并清理过期日志）
   await initLogger();
-  // 使用自定义标题栏和工具栏菜单，无需默认应用菜单
-  Menu.setApplicationMenu(null);
   setupIPC();
   mainWindow = createWindow();
   // 测试模式额外打开 chrome://tracing 调试器窗口

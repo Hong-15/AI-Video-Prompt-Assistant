@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="文档更新">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -82,15 +81,7 @@
       <updated>1781929276099</updated>
       <workItem from="1781929277579" duration="39889000" />
       <workItem from="1782015916369" duration="37241000" />
-      <workItem from="1782087497270" duration="20915000" />
-    </task>
-    <task id="LOCAL-00022" summary="打补丁,软件关闭窗口的时候,保存一次项目;软件重启的时候,保存一次项目,退出软件保存项目已实现;">
-      <option name="closed" value="true" />
-      <created>1781977732226</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1781977732226</updated>
+      <workItem from="1782087497270" duration="21411000" />
     </task>
     <task id="LOCAL-00023" summary="优化样式">
       <option name="closed" value="true" />
@@ -476,7 +467,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782115536404</updated>
     </task>
-    <option name="localTasksCounter" value="71" />
+    <task id="LOCAL-00071" summary="文档更新">
+      <option name="closed" value="true" />
+      <created>1782116729539</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1782116729539</updated>
+    </task>
+    <option name="localTasksCounter" value="72" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

@@ -1,18 +1,18 @@
 # AI 提示词助手 | AI Prompt Helper
 
-> 仓库：https://github.com/Hong-15/AI-Video-Prompt-Assistant
+> 仓库：<https://github.com/Hong-15/AI-Video-Prompt-Assistant>
 >
-> 下载：https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0
+> 下载：<https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0>
 >
-> 百度网盘（备用）：https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong 提取码: hong
+> 百度网盘（备用）：<https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong> 提取码: hong
 >
-> AI 规则文件：[AI数据输出格式规范.md](AI数据输出格式规范.md) | [AI_Data_Output_Format_Spec.md](AI_Data_Output_Format_Spec.md)
+> AI 规则文件：[AI数据输出格式规范.md](AI数据输出格式规范.md) | [AI\_Data\_Output\_Format\_Spec.md](AI_Data_Output_Format_Spec.md)
 
----
+***
 
 [中文](#中文) | [English](#english) | [AI规范](#ai规范) | [AI Spec](#ai-spec)
 
----
+***
 
 <a id="中文"></a>
 
@@ -20,17 +20,17 @@
 
 ### 怎么用
 
-| 场景 | 操作 |
-|------|------|
-| 免安装直接用 | 下载 `resource.zip` → 解压 → 进 `win-unpacked` → 双击 `AI提示词助手.exe` |
-| 安装到电脑（需管理员权限） | 下载 `AI提示词助手 Setup x.x.x.exe` → 双击安装 → 桌面快捷方式打开 |
-| 有进程但没窗口 | 任务管理器结束所有 Electron 进程 → 快捷方式后加 `--force` 重新打开 |
-| 提示"已有实例在运行" | 直接删掉 `%APPDATA%\ai-prompt-helper\.app-lock.json` → 再打开 |
-| 数据存在哪 | 你打开项目时选的那个文件夹里的 `userData.json` |
-| 配置存在哪 | `%APPDATA%\ai-prompt-helper\config\` |
-| 日志存在哪 | `%APPDATA%\ai-prompt-helper\logs\`，保留 7 天 |
+| 场景            | 操作                                                           |
+| ------------- | ------------------------------------------------------------ |
+| 免安装直接用        | 下载 `resource.zip` → 解压 → 进 `win-unpacked` → 双击 `AI提示词助手.exe` |
+| 安装到电脑（需管理员权限） | 下载 `AI提示词助手 Setup x.x.x.exe` → 双击安装 → 桌面快捷方式打开               |
+| 有进程但没窗口       | 任务管理器结束所有 Electron 进程 → 快捷方式后加 `--force` 重新打开                |
+| 提示"已有实例在运行"   | 直接删掉 `%APPDATA%\ai-prompt-helper\.app-lock.json` → 再打开       |
+| 数据存在哪         | 你打开项目时选的那个文件夹里的 `userData.json`                              |
+| 配置存在哪         | `%APPDATA%\ai-prompt-helper\config\`                         |
+| 日志存在哪         | `%APPDATA%\ai-prompt-helper\logs\`，保留 7 天                    |
 
----
+***
 
 ### 安装
 
@@ -40,14 +40,14 @@
 
 `win-unpacked` 里是完整的 Electron 运行环境：
 
-| 文件 | 说明 |
-|------|------|
-| `AI提示词助手.exe` | 启动入口（`electron.exe` 的副本，改了个名字方便找） |
-| `electron.exe` | Electron 本体，和上面是同一个文件 |
-| `resources/app.asar` | 应用代码打包文件 |
-| `resources/elevate.exe` | 权限提升工具 |
-| `locales/*.pak` | 多语言资源（zh-CN.pak 等） |
-| `*.dll` | Electron 运行时依赖（ffmpeg.dll 等） |
+| 文件                      | 说明                                |
+| ----------------------- | --------------------------------- |
+| `AI提示词助手.exe`           | 启动入口（`electron.exe` 的副本，改了个名字方便找） |
+| `electron.exe`          | Electron 本体，和上面是同一个文件             |
+| `resources/app.asar`    | 应用代码打包文件                          |
+| `resources/elevate.exe` | 权限提升工具                            |
+| `locales/*.pak`         | 多语言资源（zh-CN.pak 等）                |
+| `*.dll`                 | Electron 运行时依赖（ffmpeg.dll 等）      |
 
 > 如果下载的是压缩包，解压后整个 `win-unpacked` 文件夹就是完整的绿色版，可以随意移动位置。
 
@@ -57,7 +57,7 @@
 
 卸载：控制面板 → 程序和功能 → AI提示词助手 → 卸载。同时会删除 `%APPDATA%\ai-prompt-helper\`。
 
----
+***
 
 ### 启动参数
 
@@ -65,12 +65,12 @@
 
 **可用的参数**：
 
-| 参数 | 来源 | 实际作用 |
-|------|------|---------|
-| `--force` | 自定义 | 强制接管锁，跳过检查，杀旧进程后启动 |
-| `--test` | 自定义 | 启用 Chrome 远程调试（端口 9222），打开 chrome://tracing 窗口 |
-| `--cn` | 自定义 | 强制 Chromium 内部页面语言为中文（不影响应用界面） |
-| `--no-sandbox` | Electron 自带 | 禁用沙箱。`npm start` 已默认带这个 |
+| 参数             | 来源          | 实际作用                                           |
+| -------------- | ----------- | ---------------------------------------------- |
+| `--force`      | 自定义         | 强制接管锁，跳过检查，杀旧进程后启动                             |
+| `--test`       | 自定义         | 启用 Chrome 远程调试（端口 9222），打开 chrome://tracing 窗口 |
+| `--cn`         | 自定义         | 强制 Chromium 内部页面语言为中文（不影响应用界面）                 |
+| `--no-sandbox` | Electron 自带 | 禁用沙箱。`npm start` 已默认带这个                        |
 
 **示例**（直接在你的快捷方式目标后面追加）：
 
@@ -92,7 +92,7 @@
 
 > `--force`、`--test`、`--cn` 由 main.js 第 184、186、1306 行定义，`--no-sandbox` 是 Electron 内建参数。
 
----
+***
 
 ### 锁机制与后门
 
@@ -113,13 +113,13 @@
 
 **手动后门（不需要任何工具，直接操作文件系统）**：
 
-| 你遇到的情况 | 怎么做 |
-|-------------|--------|
-| 进程在跑但没窗口 | 任务管理器杀进程，下次打开加 `--force` |
+| 你遇到的情况          | 怎么做                                            |
+| --------------- | ---------------------------------------------- |
+| 进程在跑但没窗口        | 任务管理器杀进程，下次打开加 `--force`                       |
 | 每次打开都说"已有实例在运行" | 删掉 `%APPDATA%\ai-prompt-helper\.app-lock.json` |
-| 锁删了也不行 | 任务管理器确认没有 Electron 进程，再加 `--force` |
+| 锁删了也不行          | 任务管理器确认没有 Electron 进程，再加 `--force`             |
 
----
+***
 
 ### 功能
 
@@ -143,7 +143,7 @@
 
 **日志**：应用运行时会写日志到 `%APPDATA%\ai-prompt-helper\logs\`，分为 ERROR/WARN/INFO/DEBUG 四个级别，按天分文件，中英文各一份，自动删 7 天前的。
 
----
+***
 
 ### 目录结构
 
@@ -180,7 +180,7 @@ ai-prompt-helper\
     └── yyyy-MM-dd_en.txt    # 当日英文日志
 ```
 
----
+***
 
 ### 开发
 
@@ -192,21 +192,21 @@ npm run build:win     # 打包 → dist\AI提示词助手 Setup x.x.x.exe
 
 技术栈：Electron 34 + 原生 HTML/CSS/JS，electron-builder (NSIS) 打包。
 
----
+***
 
 ### 许可证
 
 MIT
 
----
+***
 
 <a id="ai规范"></a>
 
 ## AI 数据输出格式规范（中文）
 
-> **用途：** 将此文档作为 System Prompt 发给 AI（ChatGPT / Claude / Gemini 等），AI 将按标准格式输出提示词数据。用户保存为 `.md` 或 `.txt` 后可直接导入 AI_Helper。
+> **用途：** 将此文档作为 System Prompt 发给 AI（ChatGPT / Claude / Gemini 等），AI 将按标准格式输出提示词数据。用户保存为 `.md` 或 `.txt` 后可直接导入 AI\_Helper。
 
----
+***
 
 ### 输出格式
 
@@ -217,31 +217,32 @@ MIT
 ```
 
 规则：
-- `## ` 后**必须有一个空格**，编号可选（`## 1. 赛博朋克城市` 或 `## 赛博朋克城市`）
-- `**{卡片名称}**` 用粗体包裹，冒号后同行写内容
-- 一个 `## ` 表示一个任务，任务间互不干扰
-- 不以 `## ` 或 `**` 开头的行，自动作为上一张卡片的续行
 
----
+- `## `  后**必须有一个空格**，编号可选（`## 1. 赛博朋克城市` 或 `## 赛博朋克城市`）
+- `**{卡片名称}**` 用粗体包裹，冒号后同行写内容
+- 一个 `## `  表示一个任务，任务间互不干扰
+- 不以 `## `  或 `**` 开头的行，自动作为上一张卡片的续行
+
+***
 
 ### 标准卡片名称
 
-| 序号 | 卡片名称 | 该维度应描述的内容 |
-|------|---------|------------------|
-| 1 | 主体特征 | 画面主体的外貌、种族、体型、服装、姿势、材质质感、面部细节 |
-| 2 | 场景环境 | 地点类型、空间尺度、环境元素、天气、氛围 |
-| 3 | 光影色彩 | 主光源方向与类型、色温基调、辅助光、对比度、特殊光效 |
-| 4 | 艺术风格 | 画风流派、渲染风格、色彩方案、参考艺术家 |
-| 5 | 镜头景别 | 取景范围、画幅比例、拍摄角度、构图法则 |
-| 6 | 镜头运动 | 摄影机运动方式、运动速度和节奏 |
-| 7 | 时间节奏 | 帧率、慢动作/延时/正常速度、时间流逝感 |
-| 8 | 动态事件 | 画面中正在发生的具体动作、变化过程、行为逻辑 |
-| 9 | 技术参数 | 分辨率、采样器、CFG 值、步数、LoRA 权重等 |
-| 10 | 负面排除 | 不希望出现的元素，用否定式描述（无/不要/排除） |
+| 序号 | 卡片名称 | 该维度应描述的内容                     |
+| -- | ---- | ----------------------------- |
+| 1  | 主体特征 | 画面主体的外貌、种族、体型、服装、姿势、材质质感、面部细节 |
+| 2  | 场景环境 | 地点类型、空间尺度、环境元素、天气、氛围          |
+| 3  | 光影色彩 | 主光源方向与类型、色温基调、辅助光、对比度、特殊光效    |
+| 4  | 艺术风格 | 画风流派、渲染风格、色彩方案、参考艺术家          |
+| 5  | 镜头景别 | 取景范围、画幅比例、拍摄角度、构图法则           |
+| 6  | 镜头运动 | 摄影机运动方式、运动速度和节奏               |
+| 7  | 时间节奏 | 帧率、慢动作/延时/正常速度、时间流逝感          |
+| 8  | 动态事件 | 画面中正在发生的具体动作、变化过程、行为逻辑        |
+| 9  | 技术参数 | 分辨率、采样器、CFG 值、步数、LoRA 权重等     |
+| 10 | 负面排除 | 不希望出现的元素，用否定式描述（无/不要/排除）      |
 
 > 超出以上维度的需求，可用自定义卡片名。
 
----
+***
 
 ### 完整示例
 
@@ -269,18 +270,18 @@ MIT
 **负面排除**：无阳光，无自然植被，无噪点，无模糊，无文字，无水印，无卡通渲染。
 ```
 
----
+***
 
 ### 严格禁止
 
-1. 禁止使用 `# ` 一级标题
+1. 禁止使用 `# `  一级标题
 2. 禁止添加"导出时间"、"任务总数"等元信息
 3. 禁止在冒号之后换行写内容
 4. 禁止使用非标准卡片名
 5. 禁止在 `##` 后漏掉空格
 6. 禁止使用 `---` 分隔线
 
----
+***
 
 ### 多任务输出
 
@@ -304,31 +305,31 @@ MIT
 **艺术风格**：奇幻风格，吉卜力美学，柔和色系，手绘质感。
 ```
 
----
+***
 
 <a name="english"></a>
 
 ## English
 
-> Repo: https://github.com/Hong-15/AI-Video-Prompt-Assistant
+> Repo: <https://github.com/Hong-15/AI-Video-Prompt-Assistant>
 >
-> Download: https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0
+> Download: <https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0>
 >
-> Baidu Pan (mirror): https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong  Key: hong
+> Baidu Pan (mirror): <https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong>  Key: hong
 
 ### Quick Start
 
-| Scenario | Action |
-|----------|--------|
-| Use without install | Download `resource.zip` → extract → enter `win-unpacked` → double-click `AI提示词助手.exe` |
-| Install to PC (admin required) | Download `AI提示词助手 Setup x.x.x.exe` → install → desktop shortcut |
-| Process running, no window | Kill all Electron processes in Task Manager → relaunch with `--force` |
-| "Another instance is running" | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json` → reopen |
-| Where's the data | `userData.json` in the project folder you selected |
-| Where's the config | `%APPDATA%\ai-prompt-helper\config\` |
-| Where's the logs | `%APPDATA%\ai-prompt-helper\logs\`, kept for 7 days |
+| Scenario                       | Action                                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------------- |
+| Use without install            | Download `resource.zip` → extract → enter `win-unpacked` → double-click `AI提示词助手.exe` |
+| Install to PC (admin required) | Download `AI提示词助手 Setup x.x.x.exe` → install → desktop shortcut                       |
+| Process running, no window     | Kill all Electron processes in Task Manager → relaunch with `--force`                 |
+| "Another instance is running"  | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json` → reopen                           |
+| Where's the data               | `userData.json` in the project folder you selected                                    |
+| Where's the config             | `%APPDATA%\ai-prompt-helper\config\`                                                  |
+| Where's the logs               | `%APPDATA%\ai-prompt-helper\logs\`, kept for 7 days                                   |
 
----
+***
 
 ### Installation
 
@@ -338,14 +339,14 @@ Download `resource.zip` (or `win-unpacked.zip`) from Releases, extract anywhere,
 
 The `win-unpacked` folder is a complete Electron runtime:
 
-| File | Description |
-|------|-------------|
-| `AI提示词助手.exe` | Launcher (copy of `electron.exe`, renamed) |
-| `electron.exe` | Electron runtime, same as above |
-| `resources/app.asar` | Packaged application code |
-| `resources/elevate.exe` | Privilege elevation tool |
-| `locales/*.pak` | Locale files (zh-CN.pak etc.) |
-| `*.dll` | Runtime dependencies (ffmpeg.dll etc.) |
+| File                    | Description                                |
+| ----------------------- | ------------------------------------------ |
+| `AI提示词助手.exe`           | Launcher (copy of `electron.exe`, renamed) |
+| `electron.exe`          | Electron runtime, same as above            |
+| `resources/app.asar`    | Packaged application code                  |
+| `resources/elevate.exe` | Privilege elevation tool                   |
+| `locales/*.pak`         | Locale files (zh-CN.pak etc.)              |
+| `*.dll`                 | Runtime dependencies (ffmpeg.dll etc.)     |
 
 > After extracting, the whole `win-unpacked` folder is portable — move it wherever you want.
 
@@ -355,18 +356,18 @@ Download `AI提示词助手 Setup x.x.x.exe`, run it (**requires admin** — ins
 
 Uninstall: Control Panel → Programs and Features → AI提示词助手. Also removes `%APPDATA%\ai-prompt-helper\`.
 
----
+***
 
 ### Startup Parameters
 
 Append to shortcut Target field, space-separated.
 
-| Parameter | Source | What it does |
-|-----------|--------|-------------|
-| `--force` | Custom | Force lock takeover: kills old process, skips all checks, starts fresh |
-| `--test` | Custom | Enables Chrome remote debugging (port 9222), opens chrome://tracing |
-| `--cn` | Custom | Forces Chromium internal pages to Chinese |
-| `--no-sandbox` | Electron built-in | Disables sandbox. Default in dev (`npm start`) |
+| Parameter      | Source            | What it does                                                           |
+| -------------- | ----------------- | ---------------------------------------------------------------------- |
+| `--force`      | Custom            | Force lock takeover: kills old process, skips all checks, starts fresh |
+| `--test`       | Custom            | Enables Chrome remote debugging (port 9222), opens chrome://tracing    |
+| `--cn`         | Custom            | Forces Chromium internal pages to Chinese                              |
+| `--no-sandbox` | Electron built-in | Disables sandbox. Default in dev (`npm start`)                         |
 
 **Example** (append to shortcut Target):
 
@@ -388,7 +389,7 @@ Append to shortcut Target field, space-separated.
 
 > `--force`, `--test`, `--cn` are defined at lines 184, 186, 1306 of main.js. `--no-sandbox` is Electron's built-in flag.
 
----
+***
 
 ### Lock Mechanism & Backdoor
 
@@ -409,13 +410,13 @@ Single-instance lock at `%APPDATA%\ai-prompt-helper\.app-lock.json`, contents: `
 
 **Manual backdoor (file-system only, no tools needed)**:
 
-| Problem | Fix |
-|---------|-----|
-| Process running, no window | Kill via Task Manager, relaunch with `--force` |
-| "Another instance is running" every time | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json` |
-| Lock deleted but still fails | Ensure no Electron processes in Task Manager, then `--force` |
+| Problem                                  | Fix                                                          |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| Process running, no window               | Kill via Task Manager, relaunch with `--force`               |
+| "Another instance is running" every time | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json`           |
+| Lock deleted but still fails             | Ensure no Electron processes in Task Manager, then `--force` |
 
----
+***
 
 ### Features
 
@@ -439,7 +440,7 @@ A rough overview of what the app provides:
 
 **Logging**: Writes structured logs to `%APPDATA%\ai-prompt-helper\logs\`. Four levels (ERROR/WARN/INFO/DEBUG), daily bilingual files, 7-day auto-cleanup.
 
----
+***
 
 ### Directory Structure
 
@@ -476,7 +477,7 @@ ai-prompt-helper\
     └── yyyy-MM-dd_en.txt
 ```
 
----
+***
 
 ### Development
 
@@ -488,21 +489,21 @@ npm run build:win     # Build → dist\AI提示词助手 Setup x.x.x.exe
 
 Stack: Electron 34 + vanilla HTML/CSS/JS, electron-builder (NSIS).
 
----
+***
 
 ### License
 
 MIT
 
----
+***
 
 <a id="ai-spec"></a>
 
 ## AI Output Format Spec (English)
 
-> **Usage:** Send this document as a System Prompt to any AI (ChatGPT / Claude / Gemini). The AI will output prompt data in a standard format. Save as `.md` or `.txt` to import directly into AI_Helper.
+> **Usage:** Send this document as a System Prompt to any AI (ChatGPT / Claude / Gemini). The AI will output prompt data in a standard format. Save as `.md` or `.txt` to import directly into AI\_Helper.
 
----
+***
 
 ### Output Format
 
@@ -513,31 +514,32 @@ MIT
 ```
 
 Rules:
-- `## ` **must** be followed by a space, then the task name. Numbering is optional.
-- `**{Card Name}**` in bold, colon immediately after, content on the same line.
-- Each `## ` block = one task. Tasks are independent.
-- Lines not starting with `## ` or `**` are treated as continuation of the previous card.
 
----
+- `## `  **must** be followed by a space, then the task name. Numbering is optional.
+- `**{Card Name}**` in bold, colon immediately after, content on the same line.
+- Each `## `  block = one task. Tasks are independent.
+- Lines not starting with `## `  or `**` are treated as continuation of the previous card.
+
+***
 
 ### Standard Card Names
 
-| # | Card Name | What to describe |
-|---|-----------|-----------------|
-| 1 | 主体特征 | Subject appearance, race, build, clothing, pose, material texture, facial details |
-| 2 | 场景环境 | Location type, spatial scale, environmental elements, weather, atmosphere |
-| 3 | 光影色彩 | Key light direction/type, color temperature, fill light, contrast, special effects |
-| 4 | 艺术风格 | Art style, rendering style, color scheme, reference artists |
-| 5 | 镜头景别 | Shot size, aspect ratio, camera angle, composition |
-| 6 | 镜头运动 | Camera movement type, speed and rhythm |
-| 7 | 时间节奏 | Frame rate, slow-mo/timelapse/normal, sense of time passing |
-| 8 | 动态事件 | Specific actions happening in frame, change process, behavior logic |
-| 9 | 技术参数 | Resolution, sampler, CFG, steps, LoRA weights etc. |
-| 10 | 负面排除 | Unwanted elements, described negatively (no/avoid/exclude) |
+| #  | Card Name | What to describe                                                                   |
+| -- | --------- | ---------------------------------------------------------------------------------- |
+| 1  | 主体特征      | Subject appearance, race, build, clothing, pose, material texture, facial details  |
+| 2  | 场景环境      | Location type, spatial scale, environmental elements, weather, atmosphere          |
+| 3  | 光影色彩      | Key light direction/type, color temperature, fill light, contrast, special effects |
+| 4  | 艺术风格      | Art style, rendering style, color scheme, reference artists                        |
+| 5  | 镜头景别      | Shot size, aspect ratio, camera angle, composition                                 |
+| 6  | 镜头运动      | Camera movement type, speed and rhythm                                             |
+| 7  | 时间节奏      | Frame rate, slow-mo/timelapse/normal, sense of time passing                        |
+| 8  | 动态事件      | Specific actions happening in frame, change process, behavior logic                |
+| 9  | 技术参数      | Resolution, sampler, CFG, steps, LoRA weights etc.                                 |
+| 10 | 负面排除      | Unwanted elements, described negatively (no/avoid/exclude)                         |
 
 > For dimensions beyond the above, use custom card names.
 
----
+***
 
 ### Full Example
 
@@ -565,18 +567,18 @@ Rules:
 **负面排除**：No sunlight, no vegetation, no noise, no blur, no text, no watermark, no cartoon rendering.
 ```
 
----
+***
 
 ### Strictly Forbidden
 
-1. No `# ` level-1 headings
+1. No `# `  level-1 headings
 2. No metadata lines ("export time", "task count", etc.)
 3. No line breaks after the colon in `**Card Name**：`
 4. No non-standard card names (see table above)
 5. No missing space after `##`
 6. No `---` separators
 
----
+***
 
 ### Multi-Task Output
 
@@ -599,3 +601,4 @@ Rules:
 
 **艺术风格**：Fantasy style, Ghibli aesthetic, soft palette, hand-painted texture.
 ```
+

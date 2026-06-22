@@ -19,27 +19,60 @@
     "files": [
       "main.js",
       "preload.js",
+      "logger.js",
       "renderer/**/*",
       "config/**/*",
       "assets/**/*",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "!logs/**",
+      "!tmp_userdata/**",
+      "!.trae/**",
+      "!.idea/**",
+      "!_patch*.js",
+      "!_b64*.txt",
+      "!_test_*.txt",
+      "!docs/**",
+      "!*.md",
+      "!package-lock.json"
     ],
+    "asar": true,
+    "compression": "maximum",
     "win": {
-      "target": "nsis",
-      "icon": "assets/H.jpg"
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "icon": "assets/H.ico"
     },
     "mac": {
-      "target": "dmg",
-      "icon": "assets/H.jpg"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "assets/H.ico",
+      "category": "public.app-category.utilities",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/H.ico",
+      "uninstallerIcon": "assets/H.ico",
+      "installerHeaderIcon": "assets/H.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AI提示词助手",
+      "deleteAppDataOnUninstall": true
     }
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^34.5.1"
+    "electron": "^34.5.1",
+    "electron-builder": "^26.15.3"
   }
 }

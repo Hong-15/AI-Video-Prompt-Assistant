@@ -1170,6 +1170,21 @@ function createTraceWindow() {
   });
 }
 
+// ========== 单实例锁：防止多实例运行 ==========
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+
+app.on('second-instance', () => {
+  // 第二实例启动时，恢复并聚焦已有窗口（尤其托盘模式下的隐藏窗口）
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    if (!mainWindow.isVisible()) mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
 app.whenReady().then(async () => {
   await loadWindowConfig();
   await loadStrings();
@@ -1210,3 +1225,5 @@ app.on('activate', () => {
     mainWindow = createWindow();
   }
 });
+
+} // end if (gotTheLock)

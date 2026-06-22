@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, Tray, nativeImage, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const fsPromises = fs.promises;
@@ -18,6 +18,7 @@ async function loadStrings() {
     const langRaw = await fsPromises.readFile(langPath, 'utf-8');
     const langConfig = JSON.parse(langRaw);
     lang = langConfig.language || 'zh-CN';
+    configCache.language = langConfig; // 预填充缓存
   } catch (e) {
     if (e.code !== 'ENOENT') {
       console.error('加载语言配置失败:', e);
@@ -43,6 +44,39 @@ let windowConfig = null; // 窗口配置缓存
 let themeColors = null; // 主题颜色缓存
 let traceWindow = null; // 测试模式调试器窗口
 
+// ========== 预加载配置到内存缓存（避免 IPC 调用时重复读盘） ==========
+const configCache = {
+  fieldConfig: null,
+  shortcuts: null,
+  settings: null,
+  language: null,
+  theme: null,
+  urls: null
+};
+
+async function readJsonFile(relativePath, fallback) {
+  const fullPath = path.join(__dirname, relativePath);
+  try {
+    const raw = await fsPromises.readFile(fullPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+// 预加载所有会在 IPC 中被请求的配置文件（在 app.whenReady 启动流程中调用）
+async function preloadConfigs() {
+  const [fieldConfig, shortcuts, urls] = await Promise.all([
+    readJsonFile('config/fieldConfig.json', []),
+    readJsonFile('config/shortcuts.json', {}),
+    readJsonFile('config/urls.json', {})
+  ]);
+  configCache.fieldConfig = fieldConfig;
+  configCache.shortcuts = shortcuts;
+  configCache.urls = urls;
+  // settings / language / theme 已在 loadSettings/loadStrings/loadTheme 中同步设置
+}
+
 // 是否处于测试模式：命令行包含 --test 或 test 参数时启用远程调试
 const isTestMode = process.argv.includes('--test') || process.argv.includes('test');
 // 是否中文模式：命令行包含 --cn 或 cn 参数时设置 Chromium 内部页面语言为中文，否则为英文
@@ -56,6 +90,7 @@ async function loadSettings() {
     const raw = await fsPromises.readFile(settingsPath, 'utf-8');
     const settings = JSON.parse(raw);
     closeBehavior = settings.closeBehavior || 'exit';
+    configCache.settings = settings; // 预填充缓存
   } catch (e) {
     if (e.code !== 'ENOENT') {
       console.error('加载设置失败:', e);
@@ -72,6 +107,7 @@ async function loadTheme() {
     const themeConfig = JSON.parse(raw);
     isDarkTheme = themeConfig.theme !== 'light';
     themeColors = themeConfig.colors || null;
+    configCache.theme = themeConfig; // 预填充缓存
   } catch (e) {
     if (e.code !== 'ENOENT') {
       console.error('加载主题配置失败:', e);
@@ -720,19 +756,9 @@ function setupIPC() {
     return strings;
   });
 
-  // 获取语言配置
+  // 获取语言配置（从预加载缓存返回，避免重复磁盘 I/O）
   ipcMain.handle('get-language-config', async () => {
-    const langPath = path.join(__dirname, 'config', 'language.json');
-    try {
-      await fsPromises.access(langPath);
-      const raw = await fsPromises.readFile(langPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch (e) {
-      if (e.code !== 'ENOENT') {
-        console.error('加载语言配置失败:', e);
-      }
-    }
-    return { language: 'zh-CN' };
+    return configCache.language || { language: 'zh-CN' };
   });
 
   // 获取维度配置
@@ -749,32 +775,22 @@ function setupIPC() {
     }
   });
 
+  // 获取维度配置（从预加载缓存返回）
   ipcMain.handle('get-field-config', async () => {
-    const configPath = path.join(__dirname, 'config', 'fieldConfig.json');
-    try {
-      const raw = await fsPromises.readFile(configPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch (e) {
-      return [];
-    }
+    return configCache.fieldConfig || [];
   });
 
-  // 获取快捷键配置
+  // 获取快捷键配置（从预加载缓存返回）
   ipcMain.handle('get-shortcuts-config', async () => {
-    const configPath = path.join(__dirname, 'config', 'shortcuts.json');
-    try {
-      const raw = await fsPromises.readFile(configPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch (e) {
-      return {};
-    }
+    return configCache.shortcuts || {};
   });
 
-  // 保存快捷键配置
+  // 保存快捷键配置（同时更新缓存）
   ipcMain.handle('save-shortcuts-config', async (event, config) => {
     const configPath = path.join(__dirname, 'config', 'shortcuts.json');
     try {
       await fsPromises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+      configCache.shortcuts = config; // 更新缓存
       return true;
     } catch (e) {
       console.error('保存快捷键配置失败:', e);
@@ -822,26 +838,20 @@ function setupIPC() {
     return { success: false, canceled: true };
   });
 
-  // 获取主题配置
+  // 获取主题配置（从预加载缓存返回）
   ipcMain.handle('get-theme-config', async () => {
-    const configPath = path.join(__dirname, 'config', 'theme.json');
-    try {
-      await fsPromises.access(configPath);
-      const raw = await fsPromises.readFile(configPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch (e) {
-      if (e.code !== 'ENOENT') {
-        console.error('加载主题配置失败:', e);
-      }
-    }
-    return { theme: 'default' };
+    return configCache.theme || { theme: 'default' };
   });
 
-  // 保存主题配置
+  // 保存主题配置（同时更新缓存和主进程主题状态）
   ipcMain.handle('save-theme-config', async (event, config) => {
     const configPath = path.join(__dirname, 'config', 'theme.json');
     try {
       await fsPromises.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+      configCache.theme = config; // 更新缓存
+      // 同步主题状态，使窗口关闭等操作使用正确的主题
+      isDarkTheme = config.theme !== 'light';
+      themeColors = config.colors || null;
       return true;
     } catch (e) {
       console.error('保存主题配置失败:', e);
@@ -849,26 +859,19 @@ function setupIPC() {
     }
   });
 
-  // 获取设置（关闭行为等）
+  // 获取设置（从预加载缓存返回）
   ipcMain.handle('get-settings', async () => {
-    const settingsPath = path.join(__dirname, 'config', 'settings.json');
-    try {
-      await fsPromises.access(settingsPath);
-      const raw = await fsPromises.readFile(settingsPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch (e) {
-      if (e.code !== 'ENOENT') {
-        console.error('加载设置失败:', e);
-      }
-    }
-    return { closeBehavior: 'exit' };
+    return configCache.settings || { closeBehavior: 'exit' };
   });
 
-  // 保存设置
+  // 保存设置（同时更新缓存和主进程 closeBehavior）
   ipcMain.handle('save-settings', async (event, settings) => {
     const result = await saveSettings(settings);
-    if (result && settings.closeBehavior) {
-      closeBehavior = settings.closeBehavior;
+    if (result) {
+      configCache.settings = settings; // 更新缓存
+      if (settings.closeBehavior) {
+        closeBehavior = settings.closeBehavior;
+      }
     }
     return result;
   });
@@ -986,11 +989,13 @@ function setupIPC() {
     }
   });
 
-  // 保存语言配置
+  // 保存语言配置（同时更新缓存）
   ipcMain.handle('save-language', async (event, lang) => {
     const langPath = path.join(__dirname, 'config', 'language.json');
     try {
-      await fsPromises.writeFile(langPath, JSON.stringify({ language: lang }, null, 2), 'utf-8');
+      const langConfig = { language: lang };
+      await fsPromises.writeFile(langPath, JSON.stringify(langConfig, null, 2), 'utf-8');
+      configCache.language = langConfig; // 更新缓存
       return true;
     } catch (e) {
       console.error('保存语言配置失败:', e);
@@ -1014,19 +1019,9 @@ function setupIPC() {
     }
   });
 
-  // 获取官方地址配置
+  // 获取官方地址配置（从预加载缓存返回）
   ipcMain.handle('get-urls-config', async () => {
-    const urlsPath = path.join(__dirname, 'config', 'urls.json');
-    try {
-      await fsPromises.access(urlsPath);
-      const raw = await fsPromises.readFile(urlsPath, 'utf-8');
-      return JSON.parse(raw);
-    } catch (e) {
-      if (e.code !== 'ENOENT') {
-        console.error('加载URL配置失败:', e);
-      }
-    }
-    return {};
+    return configCache.urls || {};
   });
 
   // 在系统浏览器中打开URL
@@ -1064,9 +1059,12 @@ function performCloseAction(win) {
   }
 }
 
-// 创建系统托盘
+// 创建系统托盘（仅在用户设置关闭行为为"隐藏到托盘"时调用）
 function createTray() {
   if (tray) return;
+
+  // 按需加载 Electron 托盘模块，避免启动时加载不常用的模块
+  const { Tray, nativeImage } = require('electron');
 
   // 使用应用图标创建托盘图标
   const iconPath = path.join(__dirname, 'assets', 'H.jpg');
@@ -1177,6 +1175,8 @@ app.whenReady().then(async () => {
   await loadStrings();
   await loadSettings();
   await loadTheme();
+  // 并行预加载其余配置文件到内存缓存，后续 IPC 调用直接返回缓存数据
+  await preloadConfigs();
   // 初始化用户操作日志模块（确保 logs 目录存在并清理过期日志）
   await initLogger();
   setupIPC();

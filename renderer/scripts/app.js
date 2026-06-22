@@ -8,6 +8,20 @@ const App = (function() {
   let _shortcutCfg = {};      // 当前快捷键配置
   let _shortcutKeys = {};     // 快捷键 keydown 监听引用
 
+  // 动态加载脚本模块，返回 Promise（用于按需懒加载 import.js 等非关键模块）
+  function loadModuleScript(src) {
+    return new Promise((resolve, reject) => {
+      // 检查是否已加载过（避免重复加载）
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) return resolve();
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`无法加载模块: ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+
   // 初始化应用
   async function init() {
     // 1. 加载字符串资源
@@ -68,7 +82,8 @@ const App = (function() {
       onAiSpec: showAiSpec
     });
 
-    // 5.1 初始化卡片数据导入
+    // 5.1 按需动态加载并初始化卡片数据导入模块（减少启动时脚本解析量）
+    await loadModuleScript('scripts/import.js');
     ImportManager.init();
 
     // 5.2 侧边栏头部拖拽导入项目数据

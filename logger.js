@@ -9,11 +9,12 @@ const MAX_LOG_TEXT_LENGTH = 500;
 const LOG_LANGUAGES = ['zh-CN', 'en'];
 
 /**
- * 获取日志目录绝对路径（位于项目根目录下）
+ * 获取日志目录绝对路径（位于 userData 目录下，避免 asar 只读环境写入失败）
  * @returns {string}
  */
 function getLogDir() {
-  return path.join(__dirname, LOG_DIR_NAME);
+  const { app } = require('electron');
+  return path.join(app.getPath('userData'), LOG_DIR_NAME);
 }
 
 /**
@@ -25,9 +26,13 @@ async function ensureLogDir() {
     await fsPromises.access(dir);
   } catch (e) {
     if (e.code === 'ENOENT') {
-      await fsPromises.mkdir(dir, { recursive: true });
+      try {
+        await fsPromises.mkdir(dir, { recursive: true });
+      } catch (mkErr) {
+        console.error('[UserActionLogger] 创建日志目录失败:', mkErr.message);
+      }
     } else {
-      console.error('[UserActionLogger] 检测日志目录失败:', e);
+      console.error('[UserActionLogger] 检测日志目录失败:', e.message);
     }
   }
 }

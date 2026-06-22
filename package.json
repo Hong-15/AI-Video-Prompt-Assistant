@@ -6,9 +6,10 @@
   "scripts": {
     "start": "electron . --no-sandbox",
     "dev": "electron . --no-sandbox --dev",
-    "build:win": "electron-builder --win",
+    "prebuild": "node scripts/update-asar.js",
+    "build:win": "npm run prebuild && npx electron-builder --win --x64 --publish=never --prepackaged dist/win-unpacked",
     "build:mac": "electron-builder --mac",
-    "build": "electron-builder --win --mac"
+    "build": "npm run prebuild && npx electron-builder --win --x64 --publish=never --prepackaged dist/win-unpacked"
   },
   "build": {
     "appId": "com.ai-prompt-helper.app",
@@ -38,10 +39,7 @@
     "asar": true,
     "compression": "maximum",
     "win": {
-      "target": [
-        "portable",
-        "nsis"
-      ],
+      "target": "nsis",
       "icon": "assets/H.ico"
     },
     "mac": {
@@ -58,7 +56,7 @@
     },
     "nsis": {
       "oneClick": false,
-      "perMachine": false,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "assets/H.ico",
       "uninstallerIcon": "assets/H.ico",

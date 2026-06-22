@@ -38,6 +38,7 @@ let currentFolderPath = null;
 let tray = null;
 let closeBehavior = 'exit'; // 'exit' | 'tray' | 'taskbar'
 let isRestarting = false; // 重启标志，跳过 before-quit 数据保存
+let isQuitting = false;  // 正在执行退出流程，跳过 close 事件拦截
 let isDarkTheme = true; // 是否暗色主题
 let showDebounceTimer = null; // 显示防抖
 let windowConfig = {}; // 窗口配置缓存
@@ -83,6 +84,7 @@ function startWatchdog(window) {
   watchdogTimer = setTimeout(() => {
     if (!window || window.isDestroyed() || !window.isVisible()) {
       console.error('[Watchdog] 窗口超时未显示，自毁防止僵尸');
+      isQuitting = true;
       app.quit();
     }
   }, WATCHDOG_MS);
@@ -323,13 +325,15 @@ function createWindow(parentFolderPath) {
     showAfterComposed(win);
   });
 
-  // 窗口关闭前，通知渲染进程保存数据（非重启场景）
+  // 窗口关闭前，通知渲染进程保存数据（非重启/非退出场景）
+  // 注意：正常退出走 app.quit() → before-quit 保存，不走此拦截
   let closeTimeout = null;
   win.on('close', (e) => {
-    if (currentFolderPath && !win.isDestroyed() && !isRestarting) {
+    if (isQuitting || isRestarting) return; // 退出/重启中，不拦截，让窗口自然关闭
+    if (currentFolderPath && !win.isDestroyed()) {
       e.preventDefault();
       win.webContents.send('save-before-close');
-      // 安全超时：配置时间后强制关闭
+      // 安全超时：配置时间后强制关闭，防止渲染进程无响应导致僵尸
       closeTimeout = setTimeout(() => {
         if (win && !win.isDestroyed()) {
           win.destroy();
@@ -717,13 +721,11 @@ function setupIPC() {
   // 文件菜单：退出应用（保存后完全退出）
   ipcMain.on('quit-app', () => {
     closeBehavior = 'exit';
+    isQuitting = true;  // 先标记退出，防止 close 事件拦截窗口关闭
     if (currentFolderPath && mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('save-before-close');
     }
     setTimeout(() => {
-      BrowserWindow.getAllWindows().forEach((win) => {
-        if (!win.isDestroyed()) win.close();
-      });
       app.quit();
     }, windowConfig?.closeSaveDelayMs || 500);
   });
@@ -1106,8 +1108,9 @@ function performCloseAction(win) {
     // 隐藏到任务栏（最小化）
     win.minimize();
   } else {
-    // 默认退出
-    win.close();
+    // 直接退出应用（走 before-quit 保存流程），避免触发 close 事件形成死循环
+    isQuitting = true;
+    app.quit();
   }
 }
 
@@ -1144,6 +1147,7 @@ function createTray() {
       label: strings.menu?.quit || '退出',
       click: () => {
         closeBehavior = 'exit';
+        isQuitting = true;  // 先标记退出，close 事件不拦截
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.close();
         }
@@ -1265,6 +1269,7 @@ app.on('second-instance', (_event, argv) => {
   // 如果第二实例带了 --force，说明存在僵尸需要重启
   if (argv && argv.includes('--force')) {
     console.log('[Lock] 收到 --force 第二实例，准备重启');
+    isQuitting = true;
     app.quit();
     return;
   }
@@ -1305,7 +1310,9 @@ app.on('before-quit', (event) => {
     event.preventDefault();
     mainWindow.webContents.send('save-before-close');
     setTimeout(() => {
-      app.exit();
+      // 先清理锁，再强制退出（app.exit 跳过 will-quit，需手动清理）
+      deleteLockFile();
+      app.exit(0);
     }, windowConfig?.beforeQuitSaveTimeoutMs || 3000);
   }
 });
@@ -1326,6 +1333,7 @@ app.on('activate', () => {
 
 // 退出时清理锁文件
 app.on('will-quit', () => {
+  isQuitting = false;
   stopWatchdog();
   deleteLockFile();
 });

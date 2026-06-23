@@ -10,7 +10,7 @@ const ROOT = path.resolve(__dirname, '..');
 const DIST_ASAR = path.join(ROOT, 'dist', 'win-unpacked', 'resources', 'app.asar');
 const TMP_DIR = path.join(ROOT, 'dist', '.tmp_asar');
 
-const SOURCE_FILES = ['main.js', 'preload.js', 'package.json'];
+const SOURCE_FILES = ['main.js', 'preload.js', 'package.json', 'aiSpecContent.js', 'mdToHtml.js'];
 
 // 检查 logger.js 是否存在
 if (fs.existsSync(path.join(ROOT, 'logger.js'))) {

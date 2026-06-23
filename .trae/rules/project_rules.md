@@ -45,7 +45,7 @@ npm run prebuild && npx electron-builder --win --x64 --publish=never --prepackag
 
 ### 打包进 asar 的文件
 
-`main.js`、`preload.js`、`logger.js`、`renderer/**/*`、`config/**/*`、`assets/**/*`、`node_modules/**/*`
+`main.js`、`preload.js`、`logger.js`、`aiSpecContent.js`、`mdToHtml.js`、`renderer/**/*`、`config/**/*`、`assets/**/*`、`node_modules/**/*`
 
 排除（packages.json `files` 中的 `!`）：
 - `dist/**` — 构建产物
@@ -81,6 +81,15 @@ dist/
 └── AI提示词助手 Setup 1.0.0.exe            ← 安装版（~137MB）
 ```
 
+### 打包完成后清理旧安装包
+
+每次打包完成后，**必须**删除 `dist/` 目录下的旧安装包文件（`AI提示词助手 Setup *.exe`），避免新旧版本混淆。
+
+```bash
+# 打包完成后执行
+Remove-Item -Force "dist/AI提示词助手 Setup *.exe" -ErrorAction SilentlyContinue
+```
+
 ### 常用命令
 
 ```bash
@@ -89,6 +98,11 @@ npm run prebuild       # 仅更新便携版 asar
 npm run build:win      # 完整构建安装包
 npm run build:mac      # Mac 构建（未充分测试）
 ```
+
+### 版本号规则
+
+- 用户指定版本号时，直接使用（如 `1.1.0`）
+- **用户未指定版本号时**，默认在上一版本末位递增 `.01`（如 `1.0.0` → `1.0.01`）
 
 ---
 

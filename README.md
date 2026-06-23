@@ -1,604 +1,549 @@
-# AI 提示词助手 | AI Prompt Helper
+# AI 提示词助手
 
-> 仓库：<https://github.com/Hong-15/AI-Video-Prompt-Assistant>
+> [中文](README.md) | [English](README_EN.md)
 >
-> 下载：<https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/1.0.01>
->
-> 百度网盘（备用）：<https://pan.baidu.com/s/1Ycq5SScVy8stdj4tyM87QA?pwd=hong> 提取码: hong
->
-> AI 规则文件：[AI数据输出格式规范.md](AI数据输出格式规范.md) | [AI\_Data\_Output\_Format\_Spec.md](AI_Data_Output_Format_Spec.md)
+> 安装教程：[INSTALL.md](INSTALL.md)
 
-***
+---
 
-[中文](#中文) | [English](#english) | [AI规范](#ai规范) | [AI Spec](#ai-spec)
+## 概述
 
-***
+AI 提示词助手是一款面向 AI 视频/图像生成场景的桌面工具。将提示词按维度拆分为卡片，填写的卡片内容实时组合为结构化提示词，一键复制到剪贴板。
 
-<a id="中文"></a>
+**运行环境**：Electron 34，Windows 64 位。
 
-## 中文
+---
 
-### 怎么用
+## 获取与安装
 
-| 场景            | 操作                                                           |
-| ------------- | ------------------------------------------------------------ |
-| 免安装直接用        | 下载 `resource.zip` → 解压 → 进 `win-unpacked` → 双击 `AI提示词助手.exe` |
-| 安装到电脑（需管理员权限） | 下载 `AI提示词助手 Setup x.x.x.exe` → 双击安装 → 桌面快捷方式打开               |
-| 有进程但没窗口       | 任务管理器结束所有 Electron 进程 → 快捷方式后加 `--force` 重新打开                |
-| 提示"已有实例在运行"   | 直接删掉 `%APPDATA%\ai-prompt-helper\.app-lock.json` → 再打开       |
-| 数据存在哪         | 你打开项目时选的那个文件夹里的 `userData.json`                              |
-| 配置存在哪         | `%APPDATA%\ai-prompt-helper\config\`                         |
-| 日志存在哪         | `%APPDATA%\ai-prompt-helper\logs\`，保留 7 天                    |
+### 便携版
 
-***
+从 Releases 页面下载 `win-unpacked` 压缩包，解压后进入 `win-unpacked` 目录，双击 `AI提示词助手.exe` 即可运行。无需安装，不写注册表，可放在任意位置。
 
-### 安装
+### 安装版
 
-#### 便携版（推荐，免安装）
+下载 `AI提示词助手 Setup x.x.x.exe`，双击运行安装向导。安装过程需要管理员权限，默认安装路径为 `C:\Program Files\AI提示词助手`，安装完成后自动创建桌面快捷方式和开始菜单入口。
 
-从 Releases 下载 `resource.zip`（或 `win-unpacked.zip`），解压到任意路径，进入 `win-unpacked` 文件夹，双击 `AI提示词助手.exe`。不需要管理员权限。
+卸载入口：控制面板 → 程序和功能 → AI提示词助手。卸载时会同时删除 `%APPDATA%\ai-prompt-helper\` 下的用户数据。
 
-`win-unpacked` 里是完整的 Electron 运行环境：
+---
 
-| 文件                      | 说明                                |
-| ----------------------- | --------------------------------- |
-| `AI提示词助手.exe`           | 启动入口（`electron.exe` 的副本，改了个名字方便找） |
-| `electron.exe`          | Electron 本体，和上面是同一个文件             |
-| `resources/app.asar`    | 应用代码打包文件                          |
-| `resources/elevate.exe` | 权限提升工具                            |
-| `locales/*.pak`         | 多语言资源（zh-CN.pak 等）                |
-| `*.dll`                 | Electron 运行时依赖（ffmpeg.dll 等）      |
+## 启动参数
 
-> 如果下载的是压缩包，解压后整个 `win-unpacked` 文件夹就是完整的绿色版，可以随意移动位置。
+在快捷方式的「目标」字段末尾追加，多个参数以空格分隔。
 
-#### 安装版
+| 参数 | 说明 |
+|------|------|
+| `--force` | 跳过实例锁检查，强制启动。若已有进程则先终止再启动。 |
+| `--test` | 开启 Chrome DevTools 远程调试端口（9222），同时打开 chrome://tracing 窗口。 |
+| `--cn` | 将 Chromium 内置页面（如 DevTools）语言强制为中文。不影响应用界面语言。 |
+| `--no-sandbox` | 关闭 Electron 沙箱。开发模式（`npm start`）下默认携带。 |
 
-下载 `AI提示词助手 Setup x.x.x.exe`，双击运行（**需要管理员权限**，因为默认安装到 `C:\Program Files`）。可选创建桌面快捷方式。
-
-卸载：控制面板 → 程序和功能 → AI提示词助手 → 卸载。同时会删除 `%APPDATA%\ai-prompt-helper\`。
-
-***
-
-### 启动参数
-
-在快捷方式的「目标」字段末尾追加，空格分隔。
-
-**可用的参数**：
-
-| 参数             | 来源          | 实际作用                                           |
-| -------------- | ----------- | ---------------------------------------------- |
-| `--force`      | 自定义         | 强制接管锁，跳过检查，杀旧进程后启动                             |
-| `--test`       | 自定义         | 启用 Chrome 远程调试（端口 9222），打开 chrome://tracing 窗口 |
-| `--cn`         | 自定义         | 强制 Chromium 内部页面语言为中文（不影响应用界面）                 |
-| `--no-sandbox` | Electron 自带 | 禁用沙箱。`npm start` 已默认带这个                        |
-
-**示例**（直接在你的快捷方式目标后面追加）：
-
-```
-"C:\Program Files\AI提示词助手\AI提示词助手.exe" --force
-```
-
-**PowerShell 直接跑**：
+示例（PowerShell）：
 
 ```powershell
 & "C:\Program Files\AI提示词助手\AI提示词助手.exe" --force
 ```
 
-**组合使用**：
+---
 
-```powershell
-& "C:\Program Files\AI提示词助手\AI提示词助手.exe" --force --cn
+## 实例锁
+
+应用同一时间只允许运行一个实例。
+
+- **锁文件**：`%APPDATA%\ai-prompt-helper\.app-lock.json`，内容为 `{"pid":<进程ID>,"ts":<时间戳>}`。
+- **过期阈值**：若锁文件存在、对应进程存活但时间超过 **45 秒**，判定为僵尸进程，自动接管。
+- **看门狗**：窗口创建后 **15 秒** 内未触发 `show` 事件，自动退出，防止不可见僵尸进程。
+
+**手动恢复**：如遇"已有实例在运行"但找不到窗口，删除上述 `.app-lock.json` 文件后重新启动，或携带 `--force` 参数启动。
+
+---
+
+## 界面布局
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  文件  布局  设置                    ─  ❐  ✕            │  ← 工具栏
+├────────────┬────────────────────────────────────────────┤
+│  任务列表   │  解析数据  导入数据  导出任务  + 自定义卡片 │
+│  ────────  │  ┌──────────┐  ┌──────────┐               │
+│  ☰ 任务1   │  │ ★ 主体特征 │  │ ★ 场景环境 │               │  ← 卡片工作区
+│  ☰ 任务2   │  │ [内容....]│  │ [内容....]│               │
+│  ☰ 任务3   │  └──────────┘  └──────────┘               │
+│  + 新建    │                                            │
+│            │  ┌─────────────────────────┐               │
+│            │  │  提示词预览              │  [复制] [清空] │  ← 预览区
+│            │  │  主体特征：xxx           │               │
+│            │  │  场景环境：xxx           │               │
+│            │  └─────────────────────────┘               │
+│            │  已保存 ✓  | D:\project | 任务数: 3 | ...  │  ← 状态栏
+└────────────┴────────────────────────────────────────────┘
 ```
 
-> `--force`、`--test`、`--cn` 由 main.js 第 184、186、1306 行定义，`--no-sandbox` 是 Electron 内建参数。
+**工具栏按钮说明**：
 
-***
+| 按钮 | 说明 |
+|------|------|
+| `[|]` | 折叠/展开左侧任务栏 |
+| `文件` | 下拉菜单：打开项目、新建窗口、新建项目、关闭项目、导入/导出、教学、AI规范、退出 |
+| `布局` | 下拉菜单：重置当前任务布局、重置所有任务布局 |
+| `设置` | 下拉菜单：全局搜索、更多设置 |
+| `─` / `❐` / `✕` | 窗口最小化、最大化、关闭 |
 
-### 锁机制与后门
+**工作区按钮**：
 
-同一时间只允许一个实例运行。锁文件：`%APPDATA%\ai-prompt-helper\.app-lock.json`，内容为 `{"pid":进程ID,"ts":时间戳}`。
+| 按钮 | 说明 |
+|------|------|
+| `解析数据` | 弹窗粘贴文本，自动识别格式并导入到任务栏或当前任务 |
+| `导入数据` | 打开文件选择器，从 `.md`/`.txt` 文件导入卡片数据到当前任务 |
+| `导出任务` | 将当前任务卡片数据导出为 Markdown 文件 |
+| `+ 自定义卡片` | 在当前任务中添加一张自定义命名的卡片 |
 
-**启动时的判断流程**（代码顺序，main.js 1305-1367 行）：
+---
 
-1. 带 `--force` → 直接调用 `forceTakeover()`，杀死旧进程 + 删锁，跳过后续所有检查
-2. 不带 `--force`：先检查锁文件
-   - 锁不存在 → 跳过
-   - 锁存在，原进程已死 → 删锁，继续
-   - 锁存在，原进程活着，锁超过 45 秒（`LOCK_STALE_MS`）→ 判定为僵尸，强制接管
-3. 调用 `app.requestSingleInstanceLock()`
-   - 获取成功 → 启动
-   - 获取失败 → 再检查一次锁，如果僵尸则接管并重新启动自己（附带 `--force`），否则退出
+## 核心概念
 
-**看门狗**：窗口创建后 15 秒内未触发 `show` 事件，自动 `app.quit()` 防止不可见僵尸进程。
+### 项目
 
-**手动后门（不需要任何工具，直接操作文件系统）**：
+一个项目对应一个文件夹，数据存储在 `userData.json` 中。同一时间只能打开一个项目。
 
-| 你遇到的情况          | 怎么做                                            |
-| --------------- | ---------------------------------------------- |
-| 进程在跑但没窗口        | 任务管理器杀进程，下次打开加 `--force`                       |
-| 每次打开都说"已有实例在运行" | 删掉 `%APPDATA%\ai-prompt-helper\.app-lock.json` |
-| 锁删了也不行          | 任务管理器确认没有 Electron 进程，再加 `--force`             |
+**项目模板**：新建项目时可选两种模板：
 
-***
+| 模板 | 初始状态 |
+|------|----------|
+| 默认模板 | 包含 10 张固定卡片（主体特征、场景环境、光影色彩、艺术风格、镜头景别、镜头运动、时间节奏、动态事件、技术参数、负面排除） |
+| 空模板 | 包含 1 张自定义卡片，固定卡片全部隐藏 |
 
-### 功能
+### 任务
 
-以下是应用大概提供的功能：
+项目内的顶层组织单元。每个项目可以包含多个独立任务，任务之间互不影响。每个任务拥有独立的：
 
-**项目管理**：新建项目（可选默认模板或空模板）、打开已有项目文件夹、关闭项目。最近打开的项目会记录下来（上限 20 条），路径不存在时会灰掉标记。
+- 卡片数据（`fields`）
+- 卡片布局（`layoutData`）
+- 隐藏字段（`hiddenFields`）
+- 重命名标签（`fieldLabels`）
+- 自定义卡片（`customCards`）
+- 卡片排序（`cardOrder`）
 
-**任务管理**：项目里可以创建多个任务，切换、重命名、删除、复制。切换到其他任务时自动保存当前数据。
+**自动保存**：在以下时机自动保存到 `userData.json`：
+- 切换任务
+- 关闭项目
+- 导出数据前
+- 主进程请求关闭前（`onSaveBeforeClose`）
 
-**卡片编辑**：每个任务由若干卡片组成，预设有 10 张固定卡片分别对应不同维度（主体、场景、光影、风格、镜头等）。可以自定义添加卡片、拖拽排序、折叠展开、隐藏不需要的。
+手动保存快捷键为 `Ctrl+S`。
 
-**项目模板**：新建项目时可选择「默认模板」（含 10 张预设卡片）或「空模板」（含 1 张自定义卡片）。
+### 卡片
 
-**导入导出**：导出为 Markdown 或纯文本文件。可以从另一个项目的 `userData.json` 导入任务数据。
+每张卡片是一个带标签的文本输入区域。卡片分为两类：
 
-**设置**：主题切换（深色/浅色）、界面语言切换（中/英）、窗口关闭行为（退出程序/隐藏到托盘区/隐藏到系统任务栏）、快捷键配置。
+**固定卡片**（10 张，来自 `config/fieldConfig.json`）：
 
-**快捷键**：有 23 个可配置的快捷键操作（保存、新建/删除/重命名/复制任务、清空输入、复制预览、添加卡片、切换侧边栏、任务/输入框上下导航、打开/新建/关闭项目、导入/导出、全局搜索、打开设置、重置布局），需要在设置里手动绑定按键。
+| 字段键 | 标签 | 说明 |
+|--------|------|------|
+| `subject` | 主体特征 | 画面主体的外貌、种族、体型、服装、姿势、材质质感、面部细节 |
+| `scene` | 场景环境 | 地点类型、空间尺度、环境元素、天气、氛围 |
+| `lighting` | 光影色彩 | 主光源方向与类型、色温基调、辅助光、对比度、特殊光效 |
+| `style` | 艺术风格 | 画风流派、渲染风格、色彩方案、参考艺术家 |
+| `shotScale` | 镜头景别 | 取景范围、画幅比例、拍摄角度、构图法则 |
+| `cameraMove` | 镜头运动 | 摄影机运动方式、运动速度和节奏 |
+| `time` | 时间节奏 | 帧率、慢动作/延时/正常速度、时间流逝感 |
+| `action` | 动态事件 | 画面中正在发生的具体动作、变化过程、行为逻辑 |
+| `tech` | 技术参数 | 分辨率、采样器、CFG 值、步数、LoRA 权重等 |
+| `negative` | 负面排除 | 不希望出现的元素，用否定式描述（无/不要/排除） |
 
-**全局搜索**：`Ctrl+Shift+F` 在当前项目所有卡片内容中搜索。
+**自定义卡片**：用户可通过工作区 `+ 自定义卡片` 按钮添加。标签名自定，值存储在对应任务的自定义卡片数组中。
 
-**日志**：应用运行时会写日志到 `%APPDATA%\ai-prompt-helper\logs\`，分为 ERROR/WARN/INFO/DEBUG 四个级别，按天分文件，中英文各一份，自动删 7 天前的。
+**卡片操作**：
 
-***
+| 操作 | 方式 |
+|------|------|
+| 输入内容 | 点击卡片文本框直接输入 |
+| 排序 | 拖拽卡片左侧 `★` 手柄上下移动 |
+| 调整高度 | 拖拽卡片底部边缘手柄 |
+| 隐藏固定卡片 | 右键卡片 → 删除（仅隐藏，不删除数据） |
+| 删除自定义卡片 | 右键卡片 → 删除（彻底移除） |
+| 重命名 | 右键卡片 → 重命名 |
+| 清空 | 右键卡片 → 清空 |
+| 导出 | 右键卡片 → 导出为 `.md` 文件 |
+| Tab 切换 | 按 Tab 跳转到下一个卡片文本框，Shift+Tab 跳转到上一个 |
 
-### 目录结构
+---
+
+## 任务操作
+
+### 基础操作
+
+| 操作 | 方式 |
+|------|------|
+| 新建 | 点击侧边栏 `+` 按钮，或 `Ctrl+N` |
+| 切换 | 点击侧边栏任务名称 |
+| 重命名 | 右键任务 → 重命名，或 `F2` |
+| 复制 | 右键任务 → 复制，或 `Ctrl+D` |
+| 删除 | 右键任务 → 删除（弹出确认对话框） |
+
+### 右键菜单
+
+侧边栏任务项右键菜单包含：
+
+| 菜单项 | 说明 |
+|--------|------|
+| 重构帧位置 | 调整任务在列表中的位置（输入新序号） |
+| 重命名 | 修改任务名称 |
+| 导出任务 | 将当前任务卡片导出为 `.md` 文件 |
+| 上方插入空模板 | 在当前任务上方插入一个空模板任务 |
+| 上方插入默认模板 | 在当前任务上方插入一个默认模板任务 |
+| 下方插入空模板 | 在当前任务下方插入一个空模板任务 |
+| 下方插入默认模板 | 在当前任务下方插入一个默认模板任务 |
+
+### 拖拽导出任务
+
+按住任务项的序号标记并拖拽到窗口外部，松手后任务数据导出为 `{任务名}.md` 文件，保存到桌面。
+
+---
+
+## 导入
+
+应用提供多种导入方式。
+
+### 文件导入
+
+入口：文件 → 导入项目数据。选择 `.md` 或 `.txt` 文件，解析后导入任务数据。当前项目已有任务不被清空。
+
+**导入流程**：
+1. 解析文件内容，按 `## 任务名` 或 `【任务名】` 识别任务边界
+2. 按 `**卡片名**：内容` 格式解析卡片数据
+3. 若存在同名任务，弹出对话框提供处理选项
+
+**重复任务处理选项**：
+
+| 选项 | 行为 |
+|------|------|
+| 跳过 | 不导入该任务，保留已有数据 |
+| 全部跳过 | 后续所有重名任务均跳过 |
+| 覆盖 | 用导入数据完全替换已有任务（含卡片数据、布局、自定义卡片） |
+| 全部覆盖 | 后续所有重名任务均覆盖 |
+| 重命名 | 以"任务名_1"格式导入，不覆盖已有任务 |
+| 全部重命名 | 后续所有重名任务均自动重命名 |
+
+### 拖拽导入
+
+将 `.md` 或 `.txt` 文件从文件管理器拖入应用窗口：
+
+| 拖放目标 | 行为 |
+|----------|------|
+| 侧边栏标题区 | 触发项目级导入（导入为任务） |
+| 侧边栏任务列表区 | 触发项目级导入 |
+| 工作区「导入数据」按钮 | 导入卡片数据到当前活跃任务 |
+| 工作区空白区域 | 导入卡片数据到当前活跃任务 |
+
+### 粘贴导入
+
+入口：工作区「解析数据」按钮。在弹出对话框中粘贴文本，系统自动检测格式：
+
+- **任务级格式**：含 `##` 或 `【】` 标记的任务标题 + `**` 包裹的卡片字段 → 添加到任务栏
+- **卡片级格式**：含 `###` 段落标记 + `**内容**` 字段 → 导入到当前活跃任务
+
+对话框顶部会显示检测到的格式类型（"任务级数据" 或 "卡片级数据"）。
+
+---
+
+## 导出
+
+### 项目导出
+
+入口：文件 → 项目数据导出 → 导出为 Markdown / 导出为文本文件。
+
+导出全部任务数据到单个文件，自动生成的默认文件名为 `{项目文件夹名}_{日期时间}_{时间戳}.md`（或 `.txt`）。
+
+**Markdown 格式**：
+```markdown
+## N. 任务名
+
+**卡片标签**：内容
+```
+
+**文本格式**：
+```
+【任务名】
+
+卡片标签：内容
+```
+
+**导出规则**：
+- 已隐藏的固定卡片不导出
+- 空内容卡片不导出
+- 卡片按配置顺序排列（固定卡片在前，自定义卡片在后，自定义卡片按 `cardOrder` 排序）
+- 标签名使用当前界面语言对应的本地化文本
+
+导出成功后弹出文件路径提示，可一键复制路径。
+
+### 拖拽导出卡片
+
+按住卡片主体区域（非 `★` 手柄、按钮、文本框）向窗口外部拖拽，松手后卡片内容导出为 `{卡片标签}.md` 文件。支持保存到桌面或文件夹。
+
+拖拽 `★` 手柄进行卡片排序时，若将幽灵卡片拖出窗口再松手，同样触发卡片导出行为；若松手前鼠标回到窗口内部，则正常完成排序。
+
+空内容的卡片拖拽导出时，底部弹出提示"卡片内容为空，未导出"。
+
+### 任务导出
+
+入口：右键任务 → 导出任务。导出当前选中任务的所有卡片数据为 `.md` 文件。
+
+### 卡片右键导出
+
+入口：右键卡片 → 导出。导出单张卡片的标签和内容为 `.md` 文件。
+
+---
+
+## 预览与复制
+
+工作区底部的预览区域实时拼接所有可见卡片的内容，格式与导出 Markdown 一致。每个卡片的显示格式为：
+
+```
+**卡片标签**：内容
+```
+
+**复制**按钮（快捷键 `Ctrl+Shift+C`）将预览内容写入剪贴板。**清空**按钮（快捷键 `Ctrl+Shift+A`）清空当前任务所有卡片输入框内容。
+
+---
+
+## 全局搜索
+
+入口：快捷键 `Ctrl+Shift+F`，或 设置 → 全局搜索。
+
+弹出搜索面板，在当前项目的**所有任务的所有卡片内容**中检索关键词。结果按任务分组展示，点击结果跳转到对应卡片的输入位置。
+
+---
+
+## 更多设置
+
+入口：设置 → 更多设置。左侧菜单栏，右侧内容区。对话框可通过拖拽标题栏移动位置，右下角拖拽调整尺寸。
+
+### 1. 关闭行为
+
+| 选项 | 行为 |
+|------|------|
+| 退出程序 | 点击窗口关闭按钮时退出整个应用 |
+| 隐藏到托盘 | 点击关闭按钮时最小化到系统托盘，后台运行 |
+| 隐藏到任务栏 | 点击关闭按钮时最小化到任务栏 |
+
+### 2. 主题
+
+| 选项 | 说明 |
+|------|------|
+| 浅色 | 亮色配色 |
+| 深色 | 暗色配色 |
+| 默认 | 应用内置默认主题 |
+| 跟随系统 | 通过 `prefers-color-scheme` 自动切换 |
+
+### 3. 快捷键设置
+
+列出全部 **23 个**可配置操作。每项显示：
+
+- 操作名称与描述
+- 当前绑定键位（点击可录入新按键）
+- 启用/禁用开关
+
+支持逐项恢复默认、全部恢复默认。
+
+### 4. 语言
+
+下拉选择中文或 English。切换后需重启应用生效。
+
+### 5. 日志
+
+列出最近 **7 天**的运行日志文件，显示文件名、日期、时间、语言、文件大小、状态标签。每条日志可点击「打开」按钮用系统默认文本编辑器打开。日志目录路径可点击复制。
+
+日志分级：ERROR、WARN、INFO、DEBUG。每日中英文各一份文件（文件名格式：`yyyy-MM-dd_zh-CN.txt`、`yyyy-MM-dd_en.txt`）。
+
+应用通过 `logger.js` 模块写日志，共 17 个分类（LIFECYCLE、FILE、TASK、UI、IPC、ERROR、LOCK、CONFIG、WINDOW、THEME、LANGUAGE、SETTINGS、SHORTCUT、PROJECT、IMPORT、EXPORT、SEARCH）。
+
+### 6. 关于
+
+显示应用名称、版本号、描述及链接（仓库、文档、Issues），可点击复制。
+
+### 7. 调试预览
+
+终端风格的实时日志查看器。深色背景，等宽字体，只读不可输入。显示应用运行时 `DebugLog` 模块产生的调试日志，每条日志格式为：
+
+```
+HH:MM:SS.mmm  [级别]  文件名#方法名 : 消息内容
+```
+
+四种日志级别以不同颜色标识：DEBUG（绿色）、INFO（蓝色）、WARN（橙色）、ERROR（红色）。
+
+界面含「清空」按钮和「自动滚动」复选框。
+
+---
+
+## AI 规范
+
+入口：文件 → AI 规范。打开半模态窗口，展示 AI 数据输出格式规范文档。顶部提供中英文切换按钮，内容区显示 Markdown 渲染文本，底部「复制」按钮将原始文本复制到剪贴板。
+
+规范文档位于项目根目录：
+
+- 中文：[AI数据输出格式规范.md](AI数据输出格式规范.md)
+- 英文：[AI_Data_Output_Format_Spec.md](AI_Data_Output_Format_Spec.md)
+
+---
+
+## 教学
+
+入口：文件 → 教学。打开独立的教程窗口（800×700 像素，不可调整大小），展示应用使用说明。
+
+---
+
+## 快捷键总表
+
+以下为全部 23 个快捷键操作的默认绑定。未绑定按键的操作需在设置中手动指定。
+
+| 分类 | 操作 | 默认快捷键 | 默认状态 |
+|------|------|------------|----------|
+| 文件 | 保存所有数据 | `Ctrl+S` | 已启用 |
+| 文件 | 打开项目 | `Ctrl+O` | 已启用 |
+| 文件 | 新建项目 | `Ctrl+Shift+N` | 已启用 |
+| 文件 | 关闭项目 | `Ctrl+W` | 已启用 |
+| 文件 | 导入项目数据 | — | 未绑定 |
+| 文件 | 导出为 Markdown | — | 未绑定 |
+| 文件 | 导出为文本文件 | — | 未绑定 |
+| 任务 | 新建任务 | `Ctrl+N` | 已启用 |
+| 任务 | 删除当前任务 | `Delete` | 未绑定 |
+| 任务 | 重命名当前任务 | `F2` | 已启用 |
+| 任务 | 复制当前任务 | `Ctrl+D` | 已启用 |
+| 编辑 | 复制预览内容 | `Ctrl+Shift+C` | 已启用 |
+| 编辑 | 清空所有输入 | `Ctrl+Shift+A` | 未绑定 |
+| 编辑 | 添加自定义卡片 | — | 未绑定 |
+| 导航 | 聚焦下一个任务 | `Ctrl+↓` | 已启用 |
+| 导航 | 聚焦上一个任务 | `Ctrl+↑` | 已启用 |
+| 导航 | 聚焦下一个卡片输入框 | `Ctrl+→` | 已启用 |
+| 导航 | 聚焦上一个卡片输入框 | `Ctrl+←` | 已启用 |
+| 导航 | 展开/隐藏侧边栏 | `Ctrl+B` | 已启用 |
+| 工具 | 全局搜索 | `Ctrl+Shift+F` | 已启用 |
+| 工具 | 打开设置 | `Ctrl+,` | 已启用 |
+| 布局 | 重置当前任务布局 | — | 未绑定 |
+| 布局 | 重置所有任务布局 | — | 未绑定 |
+
+---
+
+## 数据存储
+
+### 项目数据
+
+每个项目的数据存储在项目文件夹下的 `userData.json`，与项目其他文件放在一起。数据结构：
+
+```json
+{
+  "tasks": [
+    {
+      "id": "任务唯一标识",
+      "name": "任务名称",
+      "fields": {
+        "subject": "主体特征内容",
+        "scene": "场景环境内容",
+        "...": "..."
+      },
+      "layoutData": { "subject": 80, "scene": 120 },
+      "hiddenFields": ["shotScale", "cameraMove"],
+      "fieldLabels": { "subject": "自定义标签名" },
+      "customCards": [{ "key": "custom_xxx", "label": "额外维度" }],
+      "cardOrder": ["subject", "scene", "custom_xxx"]
+    }
+  ]
+}
+```
+
+### 用户配置
+
+存储在 `%APPDATA%\ai-prompt-helper\config\`，首次启动时从 `app.asar` 内的默认配置复制。文件：
+
+| 文件 | 内容 |
+|------|------|
+| `settings.json` | 关闭行为等通用设置 |
+| `theme.json` | 主题选择 |
+| `shortcuts.json` | 快捷键绑定 |
+| `language.json` | 界面语言 |
+| `recent-projects.json` | 最近项目路径记录（最多 20 条） |
+
+### 日志
+
+存储在 `%APPDATA%\ai-prompt-helper\logs\`。自动清理超过 7 天的文件。
+
+---
+
+## 开发
+
+**环境要求**：Node.js 18 及以上。
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发模式（携带 --no-sandbox）
+npm start
+
+# 构建安装包
+npm run build:win
+```
+
+**技术栈**：
+
+| 项 | 值 |
+|----|-----|
+| 框架 | Electron 34 |
+| 界面 | 原生 HTML / CSS / JavaScript |
+| 打包工具 | electron-builder 26，NSIS 安装程序 |
+| 图标 | `assets/H.ico` |
+
+---
+
+## 目录结构
 
 **源码**：
 
 ```
 AI_Helper/
-├── main.js                  # Electron 主进程，所有核心逻辑
-├── preload.js               # 预加载脚本，暴露 API 给渲染进程
-├── logger.js                # 日志模块
-├── package.json             # 项目配置、依赖、构建脚本
-├── config/                  # 默认配置，打包进 app.asar
-├── renderer/                # 前端界面
-│   ├── index.html           # 主页面
-│   ├── styles/main.css      # 样式
-│   └── scripts/             # 前端 js（app.js、content.js 等）
-├── scripts/update-asar.js   # 构建时用的脚本
-└── assets/                  # 图标
+├── main.js                       # 主进程
+├── preload.js                    # preload 脚本
+├── logger.js                     # 日志模块
+├── aiSpecContent.js              # AI规范内容（中英文）
+├── mdToHtml.js                   # Markdown 转 HTML
+├── package.json                  # 项目配置
+├── config/                       # 默认配置
+│   ├── fieldConfig.json          # 卡片字段定义
+│   ├── promptTemplates.json      # 项目模板
+│   ├── strings.json              # 中文界面文本
+│   ├── strings_en.json           # 英文界面文本
+│   ├── settings.default.json     # 默认设置
+│   └── shortcuts.json            # 默认快捷键
+├── renderer/                     # 渲染进程
+│   ├── index.html                # 主页面
+│   ├── index_en.html             # 英文主页面
+│   ├── tutorial.html             # 教程页面
+│   ├── styles/main.css           # 样式
+│   └── scripts/
+│       ├── app.js                # 应用入口与协调
+│       ├── sidebar.js            # 侧边栏任务管理
+│       ├── content.js            # 卡片渲染与交互
+│       ├── toolbar.js            # 工具栏菜单
+│       ├── shortcuts.js          # 快捷键管理
+│       ├── exportManager.js      # 项目导出
+│       ├── projectImport.js      # 项目导入与解析
+│       ├── import.js             # 卡片拖拽导入
+│       ├── settingsDialog.js     # 更多设置对话框
+│       ├── globalSearch.js       # 全局搜索
+│       ├── aiSpecDialog.js       # AI规范弹窗
+│       ├── createProjectDialog.js # 新建项目向导
+│       ├── debugLog.js           # 调试日志工具
+│       ├── fileManager.js        # 文件读写
+│       ├── mdToHtml.js           # Markdown 转 HTML
+│       └── aiSpecContent.js      # AI规范文档渲染
+├── assets/H.ico                  # 应用图标
+└── scripts/update-asar.js        # 构建脚本
 ```
 
-**用户数据目录** `%APPDATA%\ai-prompt-helper\`：
+---
 
-```
-ai-prompt-helper\
-├── .app-lock.json           # 进程锁
-├── config\                  # 用户配置，第一次从 asar 复制默认值
-│   ├── settings.json        # 用户设置
-│   ├── theme.json           # 主题配置
-│   ├── shortcuts.json       # 快捷键配置
-│   ├── language.json        # 语言选择
-│   └── recent-projects.json # 最近项目记录
-└── logs\                    # 日志，7 天自动清理
-    ├── yyyy-MM-dd_zh-CN.txt # 当日中文日志
-    └── yyyy-MM-dd_en.txt    # 当日英文日志
-```
-
-***
-
-### 开发
-
-```bash
-npm install           # 装依赖（需要 Node.js 18+）
-npm start             # 跑起来（带 --no-sandbox）
-npm run build:win     # 打包 → dist\AI提示词助手 Setup x.x.x.exe
-```
-
-技术栈：Electron 34 + 原生 HTML/CSS/JS，electron-builder (NSIS) 打包。
-
-***
-
-### 许可证
+## 许可证
 
 MIT
-
-***
-
-<a id="ai规范"></a>
-
-## AI 数据输出格式规范（中文）
-
-> **用途：** 将此文档作为 System Prompt 发给 AI（ChatGPT / Claude / Gemini 等），AI 将按标准格式输出提示词数据。用户保存为 `.md` 或 `.txt` 后可直接导入 AI\_Helper。
-
-***
-
-### 输出格式
-
-```
-## {任务名称}
-
-**{卡片名称}**：{内容}
-```
-
-规则：
-
-- `## `  后**必须有一个空格**，编号可选（`## 1. 赛博朋克城市` 或 `## 赛博朋克城市`）
-- `**{卡片名称}**` 用粗体包裹，冒号后同行写内容
-- 一个 `## `  表示一个任务，任务间互不干扰
-- 不以 `## `  或 `**` 开头的行，自动作为上一张卡片的续行
-
-***
-
-### 标准卡片名称
-
-| 序号 | 卡片名称 | 该维度应描述的内容                     |
-| -- | ---- | ----------------------------- |
-| 1  | 主体特征 | 画面主体的外貌、种族、体型、服装、姿势、材质质感、面部细节 |
-| 2  | 场景环境 | 地点类型、空间尺度、环境元素、天气、氛围          |
-| 3  | 光影色彩 | 主光源方向与类型、色温基调、辅助光、对比度、特殊光效    |
-| 4  | 艺术风格 | 画风流派、渲染风格、色彩方案、参考艺术家          |
-| 5  | 镜头景别 | 取景范围、画幅比例、拍摄角度、构图法则           |
-| 6  | 镜头运动 | 摄影机运动方式、运动速度和节奏               |
-| 7  | 时间节奏 | 帧率、慢动作/延时/正常速度、时间流逝感          |
-| 8  | 动态事件 | 画面中正在发生的具体动作、变化过程、行为逻辑        |
-| 9  | 技术参数 | 分辨率、采样器、CFG 值、步数、LoRA 权重等     |
-| 10 | 负面排除 | 不希望出现的元素，用否定式描述（无/不要/排除）      |
-
-> 超出以上维度的需求，可用自定义卡片名。
-
-***
-
-### 完整示例
-
-```markdown
-## 1. 赛博朋克雨夜
-
-**主体特征**：穿着黑色风衣的赛博格侦探，左眼红色机械义眼，右臂银色金属骨骼，短发被雨水打湿。
-
-**场景环境**：雨夜霓虹街道，全息广告牌闪烁，地面倒映紫色和蓝色光，远处悬浮车飞过。
-
-**光影色彩**：冷色调为主，霓虹红紫光为主光源，雨中反光，高对比度。
-
-**艺术风格**：赛博朋克风格，高对比度，电影级调色，Blade Runner 美学。
-
-**镜头景别**：中景，半身构图，低角度仰拍，三分法。
-
-**镜头运动**：从人物背后缓慢环绕至正面，手持微晃动。
-
-**时间节奏**：慢动作，60fps，雨滴速度减慢为正常 1/2。
-
-**动态事件**：人物取烟点燃，烟雾在雨中升起，霓虹在烟雾中折射光晕。
-
-**技术参数**：4K，21:9 宽银幕，浅景深 f/1.4。
-
-**负面排除**：无阳光，无自然植被，无噪点，无模糊，无文字，无水印，无卡通渲染。
-```
-
-***
-
-### 严格禁止
-
-1. 禁止使用 `# `  一级标题
-2. 禁止添加"导出时间"、"任务总数"等元信息
-3. 禁止在冒号之后换行写内容
-4. 禁止使用非标准卡片名
-5. 禁止在 `##` 后漏掉空格
-6. 禁止使用 `---` 分隔线
-
-***
-
-### 多任务输出
-
-```markdown
-## 1. 赛博朋克雨夜
-
-**主体特征**：赛博格侦探，黑风衣，红色义眼。
-
-**场景环境**：雨夜霓虹街道，全息广告牌。
-
-**光影色彩**：冷色调为主，霓虹红紫光，高对比度。
-
-## 2. 森林精灵
-
-**主体特征**：精灵少女，绿色长发及腰，尖耳朵，树叶藤蔓编织衣裳。
-
-**场景环境**：清晨魔法森林，阳光穿过树冠形成光束。
-
-**光影色彩**：暖金色，丁达尔光束，柔和光斑。
-
-**艺术风格**：奇幻风格，吉卜力美学，柔和色系，手绘质感。
-```
-
-***
-
-<a name="english"></a>
-
-## English
-
-> Repo: <https://github.com/Hong-15/AI-Video-Prompt-Assistant>
->
-> Download: <https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases/tag/v1.0.0>
->
-> Baidu Pan (mirror): <https://pan.baidu.com/s/1HshnWdA-wby0m5mLu-nTlw?pwd=hong>  Key: hong
-
-### Quick Start
-
-| Scenario                       | Action                                                                                |
-| ------------------------------ | ------------------------------------------------------------------------------------- |
-| Use without install            | Download `resource.zip` → extract → enter `win-unpacked` → double-click `AI提示词助手.exe` |
-| Install to PC (admin required) | Download `AI提示词助手 Setup x.x.x.exe` → install → desktop shortcut                       |
-| Process running, no window     | Kill all Electron processes in Task Manager → relaunch with `--force`                 |
-| "Another instance is running"  | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json` → reopen                           |
-| Where's the data               | `userData.json` in the project folder you selected                                    |
-| Where's the config             | `%APPDATA%\ai-prompt-helper\config\`                                                  |
-| Where's the logs               | `%APPDATA%\ai-prompt-helper\logs\`, kept for 7 days                                   |
-
-***
-
-### Installation
-
-#### Portable (Recommended)
-
-Download `resource.zip` (or `win-unpacked.zip`) from Releases, extract anywhere, enter `win-unpacked`, double-click `AI提示词助手.exe`. No admin rights required.
-
-The `win-unpacked` folder is a complete Electron runtime:
-
-| File                    | Description                                |
-| ----------------------- | ------------------------------------------ |
-| `AI提示词助手.exe`           | Launcher (copy of `electron.exe`, renamed) |
-| `electron.exe`          | Electron runtime, same as above            |
-| `resources/app.asar`    | Packaged application code                  |
-| `resources/elevate.exe` | Privilege elevation tool                   |
-| `locales/*.pak`         | Locale files (zh-CN.pak etc.)              |
-| `*.dll`                 | Runtime dependencies (ffmpeg.dll etc.)     |
-
-> After extracting, the whole `win-unpacked` folder is portable — move it wherever you want.
-
-#### Installer
-
-Download `AI提示词助手 Setup x.x.x.exe`, run it (**requires admin** — installs to `C:\Program Files`). Optional desktop shortcut.
-
-Uninstall: Control Panel → Programs and Features → AI提示词助手. Also removes `%APPDATA%\ai-prompt-helper\`.
-
-***
-
-### Startup Parameters
-
-Append to shortcut Target field, space-separated.
-
-| Parameter      | Source            | What it does                                                           |
-| -------------- | ----------------- | ---------------------------------------------------------------------- |
-| `--force`      | Custom            | Force lock takeover: kills old process, skips all checks, starts fresh |
-| `--test`       | Custom            | Enables Chrome remote debugging (port 9222), opens chrome://tracing    |
-| `--cn`         | Custom            | Forces Chromium internal pages to Chinese                              |
-| `--no-sandbox` | Electron built-in | Disables sandbox. Default in dev (`npm start`)                         |
-
-**Example** (append to shortcut Target):
-
-```
-"C:\Program Files\AI提示词助手\AI提示词助手.exe" --force
-```
-
-**PowerShell**:
-
-```powershell
-& "C:\Program Files\AI提示词助手\AI提示词助手.exe" --force
-```
-
-**Multiple flags**:
-
-```powershell
-& "C:\Program Files\AI提示词助手\AI提示词助手.exe" --force --cn
-```
-
-> `--force`, `--test`, `--cn` are defined at lines 184, 186, 1306 of main.js. `--no-sandbox` is Electron's built-in flag.
-
-***
-
-### Lock Mechanism & Backdoor
-
-Single-instance lock at `%APPDATA%\ai-prompt-helper\.app-lock.json`, contents: `{"pid":processId,"ts":timestamp}`.
-
-**Startup flow** (main.js lines 1305–1367):
-
-1. If `--force` → calls `forceTakeover()` immediately (kills old process + removes lock), skips all checks
-2. Without `--force`: check lock file first
-   - No lock → proceed
-   - Lock exists, process dead → clean lock, proceed
-   - Lock exists, process alive, age > 45s (`LOCK_STALE_MS`) → zombie detected, force takeover
-3. Calls `app.requestSingleInstanceLock()`
-   - Lock acquired → start normally
-   - Lock denied → check once more for zombie, if yes takeover and relaunch self (with `--force`), else quit
-
-**Watchdog**: If the window doesn't fire `show` within 15 seconds of creation, auto `app.quit()`.
-
-**Manual backdoor (file-system only, no tools needed)**:
-
-| Problem                                  | Fix                                                          |
-| ---------------------------------------- | ------------------------------------------------------------ |
-| Process running, no window               | Kill via Task Manager, relaunch with `--force`               |
-| "Another instance is running" every time | Delete `%APPDATA%\ai-prompt-helper\.app-lock.json`           |
-| Lock deleted but still fails             | Ensure no Electron processes in Task Manager, then `--force` |
-
-***
-
-### Features
-
-A rough overview of what the app provides:
-
-**Projects**: Create (default template or empty), open existing folders, close. Recent projects are tracked (up to 20), missing paths are grayed out.
-
-**Tasks**: Multiple tasks per project. Create, switch, rename, delete, duplicate. Auto-saves on task switch.
-
-**Cards**: Each task consists of cards. 10 preset cards for different prompt dimensions. Custom cards can be added. Drag to reorder, collapse, hide.
-
-**Templates**: When creating a project, choose between "Default" (10 preset cards) or "Empty" (1 custom card).
-
-**Import/Export**: Export as Markdown or plain text. Import task data from another project's `userData.json`.
-
-**Settings**: Theme (dark/light), UI language (Chinese/English), close behavior (quit/hide to tray/hide to taskbar), shortcut configuration.
-
-**Shortcuts**: 23 configurable shortcut actions (save, new/delete/rename/duplicate task, clear inputs, copy preview, add card, toggle sidebar, task/input navigation, open/new/close project, import/export, global search, open settings, reset layout). Bind keys in settings.
-
-**Global Search**: `Ctrl+Shift+F` searches all card content in the current project.
-
-**Logging**: Writes structured logs to `%APPDATA%\ai-prompt-helper\logs\`. Four levels (ERROR/WARN/INFO/DEBUG), daily bilingual files, 7-day auto-cleanup.
-
-***
-
-### Directory Structure
-
-**Source**:
-
-```
-AI_Helper/
-├── main.js                  # Electron main process, all core logic
-├── preload.js               # Preload script, exposes API to renderer
-├── logger.js                # Logging module
-├── package.json             # Project config, deps, build scripts
-├── config/                  # Default configs, packed into app.asar
-├── renderer/                # Frontend UI
-│   ├── index.html           # Main page
-│   ├── styles/main.css      # Stylesheet
-│   └── scripts/             # Frontend JS
-├── scripts/update-asar.js   # Build utility script
-└── assets/                  # Icons
-```
-
-**User data** at `%APPDATA%\ai-prompt-helper\`:
-
-```
-ai-prompt-helper\
-├── .app-lock.json           # Process lock
-├── config\                  # User config (copied from asar on first run)
-│   ├── settings.json
-│   ├── theme.json
-│   ├── shortcuts.json
-│   ├── language.json
-│   └── recent-projects.json
-└── logs\                    # 7-day retention
-    ├── yyyy-MM-dd_zh-CN.txt
-    └── yyyy-MM-dd_en.txt
-```
-
-***
-
-### Development
-
-```bash
-npm install           # Install deps (Node.js 18+)
-npm start             # Run (with --no-sandbox)
-npm run build:win     # Build → dist\AI提示词助手 Setup x.x.x.exe
-```
-
-Stack: Electron 34 + vanilla HTML/CSS/JS, electron-builder (NSIS).
-
-***
-
-### License
-
-MIT
-
-***
-
-<a id="ai-spec"></a>
-
-## AI Output Format Spec (English)
-
-> **Usage:** Send this document as a System Prompt to any AI (ChatGPT / Claude / Gemini). The AI will output prompt data in a standard format. Save as `.md` or `.txt` to import directly into AI\_Helper.
-
-***
-
-### Output Format
-
-```
-## {Task Name}
-
-**{Card Name}**：{Content}
-```
-
-Rules:
-
-- `## `  **must** be followed by a space, then the task name. Numbering is optional.
-- `**{Card Name}**` in bold, colon immediately after, content on the same line.
-- Each `## `  block = one task. Tasks are independent.
-- Lines not starting with `## `  or `**` are treated as continuation of the previous card.
-
-***
-
-### Standard Card Names
-
-| #  | Card Name | What to describe                                                                   |
-| -- | --------- | ---------------------------------------------------------------------------------- |
-| 1  | 主体特征      | Subject appearance, race, build, clothing, pose, material texture, facial details  |
-| 2  | 场景环境      | Location type, spatial scale, environmental elements, weather, atmosphere          |
-| 3  | 光影色彩      | Key light direction/type, color temperature, fill light, contrast, special effects |
-| 4  | 艺术风格      | Art style, rendering style, color scheme, reference artists                        |
-| 5  | 镜头景别      | Shot size, aspect ratio, camera angle, composition                                 |
-| 6  | 镜头运动      | Camera movement type, speed and rhythm                                             |
-| 7  | 时间节奏      | Frame rate, slow-mo/timelapse/normal, sense of time passing                        |
-| 8  | 动态事件      | Specific actions happening in frame, change process, behavior logic                |
-| 9  | 技术参数      | Resolution, sampler, CFG, steps, LoRA weights etc.                                 |
-| 10 | 负面排除      | Unwanted elements, described negatively (no/avoid/exclude)                         |
-
-> For dimensions beyond the above, use custom card names.
-
-***
-
-### Full Example
-
-```markdown
-## 1. Cyberpunk Rainy Night
-
-**主体特征**：A cyberpunk detective in a black trench coat, left eye is a red mechanical implant, right arm exposed silver metallic skeleton, short hair wet from rain.
-
-**场景环境**：Rainy neon street at night, holographic billboards flickering between towering buildings, ground reflecting purple and blue light, flying cars in the distance.
-
-**光影色彩**：Cool tones dominant, neon red-purple as key light, rain reflections for hazy atmosphere, high contrast.
-
-**艺术风格**：Cyberpunk aesthetic, high contrast, cinematic color grading, Blade Runner style.
-
-**镜头景别**：Medium shot, half-body composition, low angle, rule of thirds.
-
-**镜头运动**：Slow orbit from behind to front, handheld micro-shake for documentary feel.
-
-**时间节奏**：Slow motion, 60fps, raindrops at 1/2 normal speed.
-
-**动态事件**：Detective pulls out a cigarette, lights it, smoke rises slowly in the rain, neon lights refract through the smoke.
-
-**技术参数**：4K, 21:9 widescreen, shallow DoF f/1.4.
-
-**负面排除**：No sunlight, no vegetation, no noise, no blur, no text, no watermark, no cartoon rendering.
-```
-
-***
-
-### Strictly Forbidden
-
-1. No `# `  level-1 headings
-2. No metadata lines ("export time", "task count", etc.)
-3. No line breaks after the colon in `**Card Name**：`
-4. No non-standard card names (see table above)
-5. No missing space after `##`
-6. No `---` separators
-
-***
-
-### Multi-Task Output
-
-```markdown
-## 1. Cyberpunk Rainy Night
-
-**主体特征**：Cyberpunk detective, black trench coat, red cybernetic eye.
-
-**场景环境**：Neon street at night, holographic billboards.
-
-**光影色彩**：Cool tones, neon red-purple, high contrast.
-
-## 2. Forest Elf
-
-**主体特征**：Elf maiden, long green hair to waist, pointed ears, clothes of leaves and vines.
-
-**场景环境**：Magical forest at dawn, sunlight piercing through canopy in beams.
-
-**光影色彩**：Warm gold, crepuscular rays, soft light spots on grass.
-
-**艺术风格**：Fantasy style, Ghibli aesthetic, soft palette, hand-painted texture.
-```
-

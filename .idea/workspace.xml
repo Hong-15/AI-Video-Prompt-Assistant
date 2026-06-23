@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="补丁" />
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="补丁">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

@@ -88,6 +88,7 @@
       <!-- 提示词工作台 (也称:工作区)-->
       <div id="workspace" class="workspace" style="display:none;">
         <div class="workspace-header">
+          <button id="parseDataBtn" class="import-data-btn parse-data-btn" title="解析粘贴数据">解析数据</button>
           <button id="importDataBtn" class="import-data-btn" title="导入卡片数据">导入数据</button>
           <button id="exportTaskBtn" class="import-data-btn export-task-btn" title="导出当前任务数据">导出任务</button>
           <button id="addCustomCardBtn" class="add-custom-card-btn" title="添加自定义卡片">+ 自定义卡片</button>
@@ -281,5 +282,26 @@
   <script src="scripts/app.js"></script>
 
 <!--TODO 个人注释:我好像忘记设计了 index 不要太多东西,不然软件刚打开的时候,会卡;我怎么说怎么一直修复,修复不了(虽然已经纠正了一些);先丢个注释,有缘人看到了,重构吧(或者等我重构)-->
+
+<!-- 解析数据弹窗（非模态） -->
+<div id="parseDataOverlay" class="parse-data-overlay" style="display:none;">
+  <div class="parse-data-dialog">
+    <div class="parse-data-header">
+      <span id="parseDataTitle">解析数据</span>
+      <button id="parseDataCloseBtn" class="parse-data-close-btn" title="关闭">✕</button>
+    </div>
+    <div class="parse-data-body">
+      <div class="parse-data-badge-row">
+        <span id="parseDataBadge" class="parse-data-badge badge-empty">—</span>
+      </div>
+      <textarea id="parseDataTextarea" class="parse-data-textarea" placeholder="粘贴任务数据或卡片数据..." rows="10"></textarea>
+      <div class="parse-data-actions">
+        <button id="parseDataToTaskbar" class="parse-data-btn-primary" title="将数据作为任务导入到任务栏" disabled>添加到任务栏</button>
+        <button id="parseDataToWorkspace" class="parse-data-btn-secondary" title="将数据作为卡片导入到当前工作区" disabled>添加到工作区</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

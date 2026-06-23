@@ -185,6 +185,22 @@
     "exportTaskEmpty": "No card data to export in current task",
     "exportTaskSuccess": "Task data exported successfully"
   },
+  "parseData": {
+    "parseData": "Parse Data",
+    "parseDataTitle": "Parse pasted data",
+    "dialogTitle": "Parse Data",
+    "textareaPlaceholder": "Paste task data or card data...",
+    "toTaskbar": "Add to Taskbar",
+    "toWorkspace": "Add to Workspace",
+    "toTaskbarTitle": "Import data as a task to the taskbar",
+    "toWorkspaceTitle": "Import data as cards to the current workspace",
+    "cardLevelHint": "Card-level data cannot be output as task-level data",
+    "taskLevelHint": "Task-level data cannot be imported to card workspace",
+    "formatTask": "Task-level Data",
+    "formatCard": "Card-level Data",
+    "formatUnknown": "Unrecognized Format",
+    "noActiveTask": "Please select a task first"
+  },
   "status": {
     "saved": "Saved",
     "unsaved": "Unsaved (Ctrl+S to save)",

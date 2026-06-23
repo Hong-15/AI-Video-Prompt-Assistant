@@ -367,6 +367,13 @@ const Toolbar = (function() {
       importDataBtn.title = StringLoader.get('import.importDataTitle', '导入卡片数据');
     }
 
+    // 解析数据按钮
+    const parseDataBtn = document.getElementById('parseDataBtn');
+    if (parseDataBtn) {
+      parseDataBtn.textContent = StringLoader.get('parseData.parseData', '解析数据');
+      parseDataBtn.title = StringLoader.get('parseData.parseDataTitle', '解析粘贴数据');
+    }
+
     // 自定义卡片按钮
     const addCustomCardBtn = document.getElementById('addCustomCardBtn');
     if (addCustomCardBtn) {

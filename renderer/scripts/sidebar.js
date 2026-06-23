@@ -426,6 +426,8 @@ const Sidebar = (function() {
 
     _tasks.push(newTask);
     render();
+    // 通知应用层：任务列表结构已变更（需保存 + 更新状态栏）
+    if (_onTaskChange) _onTaskChange(newTask);
     showToast(StringLoader.get('sidebar.duplicated', '任务已复制'));
   }
 
@@ -439,6 +441,8 @@ const Sidebar = (function() {
     if (task) {
       task.name = newName;
       render();
+      // 通知应用层：任务数据已变更（需保存 + 更新状态栏）
+      if (_onTaskChange) _onTaskChange(task);
       return true;
     }
     return false;
@@ -460,6 +464,9 @@ const Sidebar = (function() {
     _tasks.forEach((t, i) => { t.order = i; });
 
     render();
+    // 通知应用层：任务列表结构已变更（需保存）
+    const active = getActiveTask();
+    if (_onTaskChange) _onTaskChange(active);
     return true;
   }
 

@@ -86,6 +86,12 @@ const App = (function() {
     await loadModuleScript('scripts/import.js');
     ImportManager.init();
 
+    // 5.1.1 解析数据按钮（工具栏）
+    const parseDataBtn = document.getElementById('parseDataBtn');
+    if (parseDataBtn) {
+      parseDataBtn.addEventListener('click', showParseDataDialog);
+    }
+
     // 5.2 侧边栏头部拖拽导入项目数据
     const sidebarHeader = document.querySelector('.sidebar-header');
     if (sidebarHeader) {
@@ -733,6 +739,222 @@ const App = (function() {
     );
   }
 
+  // ========== 解析数据（粘贴导入） ==========
+  let _parseDataDetectTimer = null;
+  let _parseDetectedFormat = null;
+  let _parseDataButtonsBound = false;  // 防止重复绑定的标志
+
+  function showParseDataDialog() {
+    const overlay = document.getElementById('parseDataOverlay');
+    if (!overlay) return;
+    if (overlay.style.display === 'flex') {
+      overlay.style.display = 'none';
+      return;
+    }
+
+    overlay.style.display = 'flex';
+
+    const textarea = document.getElementById('parseDataTextarea');
+    const badge = document.getElementById('parseDataBadge');
+    const btnTaskbar = document.getElementById('parseDataToTaskbar');
+    const btnWorkspace = document.getElementById('parseDataToWorkspace');
+    const closeBtn = document.getElementById('parseDataCloseBtn');
+    const header = document.querySelector('.parse-data-header');
+
+    if (!textarea) return;
+
+    // 只在首次打开时绑定两个按钮的事件（避免重复绑定）
+    if (!_parseDataButtonsBound && btnTaskbar && btnWorkspace) {
+      _parseDataButtonsBound = true;
+
+      // 添加到任务栏：使用已有的 parseProjectExport + applyProjectImport
+      btnTaskbar.addEventListener('click', () => {
+        const text = textarea.value.trim();
+        if (!text) return;
+        if (_parseDetectedFormat !== 'task') return;
+
+        const parseResult = parseProjectExport(text);
+        if (!parseResult.success) {
+          Modal.show({
+            title: StringLoader.get('import.errorTitle', '导入失败'),
+            message: parseResult.error,
+            showCancel: false,
+            confirmText: StringLoader.get('modal.ok', '确定')
+          });
+          return;
+        }
+
+        overlay.style.display = 'none';
+        applyProjectImport(parseResult.tasks);
+      });
+
+      // 添加到工作区：转换格式后调用已有的 ImportManager.importCardsToTask
+      btnWorkspace.addEventListener('click', () => {
+        const text = textarea.value.trim();
+        if (!text) return;
+        const activeTask = Sidebar.getActiveTask();
+        if (!activeTask) {
+          Modal.show({
+            title: StringLoader.get('modal.hint', '提示'),
+            message: StringLoader.get('parseData.noActiveTask', '请先选择一个任务'),
+            showCancel: false,
+            confirmText: StringLoader.get('modal.ok', '确定')
+          });
+          return;
+        }
+
+        const converted = convertParseDataToDemoMd3(text);
+        overlay.style.display = 'none';
+        ImportManager.importCardsToTask(activeTask.id, converted, '粘贴数据');
+      });
+    }
+
+    // 重置状态
+    textarea.value = '';
+    badge.className = 'parse-data-badge badge-empty';
+    badge.textContent = '—';
+    btnTaskbar.disabled = true;
+    btnTaskbar.title = '';
+    btnWorkspace.disabled = true;
+    btnWorkspace.title = '';
+    _parseDetectedFormat = null;
+    textarea.focus();
+
+    // 关闭按钮
+    closeBtn.onclick = () => { overlay.style.display = 'none'; };
+
+    // 点击遮罩关闭、Escape 关闭
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.style.display = 'none'; };
+    const onKeyDown = (e) => { if (e.key === 'Escape') { overlay.style.display = 'none'; document.removeEventListener('keydown', onKeyDown); } };
+    document.addEventListener('keydown', onKeyDown);
+    overlay._onKeyDown = onKeyDown;
+
+    // 拖拽
+    const dialog = overlay.querySelector('.parse-data-dialog');
+    let dragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
+    header.onmousedown = (e) => {
+      dragging = true; startX = e.clientX; startY = e.clientY;
+      const rect = dialog.getBoundingClientRect();
+      origX = rect.left; origY = rect.top;
+      dialog.style.transition = 'none';
+    };
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      dialog.style.left = (origX + e.clientX - startX) + 'px';
+      dialog.style.top = (origY + e.clientY - startY) + 'px';
+    });
+    document.addEventListener('mouseup', () => { dragging = false; dialog.style.transition = ''; });
+
+    // 输入检测（200ms 防抖）
+    textarea.oninput = () => {
+      clearTimeout(_parseDataDetectTimer);
+      const text = textarea.value.trim();
+      if (!text) {
+        badge.className = 'parse-data-badge badge-empty';
+        badge.textContent = '—';
+        btnTaskbar.disabled = true;
+        btnTaskbar.title = '';
+        btnWorkspace.disabled = true;
+        btnWorkspace.title = '';
+        _parseDetectedFormat = null;
+        return;
+      }
+      _parseDataDetectTimer = setTimeout(() => detectParseFormat(textarea.value, textarea, badge, btnTaskbar, btnWorkspace), 200);
+    };
+  }
+
+  function detectParseFormat(text, textarea, badge, btnTaskbar, btnWorkspace) {
+    const lines = text.split(/\r?\n/).map(l => l.trim());
+    const hasTaskHeader = lines.some(l => /^##\s/.test(l) || /^【.+】$/.test(l));
+    const hasTaskCard = lines.some(l => /^\*\*(.+?)\*\*[：:]/.test(l));
+    const hasCardHeader = lines.some(l => /^###\s/.test(l));
+    const hasContentMarker = lines.some(l => /^\*\*内容(\d+)?\*\*$/.test(l));
+
+    // 卡片级：demoMd 格式 (### cardName + **内容**)
+    if (hasCardHeader && hasContentMarker) {
+      _parseDetectedFormat = 'card';
+      badge.className = 'parse-data-badge badge-card';
+      badge.textContent = '卡片级数据';
+      btnTaskbar.disabled = true;
+      btnTaskbar.title = '卡片级数据，无法以任务级数据输出';
+      btnWorkspace.disabled = false;
+      return;
+    }
+    // 任务级：## / 【】 任务头 + **card**：卡片内容
+    if (hasTaskHeader && hasTaskCard) {
+      _parseDetectedFormat = 'task';
+      badge.className = 'parse-data-badge badge-task';
+      badge.textContent = '任务级数据';
+      btnTaskbar.disabled = false;
+      btnWorkspace.disabled = true;
+      btnWorkspace.title = StringLoader.get('parseData.taskLevelHint', '任务级数据，无法导入到卡片工作区');
+      return;
+    }
+    // 卡片级：独立卡片（**card**：内容，无任务头）
+    if (!hasTaskHeader && hasTaskCard) {
+      _parseDetectedFormat = 'card';
+      badge.className = 'parse-data-badge badge-card';
+      badge.textContent = '卡片级数据';
+      btnTaskbar.disabled = true;
+      btnTaskbar.title = '卡片级数据，无法以任务级数据输出';
+      btnWorkspace.disabled = false;
+      return;
+    }
+    // 格式不识别
+    _parseDetectedFormat = 'unknown';
+    badge.className = 'parse-data-badge badge-unknown';
+    badge.textContent = '格式不识别';
+    btnTaskbar.disabled = true;
+    btnTaskbar.title = '';
+    btnWorkspace.disabled = true;
+    btnWorkspace.title = '';
+  }
+
+  // 将粘贴文本统一转为 demoMd3（### cardName + **内容**），交给 ImportManager 处理
+  function convertParseDataToDemoMd3(text) {
+    // 尝试任务级解析（parseProjectExport 是已有的通用方法）
+    const taskResult = parseProjectExport(text);
+    if (taskResult.success && taskResult.tasks.length > 0) {
+      let output = '';
+      taskResult.tasks.forEach(t => {
+        t.cards.forEach(c => {
+          output += '### ' + c.name + '\n**内容**\n' + c.content + '\n\n';
+        });
+      });
+      const trimmed = output.trim();
+      if (trimmed) return trimmed;
+    }
+
+    // 尝试独立卡片解析（**cardName**：content）
+    const lines = text.split(/\r?\n/);
+    let cardOutput = '';
+    let currentCardName = null;
+    let currentCardContent = '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const mdMatch = trimmed.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
+      if (mdMatch) {
+        if (currentCardName) {
+          cardOutput += '### ' + currentCardName + '\n**内容**\n' + currentCardContent.trim() + '\n\n';
+        }
+        currentCardName = mdMatch[1].trim();
+        currentCardContent = mdMatch[2];
+      } else if (currentCardName && trimmed) {
+        currentCardContent += (currentCardContent ? '\n' : '') + line;
+      }
+    }
+    if (currentCardName) {
+      cardOutput += '### ' + currentCardName + '\n**内容**\n' + currentCardContent.trim() + '\n\n';
+    }
+
+    const trimmed = cardOutput.trim();
+    if (trimmed) return trimmed;
+
+    // 已经是 demoMd 格式或其他，原样交给 ImportManager 处理
+    return text;
+  }
+
   // 解析导出文件内容（支持 md 和 txt 格式）
   function parseProjectExport(content) {
     const lines = content.split(/\r?\n/);
@@ -830,109 +1052,113 @@ const App = (function() {
   }
 
   // 应用项目导入
+  let _inProjectImport = false; // 导入期间禁止 saveCurrentTaskFields 覆盖新数据
   async function applyProjectImport(tasks) {
-    const existingTasks = Sidebar.getTasks();
-    let allTasks = [...existingTasks];
-    let importedCount = 0;
-    let skipAll = false;
-    let overwriteAll = false;
-    let renameAll = false;
-    const renameConflicts = [];
+    _inProjectImport = true;
+    try {
+      const existingTasks = Sidebar.getTasks();
+      let allTasks = [...existingTasks];
+      let importedCount = 0;
+      let skipAll = false;
+      let overwriteAll = false;
+      let renameAll = false;
+      const renameConflicts = [];
 
-    // 预加载 fieldConfig，避免循环中重复请求
-    const fieldConfig = await window.electronAPI.getFieldConfig();
-    const isEnglish = _currentLanguage === 'en';
+      // 预加载 fieldConfig，避免循环中重复请求
+      const fieldConfig = await window.electronAPI.getFieldConfig();
+      const isEnglish = _currentLanguage === 'en';
 
-    for (const taskData of tasks) {
-      const duplicate = allTasks.find(t => t.name === taskData.name);
+      for (const taskData of tasks) {
+        const duplicate = allTasks.find(t => t.name === taskData.name);
 
-      if (duplicate) {
-        if (skipAll) continue;
-        if (overwriteAll) {
-          duplicate.fields = {};
-          duplicate.customCards = [];
-          duplicate.cardOrder = [];
-          fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+        if (duplicate) {
+          if (skipAll) continue;
+          if (overwriteAll) {
+            duplicate.fields = {};
+            duplicate.customCards = [];
+            duplicate.cardOrder = [];
+            fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+            importedCount++;
+            continue;
+          }
+          if (renameAll) {
+            renameConflicts.push(taskData.name);
+            continue;
+          }
+
+          const action = await showDuplicateTaskDialog(taskData.name);
+          if (action === 'skipAll') {
+            skipAll = true;
+            continue;
+          }
+          if (action === 'overwriteAll') {
+            overwriteAll = true;
+            duplicate.fields = {};
+            duplicate.customCards = [];
+            duplicate.cardOrder = [];
+            fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+            importedCount++;
+            continue;
+          }
+          if (action === 'renameAll') {
+            renameAll = true;
+            renameConflicts.push(taskData.name);
+            continue;
+          }
+          if (action === 'skip') {
+            continue;
+          }
+          if (action === 'overwrite') {
+            duplicate.fields = {};
+            duplicate.customCards = [];
+            duplicate.cardOrder = [];
+            fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
+            importedCount++;
+            continue;
+          }
+          if (action === 'rename') {
+            renameConflicts.push(taskData.name);
+            continue;
+          }
+        } else {
+          const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          const newTask = {
+            id: taskId,
+            name: taskData.name,
+            fields: {},
+            layout: {},
+            hiddenFields: [],
+            fieldLabels: {},
+            customCards: [],
+            cardOrder: []
+          };
+          fillTaskFields(newTask, taskData.cards, fieldConfig, isEnglish);
+          allTasks = [...allTasks, newTask];
           importedCount++;
-          continue;
         }
-        if (renameAll) {
-          renameConflicts.push(taskData.name);
-          continue;
-        }
-
-        const action = await showDuplicateTaskDialog(taskData.name);
-        if (action === 'skipAll') {
-          skipAll = true;
-          continue;
-        }
-        if (action === 'overwriteAll') {
-          overwriteAll = true;
-          duplicate.fields = {};
-          duplicate.customCards = [];
-          duplicate.cardOrder = [];
-          fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
-          importedCount++;
-          continue;
-        }
-        if (action === 'renameAll') {
-          renameAll = true;
-          renameConflicts.push(taskData.name);
-          continue;
-        }
-        if (action === 'skip') {
-          continue;
-        }
-        if (action === 'overwrite') {
-          duplicate.fields = {};
-          duplicate.customCards = [];
-          duplicate.cardOrder = [];
-          fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
-          importedCount++;
-          continue;
-        }
-        if (action === 'rename') {
-          renameConflicts.push(taskData.name);
-          continue;
-        }
-      } else {
-        const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        const newTask = {
-          id: taskId,
-          name: taskData.name,
-          fields: {},
-          layout: {},
-          hiddenFields: [],
-          fieldLabels: {},
-          customCards: [],
-          cardOrder: []
-        };
-        fillTaskFields(newTask, taskData.cards, fieldConfig, isEnglish);
-        allTasks = [...allTasks, newTask];
-        importedCount++;
       }
-    }
 
-    // 一次性应用到侧边栏
-    Sidebar.setTasks(allTasks);
-    updateStatusTaskCount();
+      // 提示重命名列表
+      if (renameConflicts.length > 0) {
+        showProjectRenameListDialog(renameConflicts);
+      }
 
-    // 提示重命名列表
-    if (renameConflicts.length > 0) {
-      showProjectRenameListDialog(renameConflicts);
-    }
+      if (importedCount > 0) {
+        // 一次性应用到侧边栏
+        Sidebar.setTasks(allTasks);
+        updateStatusTaskCount();
 
-    if (importedCount > 0) {
-      // 选中最后一个导入/覆盖的任务
-      Sidebar.setActiveTask(allTasks[allTasks.length - 1].id);
-      markDirty();
-      Sidebar.render();
-      Content.showToast(
-        StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
-      );
-      logAppEvent('IMPORT', '导入项目数据成功', { importedCount: String(importedCount), totalTasks: String(allTasks.length) });
-    } else if (renameConflicts.length === 0) {
-      Content.showToast(StringLoader.get('import.errorEmpty', '文件内容为空'));
+        // 选中最后一个导入/覆盖的任务
+        Sidebar.setActiveTask(allTasks[allTasks.length - 1].id);
+        markDirty();
+        Sidebar.render();
+        Content.showToast(
+          StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
+        );
+        logAppEvent('IMPORT', '导入项目数据成功', { importedCount: String(importedCount), totalTasks: String(allTasks.length) });
+      }
+    } finally {
+      _inProjectImport = false;
     }
   }
 
@@ -1190,14 +1416,16 @@ const App = (function() {
 
   // 任务切换
   function handleTaskChange(task) {
-    if (Content.hasActiveTask()) {
+    if (Content.hasActiveTask() && !_inProjectImport) {
       saveCurrentTaskFields();
+      autoSave();
     }
     Content.switchToTask(task);
     updateStatusTaskName(task ? task.name : '');
     updateStatusCardName('');
     updateStatusTaskCount();
     updateStatusSelectedLength(null);
+    markDirty();
     if (task) {
       logAppEvent('TASK', '切换任务', { taskId: task.id, taskName: task.name });
     }
@@ -1252,6 +1480,7 @@ const App = (function() {
   // 标记有未保存的更改
   function markDirty() {
     if (!_isDirty) {
+      logAppEvent('DEBUG', 'markDirty', { caller: new Error().stack.split('\n')[2].trim() });
       _isDirty = true;
       updateSaveStatus(false);
     }
@@ -1302,7 +1531,11 @@ const App = (function() {
 
   // 保存数据到文件（仅 Ctrl+S 和退出时调用）
   async function autoSave() {
-    if (!_currentFolder) return;
+    if (!_currentFolder) {
+      logAppEvent('DEBUG', 'autoSave跳过', { reason: '_currentFolder为空' });
+      return;
+    }
+    logAppEvent('DEBUG', 'autoSave开始', { folder: _currentFolder });
     saveCurrentTaskFields();
     const tasks = Sidebar.getTasks();
     const activeTask = Sidebar.getActiveTask();
@@ -1311,6 +1544,7 @@ const App = (function() {
       activeTaskId: activeTask ? activeTask.id : null
     };
     const result = await FileManager.saveData(data);
+    logAppEvent('DEBUG', 'autoSave结果', { success: result });
     if (result) {
       _isDirty = false;
       updateSaveStatus(true);
@@ -1320,8 +1554,13 @@ const App = (function() {
 
   // 关闭前保存
   async function handleSaveBeforeClose() {
+    logAppEvent('DEBUG', 'handleSaveBeforeClose被调用', { isDirty: _isDirty, hasFolder: Boolean(_currentFolder) });
     if (_isDirty) {
+      logAppEvent('DEBUG', 'handleSaveBeforeClose开始保存', { taskCount: Sidebar.getTasks().length });
       await autoSave();
+      logAppEvent('DEBUG', 'handleSaveBeforeClose保存完成', { isDirty: _isDirty });
+    } else {
+      logAppEvent('DEBUG', 'handleSaveBeforeClose跳过', { reason: '_isDirty=false' });
     }
     window.electronAPI.saveComplete();
   }

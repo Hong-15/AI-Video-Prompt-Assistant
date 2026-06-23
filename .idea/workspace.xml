@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="纠正语言切换问题" />
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="纠正语言切换问题">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/strings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/strings_en.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings_en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/sidebar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/toolbar.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/toolbar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/styles/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/styles/main.css" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

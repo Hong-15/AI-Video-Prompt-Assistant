@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, shell, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const fsPromises = fs.promises;
@@ -9,6 +9,18 @@ const mdToHtml = require('./mdToHtml');
 // 尽早移除默认菜单栏，避免 Electron 启动时创建默认菜单（提升启动性能）
 // 参考：Electron 性能最佳实践第 8 条
 Menu.setApplicationMenu(null);
+
+// 拖拽导出用的图标（缩放 app 图标为 24x24）
+let dragFileIcon = null;
+try {
+  const iconPath = path.join(__dirname, 'assets', 'H.ico');
+  if (fs.existsSync(iconPath)) {
+    dragFileIcon = nativeImage.createFromPath(iconPath).resize({ width: 24, height: 24 });
+  }
+} catch (e) { /* ignore */ }
+if (!dragFileIcon) {
+  dragFileIcon = nativeImage.createEmpty();
+}
 
 // 字符串资源加载（根据语言配置，异步避免阻塞主进程）
 let strings = {};
@@ -1169,6 +1181,52 @@ function setupIPC() {
   ipcMain.on('open-external-url', (event, url) => {
     if (url) {
       shell.openExternal(url);
+    }
+  });
+
+  // 拖拽导出文件（同步一步到位：写临时文件 + 启动原生拖拽）
+  // 仅用于 HTML5 dragstart 上下文（卡片 body 拖拽）
+  ipcMain.on('drag-export-file-sync', (event, { content, fileName }) => {
+    const tempDir = path.join(app.getPath('temp'), 'ai-helper-drag');
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    const safeName = fileName.replace(/[/\\:*?"<>|]/g, '_');
+    const tempPath = path.join(tempDir, safeName);
+    try {
+      fs.writeFileSync(tempPath, content, 'utf-8');
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win && !win.isDestroyed()) {
+        win.webContents.startDrag({ file: tempPath, icon: dragFileIcon });
+        event.returnValue = { success: true, filePath: tempPath };
+        // 清理临时文件（拖拽结束后）
+        try { fs.unlinkSync(tempPath); } catch (e) {}
+      } else {
+        try { fs.unlinkSync(tempPath); } catch (e) {}
+        event.returnValue = { success: false, error: 'window destroyed' };
+      }
+    } catch (e) {
+      event.returnValue = { success: false, error: e.message };
+    }
+  });
+
+  // 直接导出文件到桌面（排序拖拽出窗口时使用，不需要原生拖拽上下文）
+  ipcMain.on('save-export-file', (event, { content, fileName }) => {
+    const desktop = app.getPath('desktop');
+    const safeName = fileName.replace(/[/\\:*?"<>|]/g, '_');
+    const targetPath = path.join(desktop, safeName);
+    try {
+      // 重名自动追加序号
+      let finalPath = targetPath;
+      let counter = 1;
+      while (fs.existsSync(finalPath)) {
+        const ext = path.extname(targetPath);
+        const base = path.basename(targetPath, ext);
+        finalPath = path.join(desktop, base + '_' + counter + ext);
+        counter++;
+      }
+      fs.writeFileSync(finalPath, content, 'utf-8');
+      event.returnValue = { success: true, filePath: finalPath };
+    } catch (e) {
+      event.returnValue = { success: false, error: e.message };
     }
   });
 }

@@ -12,6 +12,7 @@ const Content = (function() {
   let _customCards = [];     // 当前任务的自定义卡片 [{key, label}]
   let _cardOrder = [];       // 当前任务的卡片渲染顺序（包含固定卡片和自定义卡片）
   let _dragState = null;     // 拖拽状态：{ cardKey, ghost, card, offsetX, offsetY }
+  let _reorderExportFlag = false; // 排序拖拽时鼠标是否离开过窗口
 
   // 初始化内容区域
   async function init(callbacks) {
@@ -232,6 +233,23 @@ const Content = (function() {
       e.stopPropagation();
       showCardMenu(e, cardDef, textarea, fieldsData);
     });
+
+    // ===== 拖拽导出卡片 =====
+    card.setAttribute('draggable', 'true');
+
+    card.addEventListener('dragstart', (e) => {
+      if (e.target === dragHandle || e.target === menuBtn || e.target === textarea || e.target === resizeHandle) {
+        e.preventDefault(); return;
+      }
+      e.preventDefault();
+      const label = labelText.textContent.replace(/^[*\s]+/, '').trim();
+      const val = textarea.value.trim();
+      if (!val) return;
+      const content = `**${label}**：${val}`;
+      const fileName = label.replace(/[/\\:*?"<>|]/g, '_') + '.md';
+      window.electronAPI.dragExportFileSync(content, fileName);
+    });
+
 
     return card;
   }
@@ -720,12 +738,17 @@ const Content = (function() {
       offsetX: e.clientX - rect.left,
       offsetY: e.clientY - rect.top,
       cardWidth: rect.width,
-      cardHeight: rect.height
+      cardHeight: rect.height,
+      // 快照：拖拽开始时的卡片数据，避免 DOM 变化导致松手时查询不到
+      snapLabel: card.querySelector('.label-text')?.textContent || '',
+      snapValue: card.querySelector('textarea')?.value || ''
     };
 
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('mouseup', onDragEnd);
     document.addEventListener('scroll', onDragScroll, true);
+    document.documentElement.addEventListener('mouseleave', onDragLeave);
+    document.documentElement.addEventListener('mouseenter', onDragEnter);
   }
 
   // 拖拽移动
@@ -733,6 +756,23 @@ const Content = (function() {
     if (!_dragState) return;
     const { ghost, offsetX, offsetY } = _dragState;
     ghost.style.transform = `translate(${e.clientX - offsetX}px, ${e.clientY - offsetY}px)`;
+
+    // 坐标检测窗口外
+    const isOutside = e.clientX < 0 || e.clientX > window.innerWidth ||
+                      e.clientY < 0 || e.clientY > window.innerHeight;
+    _reorderExportFlag = isOutside;
+  }
+
+  // 拖拽时鼠标离开窗口 → 标记为导出
+  function onDragLeave(e) {
+    if (!_dragState) return;
+    _reorderExportFlag = true;
+  }
+
+  // 拖拽时鼠标回到窗口 → 取消导出标记
+  function onDragEnter(e) {
+    if (!_dragState) return;
+    _reorderExportFlag = false;
   }
 
   // 滚动时保持幽灵卡片在鼠标下方（position: fixed 自动处理，此处为兼容）
@@ -744,13 +784,32 @@ const Content = (function() {
   // 拖拽结束
   function onDragEnd(e) {
     if (!_dragState) return;
-    const { ghost, card, cardKey } = _dragState;
+    const { ghost, card, cardKey, snapLabel, snapValue } = _dragState;
 
     // 还原原卡片
     card.classList.remove('dragging');
 
     // 移除幽灵卡片
     ghost.remove();
+
+    // 如果拖出了窗口 → 导出文件到桌面
+    if (_reorderExportFlag) {
+      _reorderExportFlag = false;
+      // 用 DOM 实时值，降级到快照
+      const textarea = card.querySelector('textarea');
+      const labelSpan = card.querySelector('.label-text');
+      const label = (labelSpan ? labelSpan.textContent : snapLabel).replace(/^[*\s]+/, '').trim();
+      const val = (textarea ? textarea.value : snapValue).trim();
+      if (val) {
+        const content = `**${label}**：${val}`;
+        const fileName = label.replace(/[/\\:*?"<>|]/g, '_') + '.md';
+        window.electronAPI.saveExportFile(content, fileName);
+      } else {
+        showToast('卡片内容为空，未导出');
+      }
+      cleanupDrag();
+      return;
+    }
 
     // 计算拖放目标位置
     const dropX = e.clientX;
@@ -817,6 +876,8 @@ const Content = (function() {
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('scroll', onDragScroll, true);
+    document.documentElement.removeEventListener('mouseleave', onDragLeave);
+    document.documentElement.removeEventListener('mouseenter', onDragEnter);
     _dragState = null;
   }
 

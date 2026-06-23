@@ -154,6 +154,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 通知主进程渲染进程已完成一次合成，可以显示窗口
   showReady: () => ipcRenderer.send('show-ready'),
 
+  // 拖拽导出文件（同步一步到位：写文件 + 启动原生拖拽）
+  // 必须在 HTML5 dragstart 事件上下文中调用
+  dragExportFileSync: (content, fileName) => ipcRenderer.sendSync('drag-export-file-sync', { content, fileName }),
+
+  // 直接导出文件到桌面（排序拖拽出窗口时使用，不走 startDrag）
+  saveExportFile: (content, fileName) => ipcRenderer.sendSync('save-export-file', { content, fileName }),
+
   // 移除所有监听器
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

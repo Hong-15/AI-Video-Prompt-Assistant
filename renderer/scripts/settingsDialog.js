@@ -72,6 +72,7 @@ const SettingsDialog = (function() {
       { id: 'shortcuts', label: 'moreSettings.menuShortcuts', defaultLabel: '快捷键设置' },
       { id: 'language', label: 'moreSettings.menuLanguage', defaultLabel: '语言' },
       { id: 'logs', label: 'moreSettings.menuLogs', defaultLabel: '日志' },
+      { id: 'debug', label: 'moreSettings.menuDebug', defaultLabel: '调试预览' },
       { id: 'about', label: 'moreSettings.menuAbout', defaultLabel: '关于' }
     ];
 
@@ -117,6 +118,10 @@ const SettingsDialog = (function() {
     // ===== 面板6：关于 =====
     const panelAbout = _buildAboutPanel();
     content.appendChild(panelAbout);
+
+    // ===== 面板7：调试预览 =====
+    const panelDebug = _buildDebugPanel();
+    content.appendChild(panelDebug);
 
     body.appendChild(content);
     box.appendChild(body);
@@ -662,6 +667,133 @@ const SettingsDialog = (function() {
         urlsList.appendChild(urlItem);
       });
     }).catch(() => {});
+
+    return panel;
+  }
+
+  // ===== 面板7：调试预览 =====
+  function _buildDebugPanel() {
+    const panel = document.createElement('div');
+    panel.className = 'more-settings-panel';
+    panel.id = 'panelDebug';
+
+    const titleRow = document.createElement('div');
+    titleRow.style.display = 'flex';
+    titleRow.style.justifyContent = 'space-between';
+    titleRow.style.alignItems = 'center';
+    titleRow.style.marginBottom = '0.6rem';
+
+    const debugTitle = document.createElement('h3');
+    debugTitle.textContent = StringLoader.get('debug.title', '调试预览');
+    debugTitle.style.margin = '0';
+    titleRow.appendChild(debugTitle);
+
+    const toolbar = document.createElement('div');
+    toolbar.style.display = 'flex';
+    toolbar.style.gap = '0.4rem';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'debug-toolbar-btn';
+    clearBtn.textContent = StringLoader.get('debug.clearBtn', '清空');
+    clearBtn.addEventListener('click', () => {
+      if (typeof DebugLog !== 'undefined') DebugLog.clearLogs();
+    });
+    toolbar.appendChild(clearBtn);
+
+    const autoScrollCheck = document.createElement('label');
+    autoScrollCheck.style.display = 'flex';
+    autoScrollCheck.style.alignItems = 'center';
+    autoScrollCheck.style.gap = '0.2rem';
+    autoScrollCheck.style.cursor = 'pointer';
+    autoScrollCheck.style.fontSize = '0.8rem';
+    const autoScrollCb = document.createElement('input');
+    autoScrollCb.type = 'checkbox';
+    autoScrollCb.checked = true;
+    autoScrollCheck.appendChild(autoScrollCb);
+    autoScrollCheck.appendChild(document.createTextNode(StringLoader.get('debug.autoScroll', '自动滚动')));
+    toolbar.appendChild(autoScrollCheck);
+
+    titleRow.appendChild(toolbar);
+    panel.appendChild(titleRow);
+
+    // 终端输出区域（仿真终端风格）
+    const terminal = document.createElement('div');
+    terminal.className = 'debug-terminal';
+    panel.appendChild(terminal);
+
+    // 日志行缓存（用于渲染）
+    let _debugLineCount = 0;
+
+    function appendLogLine(entry) {
+      const line = document.createElement('div');
+      line.className = 'debug-log-line debug-level-' + entry.level.toLowerCase();
+
+      // 时间戳
+      const tsSpan = document.createElement('span');
+      tsSpan.className = 'debug-log-ts';
+      tsSpan.textContent = entry.timestamp;
+      line.appendChild(tsSpan);
+
+      // 级别标记
+      const lvlSpan = document.createElement('span');
+      lvlSpan.className = 'debug-log-level';
+      lvlSpan.textContent = '[' + entry.level + ']';
+      line.appendChild(lvlSpan);
+
+      // 文件#方法
+      const srcSpan = document.createElement('span');
+      srcSpan.className = 'debug-log-source';
+      srcSpan.textContent = entry.fileName + '#' + entry.methodName;
+      line.appendChild(srcSpan);
+
+      // 分隔符
+      const sepSpan = document.createElement('span');
+      sepSpan.className = 'debug-log-sep';
+      sepSpan.textContent = ':';
+      line.appendChild(sepSpan);
+
+      // 消息
+      const msgSpan = document.createElement('span');
+      msgSpan.className = 'debug-log-msg';
+      msgSpan.textContent = entry.message;
+      line.appendChild(msgSpan);
+
+      terminal.appendChild(line);
+      _debugLineCount++;
+
+      // 限制最大行数
+      if (_debugLineCount > 1000) {
+        const firstLine = terminal.querySelector('.debug-log-line');
+        if (firstLine) firstLine.remove();
+        _debugLineCount--;
+      }
+
+      // 自动滚动
+      if (autoScrollCb.checked) {
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+    }
+
+    function clearTerminal() {
+      terminal.innerHTML = '';
+      _debugLineCount = 0;
+    }
+
+    // 订阅 DebugLog
+    if (typeof DebugLog !== 'undefined') {
+      // 先加载已有日志
+      const existing = DebugLog.getLogs();
+      existing.forEach(entry => appendLogLine(entry));
+
+      // 订阅新日志
+      DebugLog.onLog(entry => {
+        if (entry._clear) {
+          clearTerminal();
+          return;
+        }
+        appendLogLine(entry);
+      });
+    }
 
     return panel;
   }

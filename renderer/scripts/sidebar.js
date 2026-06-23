@@ -600,6 +600,36 @@ const Sidebar = (function() {
       item.appendChild(nameSpan);
       item.appendChild(deleteBtn);
 
+      // ===== 序号拖拽导出任务 =====
+      indexSpan.setAttribute('draggable', 'true');
+      indexSpan.style.cursor = 'grab';
+      indexSpan.title = '拖拽导出任务';
+
+      indexSpan.addEventListener('dragstart', (e) => {
+        e.preventDefault();
+        const taskData = _tasks.find(t => t.id === task.id);
+        if (!taskData || !taskData.fields) return;
+        const fieldConfig = typeof Content !== 'undefined' ? Content.getFieldConfig() : [];
+        let content = `## ${index + 1}. ${taskData.name}\n\n`;
+        const customCards = taskData.customCards || [];
+        const cardOrder = taskData.cardOrder || [];
+        const hiddenFields = taskData.hiddenFields || [];
+        const customMap = {};
+        customCards.forEach(cc => { customMap[cc.key] = cc.label; });
+        fieldConfig.forEach(f => {
+          if (!hiddenFields.includes(f.key) && taskData.fields[f.key] && taskData.fields[f.key].trim()) {
+            content += `\n**${f.label}**：${taskData.fields[f.key]}\n`;
+          }
+        });
+        cardOrder.forEach(key => {
+          if (customMap[key] && taskData.fields[key] && taskData.fields[key].trim()) {
+            content += `\n**${customMap[key]}**：${taskData.fields[key]}\n`;
+          }
+        });
+        const fileName = (taskData.name || 'task').replace(/[/\\:*?"<>|]/g, '_') + '.md';
+        window.electronAPI.dragExportFileSync(content, fileName);
+      });
+
       // 点击选中任务
       item.addEventListener('click', (e) => {
         if (e.target === deleteBtn) return;
@@ -877,10 +907,7 @@ const Sidebar = (function() {
     const customCards = task.customCards || [];
     const cardOrder = task.cardOrder || [];
 
-    let fieldConfig = [];
-    try {
-      fieldConfig = await window.electronAPI.getFieldConfig();
-    } catch (e) {}
+    let fieldConfig = typeof Content !== 'undefined' ? Content.getFieldConfig() : [];
 
     const cards = [];
 

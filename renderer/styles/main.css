@@ -575,7 +575,13 @@ body.window-zoom-out {
   max-width: 200px;
 }
 
-/* ========== 内容区域 ========== */
+.status-preview-length,
+.status-selected-length {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ========== 内容区域 ==========*/
 .content-area {
   flex: 1;
   overflow-y: auto;

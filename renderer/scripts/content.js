@@ -201,12 +201,19 @@ const Content = (function() {
     textarea.addEventListener('input', () => {
       debouncedUpdatePrompt();
       if (_onInputChange) _onInputChange();
+      // 当前卡片输入时同步更新信息栏字符长度
+      if (document.activeElement === textarea && typeof App !== 'undefined' && App.updateStatusSelectedLength) {
+        App.updateStatusSelectedLength(textarea.value);
+      }
     });
 
-    // 聚焦时更新状态栏显示当前卡片
+    // 聚焦时更新状态栏显示当前卡片，并显示该卡片内容字符长度
     textarea.addEventListener('focus', () => {
       if (typeof App !== 'undefined' && App.notifyCardFocused) {
         App.notifyCardFocused(cardDef.label);
+      }
+      if (typeof App !== 'undefined' && App.updateStatusSelectedLength) {
+        App.updateStatusSelectedLength(textarea.value);
       }
     });
 
@@ -559,6 +566,11 @@ const Content = (function() {
     });
 
     promptBox.textContent = parts.join('\n');
+
+    // 同步更新信息栏中完整提示词预览的字符长度
+    if (typeof App !== 'undefined' && App.updateStatusPreviewLength) {
+      App.updateStatusPreviewLength(promptBox.textContent);
+    }
   }
 
   // 获取当前所有字段数据
@@ -595,7 +607,14 @@ const Content = (function() {
         Object.values(_inputElements).forEach(textarea => {
           textarea.value = '';
         });
-        document.getElementById('promptBox').textContent = '';
+        const promptBox = document.getElementById('promptBox');
+        promptBox.textContent = '';
+        if (typeof App !== 'undefined' && App.updateStatusPreviewLength) {
+          App.updateStatusPreviewLength('');
+        }
+        if (typeof App !== 'undefined' && App.updateStatusSelectedLength) {
+          App.updateStatusSelectedLength(null);
+        }
         if (_onInputChange) _onInputChange();
       },
       { confirmText: StringLoader.get('content.clearConfirmBtn', '清空'), confirmClass: 'modal-btn-danger' }
@@ -619,6 +638,11 @@ const Content = (function() {
       emptyState.style.display = 'flex';
       workspace.style.display = 'none';
     }
+
+    // 切换任务时清空选中长度；preview长度随renderInputs→updatePrompt自动更新
+    if (typeof App !== 'undefined' && App.updateStatusSelectedLength) {
+      App.updateStatusSelectedLength(null);
+    }
   }
 
   // 完全清除所有内部状态（关闭项目时调用）
@@ -635,6 +659,12 @@ const Content = (function() {
     if (grid) grid.innerHTML = '';
     const promptBox = document.getElementById('promptBox');
     if (promptBox) promptBox.textContent = '';
+    if (typeof App !== 'undefined' && App.updateStatusPreviewLength) {
+      App.updateStatusPreviewLength('');
+    }
+    if (typeof App !== 'undefined' && App.updateStatusSelectedLength) {
+      App.updateStatusSelectedLength(null);
+    }
   }
 
   // 恢复当前任务所有卡片的布局为默认（同时清除隐藏和重命名）
@@ -657,6 +687,7 @@ const Content = (function() {
     // 重新渲染以显示所有卡片
     refreshCurrentTask();
     layoutMasonry();
+    updateStatusSelectedLength(null);
     if (_onInputChange) _onInputChange();
   }
 

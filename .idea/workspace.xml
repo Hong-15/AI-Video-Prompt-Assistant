@@ -3,7 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="信息补充">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.trae/rules/project_rules.md" beforeDir="false" afterPath="$PROJECT_DIR$/.trae/rules/project_rules.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/strings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/strings_en.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings_en.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/renderer/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/content.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/content.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/styles/main.css" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/styles/main.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,15 +91,7 @@
       <workItem from="1782015916369" duration="37241000" />
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
-      <workItem from="1782176099051" duration="181000" />
-    </task>
-    <task id="LOCAL-00026" summary="打补丁,修复闪白(后面还有补丁)">
-      <option name="closed" value="true" />
-      <created>1781979405275</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1781979405275</updated>
+      <workItem from="1782176099051" duration="1733000" />
     </task>
     <task id="LOCAL-00027" summary="软件顶部栏高度减少 5px,左侧任务栏 新建任务 + 号 元素的大小降低 5px(闪白问题,记得打补丁)">
       <option name="closed" value="true" />
@@ -479,7 +477,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782176113450</updated>
     </task>
-    <option name="localTasksCounter" value="75" />
+    <task id="LOCAL-00075" summary="信息补充">
+      <option name="closed" value="true" />
+      <created>1782176293926</created>
+      <option name="number" value="00075" />
+      <option name="presentableId" value="LOCAL-00075" />
+      <option name="project" value="LOCAL" />
+      <updated>1782176293926</updated>
+    </task>
+    <option name="localTasksCounter" value="76" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

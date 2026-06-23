@@ -915,6 +915,7 @@ const App = (function() {
 
     // 一次性应用到侧边栏
     Sidebar.setTasks(allTasks);
+    updateStatusTaskCount();
 
     // 提示重命名列表
     if (renameConflicts.length > 0) {
@@ -1077,6 +1078,8 @@ const App = (function() {
     updateStatusFolderPath(folderPath);
     updateSaveStatus(true);
     updateStatusTaskCount();
+    updateStatusPreviewLength('');
+    updateStatusSelectedLength(null);
 
     // 添加到最近项目
     try { await window.electronAPI.addRecentProject(folderPath); } catch (e) {}
@@ -1119,6 +1122,8 @@ const App = (function() {
     updateStatusTaskName('');
     updateStatusCardName('');
     updateStatusTaskCount();
+    updateStatusPreviewLength('');
+    updateStatusSelectedLength(null);
 
     // 显示无项目视图
     try {
@@ -1192,6 +1197,7 @@ const App = (function() {
     updateStatusTaskName(task ? task.name : '');
     updateStatusCardName('');
     updateStatusTaskCount();
+    updateStatusSelectedLength(null);
     if (task) {
       logAppEvent('TASK', '切换任务', { taskId: task.id, taskName: task.name });
     }
@@ -1231,6 +1237,7 @@ const App = (function() {
     updateStatusTaskName(task.name);
     updateStatusCardName('');
     updateStatusTaskCount();
+    updateStatusSelectedLength(null);
     markDirty();
     logAppEvent('TASK', template === 'empty' ? '新建任务（空模板）' : '新建任务（默认模板）', { taskId: task.id, taskName: task.name });
   }
@@ -1412,6 +1419,23 @@ const App = (function() {
     if (!el) return;
     const tasks = Sidebar.getTasks();
     el.textContent = tasks.length > 0 ? StringLoader.get('status.taskCount', '共 {count} 个任务').replace('{count}', tasks.length) : '';
+  }
+
+  function updateStatusPreviewLength(text) {
+    const el = document.getElementById('statusPreviewLength');
+    if (!el) return;
+    const len = text ? text.length : 0;
+    el.textContent = StringLoader.get('status.previewLength', '预览：{count} 字符').replace('{count}', len);
+  }
+
+  function updateStatusSelectedLength(text) {
+    const el = document.getElementById('statusSelectedLength');
+    if (!el) return;
+    if (text === null || text === undefined) {
+      el.textContent = '';
+      return;
+    }
+    el.textContent = StringLoader.get('status.selectedLength', '卡片字符长度：{count}').replace('{count}', String(text).length);
   }
 
   function notifyCardFocused(cardLabel) {
@@ -2933,7 +2957,7 @@ const App = (function() {
     input.focus();
   }
 
-  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty, importProject: handleImportProject };
+  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty, importProject: handleImportProject, updateStatusPreviewLength, updateStatusSelectedLength };
 })();
 
 // 启动应用

@@ -64,6 +64,7 @@
     "reorderPlaceholder": "Please enter position number",
     "defaultTaskName": "New Task",
     "noFolderPrompt": "Please open a working folder first. Data will be saved in that folder.",
+    "openFolder": "Open Project",
     "openFolderAction": "Open Project",
     "taskCount": "{count} task(s)",
     "contextMenu": {
@@ -190,6 +191,9 @@
     "taskPrefix": "Task: ",
     "cardPrefix": "Card: ",
     "taskCount": "{count} task(s)",
+    "previewLength": "Task Char Length: {count}",
+    "selectedLength": "Card Char Length: {count}",
+    "notSelected": "Card Empty",
     "copiedPath": "Path copied!",
     "clickToCopy": "Click to copy path"
   },

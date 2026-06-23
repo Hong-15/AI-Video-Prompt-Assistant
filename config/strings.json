@@ -63,6 +63,7 @@
     "reorderPlaceholder": "请输入位置序号",
     "defaultTaskName": "新任务",
     "noFolderPrompt": "请先打开一个工作文件夹，数据将保存在该文件夹中",
+    "openFolder": "打开项目",
     "openFolderAction": "打开项目",
     "taskCount": "共 {count} 个任务",
     "contextMenu": {
@@ -189,6 +190,9 @@
     "taskPrefix": "任务：",
     "cardPrefix": "卡片：",
     "taskCount": "共 {count} 个任务",
+    "previewLength": "任务字符长度：{count}",
+    "selectedLength": "卡片字符长度：{count}",
+    "notSelected": "卡片无内容",
     "copiedPath": "已复制路径!",
     "clickToCopy": "点击复制路径"
   },

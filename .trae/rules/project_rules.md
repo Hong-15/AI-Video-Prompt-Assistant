@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+description: 打包构建流程
+---
 # 项目规则 · AI 记忆
 
 ---

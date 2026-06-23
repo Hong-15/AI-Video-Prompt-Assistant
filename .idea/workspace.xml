@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="修复bug,AI规范不加载">
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="信息补充">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,14 +85,7 @@
       <workItem from="1782015916369" duration="37241000" />
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
-    </task>
-    <task id="LOCAL-00025" summary="软件初次打开的时候(首次创建的时候),先使用预加载,等所有资源就位了,再打开软件,这个软件虽然性能不是多好,但也不是什么很大的软件,所以全部预加载没有问题的;不过你还别说,这样之后,首次打开,也不会有什么失败了(我是没有遇到),不过倒是有UI刷新被观测到过一次,之后就没有被观测到了,这种情况是:当你刚启动的时候,连续隐藏,显示,高频的情况下,会出现这种情况,不过智慧出现一次(反正我现在测试的结果就是这样),无伤大雅">
-      <option name="closed" value="true" />
-      <created>1781978679256</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1781978679256</updated>
+      <workItem from="1782176099051" duration="181000" />
     </task>
     <task id="LOCAL-00026" summary="打补丁,修复闪白(后面还有补丁)">
       <option name="closed" value="true" />
@@ -477,7 +471,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782119785437</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="信息补充">
+      <option name="closed" value="true" />
+      <created>1782176113448</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1782176113450</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -495,7 +497,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="导入数据部分再次打补丁" />
     <MESSAGE value="导出全部数据打补丁" />
     <MESSAGE value="右键任务项会弹出一个菜单(已实现),增加一个导出任务项;每张卡片加一个功能,导出卡片" />
     <MESSAGE value="卡片布局微调" />
@@ -520,6 +521,7 @@
     <MESSAGE value="其它" />
     <MESSAGE value="文档更新" />
     <MESSAGE value="修复bug,AI规范不加载" />
-    <option name="LAST_COMMIT_MESSAGE" value="修复bug,AI规范不加载" />
+    <MESSAGE value="信息补充" />
+    <option name="LAST_COMMIT_MESSAGE" value="信息补充" />
   </component>
 </project>

@@ -1,7 +1,7 @@
 {
   "width": 1200,
   "height": 800,
-  "minWidth": 900,
+  "minWidth": 720,
   "minHeight": 600,
   "showDebounceMs": 333,
   "showReadyTimeoutMs": 2000,

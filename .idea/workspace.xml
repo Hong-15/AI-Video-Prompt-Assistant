@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="补丁">
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="新增快捷键">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/window.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/window.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -86,14 +87,6 @@
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
       <workItem from="1782176099051" duration="2455000" />
-    </task>
-    <task id="LOCAL-00031" summary="测试版本 滚动条样式优化">
-      <option name="closed" value="true" />
-      <created>1782024893084</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1782024893084</updated>
     </task>
     <task id="LOCAL-00032" summary="打补丁,如果有多个窗口,点击右上角的 X,是关闭当前窗口,如果只有一个窗口,如果设置里面是设置的隐藏,那么隐藏,否则,关闭,文件里面的 退出,改成 退出软件;修改,关闭当前窗口字样,改为,关闭此窗口字样">
       <option name="closed" value="true" />
@@ -479,7 +472,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782193919666</updated>
     </task>
-    <option name="localTasksCounter" value="80" />
+    <task id="LOCAL-00080" summary="新增快捷键">
+      <option name="closed" value="true" />
+      <created>1782198036867</created>
+      <option name="number" value="00080" />
+      <option name="presentableId" value="LOCAL-00080" />
+      <option name="project" value="LOCAL" />
+      <updated>1782198036867</updated>
+    </task>
+    <option name="localTasksCounter" value="81" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -505,7 +506,6 @@
     <MESSAGE value="修复bug json文件不可修改问题" />
     <MESSAGE value="开始页面基本搭建" />
     <MESSAGE value="开始页面优化" />
-    <MESSAGE value="新增快捷键" />
     <MESSAGE value="AI规范;AI输出文本按照用户级别标准输入输出文档进行输出" />
     <MESSAGE value="重新编写文档" />
     <MESSAGE value="重新编写文档;打补丁" />
@@ -522,6 +522,7 @@
     <MESSAGE value="纠正语言切换问题" />
     <MESSAGE value="补丁,和新增功能" />
     <MESSAGE value="补丁" />
-    <option name="LAST_COMMIT_MESSAGE" value="补丁" />
+    <MESSAGE value="新增快捷键" />
+    <option name="LAST_COMMIT_MESSAGE" value="新增快捷键" />
   </component>
 </project>

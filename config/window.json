@@ -1,1 +1,12 @@
-{"width":1200,"height":800,"minWidth":900,"minHeight":600,"showDebounceMs":333,"showReadyTimeoutMs":2000,"closeSaveDelayMs":500,"closeForceTimeoutMs":1000,"beforeQuitSaveTimeoutMs":3000,"restartSaveDelayMs":500}
+{
+  "width": 1200,
+  "height": 800,
+  "minWidth": 900,
+  "minHeight": 600,
+  "showDebounceMs": 333,
+  "showReadyTimeoutMs": 2000,
+  "closeSaveDelayMs": 500,
+  "closeForceTimeoutMs": 1000,
+  "beforeQuitSaveTimeoutMs": 3000,
+  "restartSaveDelayMs": 500
+}

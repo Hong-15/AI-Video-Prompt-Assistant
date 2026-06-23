@@ -5,8 +5,6 @@ const App = (function() {
   let _sidebarCollapsed = false;
   let _currentFolder = null;
   let _isDirty = false;       // 是否有未保存的更改
-  let _shortcutCfg = {};      // 当前快捷键配置
-  let _shortcutKeys = {};     // 快捷键 keydown 监听引用
 
   // 动态加载脚本模块，返回 Promise（用于按需懒加载 import.js 等非关键模块）
   function loadModuleScript(src) {
@@ -185,8 +183,9 @@ const App = (function() {
       }
     }
 
-    // 10. 注册全局键盘快捷键
-    await initKeyboardShortcuts();
+    // 10. 注册并初始化键盘快捷键
+      _registerShortcuts();
+      await ShortcutManager.init();
 
     // 11. 注册全局用户操作监听，用于本地日志记录
     // 使用 requestIdleCallback 延迟到浏览器空闲时初始化，避免阻塞首帧渲染
@@ -382,162 +381,55 @@ const App = (function() {
 
   // ========== 全局键盘快捷键 ==========
 
-  async function initKeyboardShortcuts() {
-    try {
-      _shortcutCfg = await window.electronAPI.getShortcutsConfig();
-    } catch (e) {
-      console.error('加载快捷键配置失败:', e);
-    }
-    // 合并默认配置：新默认值覆盖旧键位，但保留用户自定义的 enabled 状态
-    if (!_shortcutCfg || Object.keys(_shortcutCfg).length === 0) {
-      _shortcutCfg = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
-    } else {
-      for (const [key, defaultCfg] of Object.entries(DEFAULT_SHORTCUTS)) {
-        const existing = _shortcutCfg[key];
-        _shortcutCfg[key] = existing
-          ? { ...defaultCfg, enabled: existing.enabled }
-          : { ...defaultCfg };
-      }
-    }
-    bindShortcutKeys();
-  }
+  // ========== 快捷键注册 ==========
 
-  function bindShortcutKeys() {
-    const handler = (e) => {
-      // 遍历所有快捷键配置
-      for (const [action, cfg] of Object.entries(_shortcutCfg)) {
-        if (!cfg || !cfg.enabled) continue;
-        if (matchShortcut(e, cfg)) {
-          e.preventDefault();
-          dispatchShortcut(action);
-          return;
-        }
-      }
-    };
+  function _registerShortcuts() {
+    // 文件操作
+    ShortcutManager.register('save',     { key: 's', ctrl: true, shift: false, alt: false, enabled: true, description: '保存所有数据' }, () => { autoSave(); logAppEvent('FILE', '快捷键：保存'); });
+    ShortcutManager.register('openFolder',   { key: 'o', ctrl: true, shift: false, alt: false, enabled: true,  description: '打开项目' },       () => { Toolbar.triggerOpenFolder(); logAppEvent('FILE', '快捷键：打开文件夹'); });
+    ShortcutManager.register('createProject',{ key: 'n', ctrl: true, shift: true,  alt: false, enabled: true,  description: '新建项目' },       () => { Toolbar.triggerCreateProject(); logAppEvent('PROJECT', '快捷键：新建项目'); });
+    ShortcutManager.register('closeProject', { key: 'w', ctrl: true, shift: false, alt: false, enabled: true,  description: '关闭当前项目' },   () => { window.electronAPI.closeProject(); logAppEvent('FILE', '快捷键：关闭项目'); });
+    ShortcutManager.register('importProject',{ key: '',  ctrl: false,shift: false, alt: false, enabled: false, description: '导入项目数据' },   () => { Toolbar.triggerImportProject(); logAppEvent('IMPORT', '快捷键：导入项目'); });
+    ShortcutManager.register('exportMD',     { key: '',  ctrl: false,shift: false, alt: false, enabled: false, description: '导出为 Markdown' },() => { handleExport('md'); });
+    ShortcutManager.register('exportTXT',    { key: '',  ctrl: false,shift: false, alt: false, enabled: false, description: '导出为文本文件' },  () => { handleExport('txt'); });
 
-    document.addEventListener('keydown', handler);
-    _shortcutKeys.handler = handler;
-  }
+    // 任务操作
+    ShortcutManager.register('newTask',       { key: 'n',      ctrl: true,  shift: false, alt: false, enabled: true,  description: '新建任务' },       () => { if (checkFolderBeforeAddTask()) Sidebar.addTask(); });
+    ShortcutManager.register('deleteTask',    { key: 'Delete', ctrl: false, shift: false, alt: false, enabled: false, description: '删除当前任务' },   () => {
+      if (!_currentFolder) return;
+      const t = Sidebar.getActiveTask();
+      if (t) { Sidebar.showDeleteConfirm(t); logAppEvent('TASK', '快捷键：删除任务', { taskId: t.id, taskName: t.name }); }
+    });
+    ShortcutManager.register('renameTask',    { key: 'F2',     ctrl: false, shift: false, alt: false, enabled: true,  description: '重命名当前任务' }, () => {
+      if (!_currentFolder) return;
+      const t = Sidebar.getActiveTask();
+      if (t) { Sidebar.showRenameDialog(t); logAppEvent('TASK', '快捷键：重命名任务', { taskId: t.id, taskName: t.name }); }
+    });
+    ShortcutManager.register('duplicateTask', { key: 'd',      ctrl: true,  shift: false, alt: false, enabled: true,  description: '复制当前任务' },   () => {
+      if (!_currentFolder) return;
+      const t = Sidebar.getActiveTask();
+      if (t) { Sidebar.duplicateTask(t.id); logAppEvent('TASK', '快捷键：复制任务', { taskId: t.id, taskName: t.name }); }
+    });
 
-  function dispatchShortcut(action) {
-    switch (action) {
-      case 'save':
-        autoSave();
-        logAppEvent('FILE', '快捷键：保存');
-        break;
-      case 'newTask':
-        if (checkFolderBeforeAddTask()) {
-          Sidebar.addTask();
-        }
-        break;
-      case 'deleteTask':
-        if (!_currentFolder) return;
-        const activeTask = Sidebar.getActiveTask();
-        if (activeTask) {
-          Sidebar.showDeleteConfirm(activeTask);
-          logAppEvent('TASK', '快捷键：删除任务', { taskId: activeTask.id, taskName: activeTask.name });
-        }
-        break;
-      case 'renameTask':
-        if (!_currentFolder) return;
-        const renameTask = Sidebar.getActiveTask();
-        if (renameTask) {
-          Sidebar.showRenameDialog(renameTask);
-          logAppEvent('TASK', '快捷键：重命名任务', { taskId: renameTask.id, taskName: renameTask.name });
-        }
-        break;
-      case 'duplicateTask':
-        if (!_currentFolder) return;
-        const dupTask = Sidebar.getActiveTask();
-        if (dupTask) {
-          Sidebar.duplicateTask(dupTask.id);
-          logAppEvent('TASK', '快捷键：复制任务', { taskId: dupTask.id, taskName: dupTask.name });
-        }
-        break;
-      case 'clearAll':
-        if (Content.clearAllInputs) Content.clearAllInputs();
-        logAppEvent('TASK', '快捷键：清空所有输入');
-        break;
-      case 'copyPreview':
-        if (Content.copyPreview) Content.copyPreview();
-        break;
-      case 'addCustomCard':
-        if (Content.addCustomCard) Content.addCustomCard();
-        break;
-      case 'toggleSidebar':
-        if (Sidebar.toggle) Sidebar.toggle();
-        break;
-      case 'focusNextTask':
-        if (Sidebar.focusNextTask) Sidebar.focusNextTask();
-        break;
-      case 'focusPrevTask':
-        if (Sidebar.focusPrevTask) Sidebar.focusPrevTask();
-        break;
-      case 'focusNextInput':
-        if (Content.focusNextInput) Content.focusNextInput();
-        break;
-      case 'focusPrevInput':
-        if (Content.focusPrevInput) Content.focusPrevInput();
-        break;
-      case 'openFolder':
-        Toolbar.triggerOpenFolder();
-        logAppEvent('FILE', '快捷键：打开文件夹');
-        break;
-      case 'createProject':
-        Toolbar.triggerCreateProject();
-        logAppEvent('PROJECT', '快捷键：新建项目');
-        break;
-      case 'closeProject':
-        window.electronAPI.closeProject();
-        logAppEvent('FILE', '快捷键：关闭项目');
-        break;
-      case 'importProject':
-        Toolbar.triggerImportProject();
-        logAppEvent('IMPORT', '快捷键：导入项目');
-        break;
-      case 'exportMD':
-        handleExport('md');
-        break;
-      case 'exportTXT':
-        handleExport('txt');
-        break;
-      case 'goToSearch':
-        Toolbar.triggerGlobalSearch();
-        break;
-      case 'goToSettings':
-        Toolbar.triggerMoreSettings();
-        break;
-      case 'resetTaskLayout':
-        if (Content.resetCurrentTaskLayout) Content.resetCurrentTaskLayout();
-        logAppEvent('TASK', '快捷键：重置当前任务布局');
-        break;
-      case 'resetAllLayouts':
-        if (Sidebar.resetAllLayouts) Sidebar.resetAllLayouts();
-        logAppEvent('TASK', '快捷键：重置所有任务布局');
-        break;
-      default:
-        console.warn('未知快捷键操作:', action);
-    }
-  }
+    // 编辑操作
+    ShortcutManager.register('copyPreview',   { key: 'c', ctrl: true, shift: true,  alt: false, enabled: true,  description: '复制预览内容' },   () => { if (Content.copyPreview) Content.copyPreview(); });
+    ShortcutManager.register('clearAll',      { key: 'a', ctrl: true, shift: true,  alt: false, enabled: false, description: '清空所有输入' },   () => { if (Content.clearAllInputs) { Content.clearAllInputs(); logAppEvent('TASK', '快捷键：清空所有输入'); } });
+    ShortcutManager.register('addCustomCard', { key: '',  ctrl: false,shift: false, alt: false, enabled: false, description: '添加自定义卡片' }, () => { if (Content.addCustomCard) Content.addCustomCard(); });
 
-  function rebindShortcutKeys() {
-    if (_shortcutKeys.handler) {
-      document.removeEventListener('keydown', _shortcutKeys.handler);
-    }
-    bindShortcutKeys();
-  }
+    // 导航操作
+    ShortcutManager.register('focusNextTask',  { key: 'ArrowDown',  ctrl: true, shift: false, alt: false, enabled: true, description: '聚焦下一个任务' },       () => { if (Sidebar.focusNextTask) Sidebar.focusNextTask(); });
+    ShortcutManager.register('focusPrevTask',  { key: 'ArrowUp',    ctrl: true, shift: false, alt: false, enabled: true, description: '聚焦上一个任务' },       () => { if (Sidebar.focusPrevTask) Sidebar.focusPrevTask(); });
+    ShortcutManager.register('focusNextInput', { key: 'ArrowRight', ctrl: true, shift: false, alt: false, enabled: true, description: '聚焦下一个卡片输入框' },() => { if (Content.focusNextInput) Content.focusNextInput(); });
+    ShortcutManager.register('focusPrevInput', { key: 'ArrowLeft',  ctrl: true, shift: false, alt: false, enabled: true, description: '聚焦上一个卡片输入框' },() => { if (Content.focusPrevInput) Content.focusPrevInput(); });
+    ShortcutManager.register('toggleSidebar',  { key: 'b',          ctrl: true, shift: false, alt: false, enabled: true,  description: '展开/隐藏侧边栏' },    () => { if (Sidebar.toggle) Sidebar.toggle(); });
 
-  function matchShortcut(e, cfg) {
-    if (!cfg) return false;
-    const keyMatch = e.key.toLowerCase() === cfg.key.toLowerCase();
-    if (!keyMatch) return false;
-    if (cfg.ctrl && !e.ctrlKey) return false;
-    if (!cfg.ctrl && e.ctrlKey) return false;
-    if (cfg.shift && !e.shiftKey) return false;
-    if (!cfg.shift && e.shiftKey) return false;
-    if (cfg.alt && !e.altKey) return false;
-    if (!cfg.alt && e.altKey) return false;
-    return true;
+    // 工具
+    ShortcutManager.register('goToSearch',   { key: 'f', ctrl: true, shift: true,  alt: false, enabled: true, description: '全局搜索' }, () => { Toolbar.triggerGlobalSearch(); });
+    ShortcutManager.register('goToSettings', { key: ',', ctrl: true, shift: false, alt: false, enabled: true, description: '打开设置' },   () => { Toolbar.triggerMoreSettings(); });
+
+    // 布局
+    ShortcutManager.register('resetTaskLayout',  { key: '',  ctrl: false,shift: false, alt: false, enabled: false, description: '重置当前任务布局' }, () => { if (Content.resetCurrentTaskLayout) { Content.resetCurrentTaskLayout(); logAppEvent('TASK', '快捷键：重置当前任务布局'); } });
+    ShortcutManager.register('resetAllLayouts',  { key: '',  ctrl: false,shift: false, alt: false, enabled: false, description: '重置所有任务布局' },   () => { if (Sidebar.resetAllLayouts) { Sidebar.resetAllLayouts(); logAppEvent('TASK', '快捷键：重置所有任务布局'); } });
   }
 
   // ========== 导出功能 ==========
@@ -1692,38 +1584,6 @@ const App = (function() {
 
   // ========== 更多设置弹窗（左侧菜单 + 右侧内容） ==========
 
-  const DEFAULT_SHORTCUTS = {
-    // ---- 文件操作 ----
-    save:     { key: "s",         ctrl: true,  shift: false, alt: false, enabled: true,  description: "保存所有数据" },
-    openFolder:   { key: "o",         ctrl: true,  shift: false, alt: false, enabled: true,  description: "打开项目" },
-    createProject:{ key: "n",         ctrl: true,  shift: true,  alt: false, enabled: true,  description: "新建项目" },
-    closeProject: { key: "w",         ctrl: true,  shift: false, alt: false, enabled: true,  description: "关闭当前项目" },
-    importProject:{ key: "",          ctrl: false, shift: false, alt: false, enabled: false, description: "导入项目数据" },
-    exportMD:     { key: "",          ctrl: false, shift: false, alt: false, enabled: false, description: "导出为 Markdown" },
-    exportTXT:    { key: "",          ctrl: false, shift: false, alt: false, enabled: false, description: "导出为文本文件" },
-    // ---- 任务操作 ----
-    newTask:       { key: "n",         ctrl: true,  shift: false, alt: false, enabled: true,  description: "新建任务" },
-    deleteTask:    { key: "Delete",    ctrl: false, shift: false, alt: false, enabled: false, description: "删除当前任务" },
-    renameTask:    { key: "F2",        ctrl: false, shift: false, alt: false, enabled: true,  description: "重命名当前任务" },
-    duplicateTask: { key: "d",         ctrl: true,  shift: false, alt: false, enabled: true,  description: "复制当前任务" },
-    // ---- 编辑操作 ----
-    copyPreview:   { key: "c",         ctrl: true,  shift: true,  alt: false, enabled: true,  description: "复制预览内容" },
-    clearAll:      { key: "a",         ctrl: true,  shift: true,  alt: false, enabled: false, description: "清空所有输入" },
-    addCustomCard: { key: "",          ctrl: false, shift: false, alt: false, enabled: false, description: "添加自定义卡片" },
-    // ---- 导航操作 ----
-    focusNextTask:  { key: "ArrowDown",  ctrl: true,  shift: false, alt: false, enabled: true, description: "聚焦下一个任务" },
-    focusPrevTask:  { key: "ArrowUp",    ctrl: true,  shift: false, alt: false, enabled: true, description: "聚焦上一个任务" },
-    focusNextInput: { key: "ArrowRight", ctrl: true,  shift: false, alt: false, enabled: true, description: "聚焦下一个卡片输入框" },
-    focusPrevInput: { key: "ArrowLeft",  ctrl: true,  shift: false, alt: false, enabled: true, description: "聚焦上一个卡片输入框" },
-    toggleSidebar:  { key: "b",          ctrl: true,  shift: false, alt: false, enabled: true,  description: "展开/隐藏侧边栏" },
-    // ---- 工具 ----
-    goToSearch:    { key: "f",         ctrl: true,  shift: true,  alt: false, enabled: true,  description: "全局搜索" },
-    goToSettings:  { key: ",",         ctrl: true,  shift: false, alt: false, enabled: true,  description: "打开设置" },
-    // ---- 布局 ----
-    resetTaskLayout:  { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "重置当前任务布局" },
-    resetAllLayouts:  { key: "", ctrl: false, shift: false, alt: false, enabled: false, description: "重置所有任务布局" }
-  };
-
   let _currentCloseBehavior = 'exit';
   let _currentLanguage = 'zh-CN'; // 当前语言
 
@@ -1904,134 +1764,11 @@ const App = (function() {
 
     content.appendChild(panelTheme);
 
-    // ===== 面板2：快捷键设置 =====
+    // ===== 面板2：快捷键设置（由 ShortcutManager 动态渲染） =====
     const panelShortcuts = document.createElement('div');
     panelShortcuts.className = 'more-settings-panel';
     panelShortcuts.id = 'panelShortcuts';
-
-    const shortcutTitle = document.createElement('h3');
-    shortcutTitle.textContent = StringLoader.get('shortcuts.title', '快捷键设置');
-    panelShortcuts.appendChild(shortcutTitle);
-
-    const shortcutDesc = document.createElement('p');
-    shortcutDesc.className = 'more-settings-desc';
-    shortcutDesc.textContent = StringLoader.get('moreSettings.shortcutsDesc', '点击快捷键输入框，按下组合键录制');
-    panelShortcuts.appendChild(shortcutDesc);
-
-    const table = document.createElement('table');
-    table.className = 'more-settings-shortcut-table';
-
-    const thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>' + StringLoader.get('shortcuts.function', '功能') + '</th><th>' + StringLoader.get('shortcuts.key', '快捷键') + '</th><th>' + StringLoader.get('shortcuts.enabled', '启用') + '</th></tr>';
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    const shortcutKeys = Object.keys(_shortcutCfg);
-    const shortcutInputs = {};
-
-    // 快捷键显示文本
-    function shortcutToDisplay(cfg) {
-      if (!cfg.key) return '—';
-      const parts = [];
-      if (cfg.ctrl) parts.push('Ctrl');
-      if (cfg.shift) parts.push('Shift');
-      if (cfg.alt) parts.push('Alt');
-      const keyDisplay = cfg.key === ' ' ? 'Space' : (cfg.key.length === 1 ? cfg.key.toUpperCase() : cfg.key);
-      parts.push(keyDisplay);
-      return parts.join('+');
-    }
-
-    shortcutKeys.forEach(key => {
-      const cfg = _shortcutCfg[key];
-      if (!cfg) return;
-      const tr = document.createElement('tr');
-
-      const tdDesc = document.createElement('td');
-      tdDesc.className = 'more-settings-shortcut-desc';
-      tdDesc.textContent = cfg.description || key;
-      tr.appendChild(tdDesc);
-
-      const tdKey = document.createElement('td');
-      const recordingInput = document.createElement('input');
-      recordingInput.className = 'more-settings-shortcut-record-input';
-      recordingInput.type = 'text';
-      recordingInput.readOnly = true;
-      recordingInput.value = shortcutToDisplay(cfg);
-      recordingInput.placeholder = StringLoader.get('shortcuts.clickToRecord', '点击录制快捷键');
-      recordingInput.style.cursor = 'pointer';
-
-      // 录制快捷键
-      recordingInput.addEventListener('click', () => {
-        recordingInput.value = '...';
-        recordingInput.style.background = 'var(--bg-hover)';
-        const onKeyDown = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
-          const newCfg = {
-            key: e.key,
-            ctrl: e.ctrlKey,
-            shift: e.shiftKey,
-            alt: e.altKey,
-            enabled: cfg.enabled,
-            description: cfg.description
-          };
-          shortcutInputs[key].cfg = newCfg;
-          recordingInput.value = shortcutToDisplay(newCfg);
-          recordingInput.style.background = '';
-          document.removeEventListener('keydown', onKeyDown, true);
-        };
-        document.addEventListener('keydown', onKeyDown, true);
-        // 点其他地方取消录制
-        const cancelRecord = (e) => {
-          if (e.target !== recordingInput) {
-            recordingInput.value = shortcutToDisplay(cfg);
-            recordingInput.style.background = '';
-            document.removeEventListener('keydown', onKeyDown, true);
-            document.removeEventListener('click', cancelRecord, true);
-          }
-        };
-        setTimeout(() => document.addEventListener('click', cancelRecord, true), 0);
-      });
-      tdKey.appendChild(recordingInput);
-      tr.appendChild(tdKey);
-
-      const tdEnabled = document.createElement('td');
-      const enabledCheck = document.createElement('input');
-      enabledCheck.type = 'checkbox';
-      enabledCheck.className = 'more-settings-checkbox';
-      enabledCheck.checked = cfg.enabled || false;
-      tdEnabled.appendChild(enabledCheck);
-      tr.appendChild(tdEnabled);
-
-      tbody.appendChild(tr);
-      shortcutInputs[key] = { recordingInput, enabledCheck, cfg: { ...cfg } };
-    });
-
-    table.appendChild(tbody);
-    panelShortcuts.appendChild(table);
-
-    const shortcutActions = document.createElement('div');
-    shortcutActions.style.display = 'flex';
-    shortcutActions.style.gap = '8px';
-
-    const resetShortcutBtn = document.createElement('button');
-    resetShortcutBtn.className = 'modal-btn modal-btn-cancel';
-    resetShortcutBtn.textContent = StringLoader.get('shortcuts.restoreDefault', '恢复默认设置');
-    resetShortcutBtn.addEventListener('click', () => {
-      Object.keys(DEFAULT_SHORTCUTS).forEach(key => {
-        const def = DEFAULT_SHORTCUTS[key];
-        const inp = shortcutInputs[key];
-        if (inp) {
-          inp.cfg = { ...def };
-          inp.recordingInput.value = shortcutToDisplay(def);
-          inp.enabledCheck.checked = def.enabled;
-        }
-      });
-    });
-    shortcutActions.appendChild(resetShortcutBtn);
-    panelShortcuts.appendChild(shortcutActions);
-
+    const _shortcutsPanel = ShortcutManager.buildSettingsUI(panelShortcuts);
     content.appendChild(panelShortcuts);
 
     // ===== 面板3：语言 =====
@@ -2350,21 +2087,8 @@ const App = (function() {
           await window.electronAPI.saveLanguage(_currentLanguage);
         }
         // 也保存快捷键设置
-        if (shortcutInputs) {
-          const newCfg = {};
-          Object.keys(_shortcutCfg).forEach(key => {
-            const inp = shortcutInputs[key];
-            if (inp) {
-              newCfg[key] = {
-                ...inp.cfg,
-                enabled: inp.enabledCheck.checked,
-                description: _shortcutCfg[key].description
-              };
-            }
-          });
-          await window.electronAPI.saveShortcutsConfig(newCfg);
-          _shortcutCfg = newCfg;
-          rebindShortcutKeys();
+        if (_shortcutsPanel) {
+          await _shortcutsPanel.save();
         }
       } catch (e) {
         console.error('保存设置失败:', e);

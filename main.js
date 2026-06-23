@@ -11,11 +11,17 @@ Menu.setApplicationMenu(null);
 // 字符串资源加载（根据语言配置，异步避免阻塞主进程）
 let strings = {};
 async function loadStrings() {
-  const langPath = path.join(__dirname, 'config', 'language.json');
+  // 优先读用户持久化版本（userData），其次读 asar 内置默认版本
+  const userLangPath = getUserConfigPath('language.json');
+  const asarLangPath = path.join(__dirname, 'config', 'language.json');
   let lang = 'zh-CN';
   try {
-    await fsPromises.access(langPath);
-    const langRaw = await fsPromises.readFile(langPath, 'utf-8');
+    let langRaw;
+    try {
+      langRaw = await fsPromises.readFile(userLangPath, 'utf-8');
+    } catch {
+      langRaw = await fsPromises.readFile(asarLangPath, 'utf-8');
+    }
     const langConfig = JSON.parse(langRaw);
     lang = langConfig.language || 'zh-CN';
     configCache.language = langConfig; // 预填充缓存

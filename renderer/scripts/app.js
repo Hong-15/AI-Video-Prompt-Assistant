@@ -1055,6 +1055,7 @@ const App = (function() {
   let _inProjectImport = false; // 导入期间禁止 saveCurrentTaskFields 覆盖新数据
   async function applyProjectImport(tasks) {
     _inProjectImport = true;
+    const prevActiveTask = Sidebar.getActiveTask();
     try {
       const existingTasks = Sidebar.getTasks();
       let allTasks = [...existingTasks];
@@ -1145,11 +1146,9 @@ const App = (function() {
 
       if (importedCount > 0) {
         // 一次性应用到侧边栏
-        Sidebar.setTasks(allTasks);
+        Sidebar.setTasks(allTasks, prevActiveTask ? prevActiveTask.id : undefined);
         updateStatusTaskCount();
 
-        // 选中最后一个导入/覆盖的任务
-        Sidebar.setActiveTask(allTasks[allTasks.length - 1].id);
         markDirty();
         Sidebar.render();
         Content.showToast(

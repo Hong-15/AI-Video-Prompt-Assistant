@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="补丁,和新增功能">
-      <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
-    </list>
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="补丁" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -85,14 +83,6 @@
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
       <workItem from="1782176099051" duration="2455000" />
-    </task>
-    <task id="LOCAL-00030" summary="A">
-      <option name="closed" value="true" />
-      <created>1782020970345</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1782020970345</updated>
     </task>
     <task id="LOCAL-00031" summary="测试版本 滚动条样式优化">
       <option name="closed" value="true" />
@@ -478,7 +468,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782193507488</updated>
     </task>
-    <option name="localTasksCounter" value="79" />
+    <task id="LOCAL-00079" summary="补丁">
+      <option name="closed" value="true" />
+      <created>1782193919666</created>
+      <option name="number" value="00079" />
+      <option name="presentableId" value="LOCAL-00079" />
+      <option name="project" value="LOCAL" />
+      <updated>1782193919666</updated>
+    </task>
+    <option name="localTasksCounter" value="80" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -512,7 +510,6 @@
     <MESSAGE value="删除无用文件" />
     <MESSAGE value="构建与安装" />
     <MESSAGE value="构建与安装 + 心跳 + 看门狗 加后门:可以外部终结进程 防止僵尸进程" />
-    <MESSAGE value="补丁" />
     <MESSAGE value="日志重构" />
     <MESSAGE value="其它" />
     <MESSAGE value="文档更新" />
@@ -521,6 +518,7 @@
     <MESSAGE value="优化按钮问题,新增获取任务字符长度,选中卡片字符长度" />
     <MESSAGE value="纠正语言切换问题" />
     <MESSAGE value="补丁,和新增功能" />
-    <option name="LAST_COMMIT_MESSAGE" value="补丁,和新增功能" />
+    <MESSAGE value="补丁" />
+    <option name="LAST_COMMIT_MESSAGE" value="补丁" />
   </component>
 </project>

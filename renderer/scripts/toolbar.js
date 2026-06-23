@@ -105,6 +105,12 @@ const Toolbar = (function() {
       window.electronAPI.openTutorial();
     });
 
+    // AI规范
+    document.getElementById('menuAiSpec').addEventListener('click', () => {
+      hideAllDropdowns();
+      if (_onAiSpec) _onAiSpec();
+    });
+
     // 关闭项目
     document.getElementById('menuCloseProject').addEventListener('click', () => {
       hideAllDropdowns();
@@ -148,14 +154,6 @@ const Toolbar = (function() {
       hideAllDropdowns();
       if (_onResetAllLayout) _onResetAllLayout();
     });
-
-    // ========== AI规范按钮 ==========
-    const menuAiSpecBtn = document.getElementById('menuAiSpecBtn');
-    if (menuAiSpecBtn) {
-      menuAiSpecBtn.addEventListener('click', () => {
-        if (_onAiSpec) _onAiSpec();
-      });
-    }
 
     // ========== 设置菜单 ==========
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
@@ -268,9 +266,6 @@ const Toolbar = (function() {
     const menuLayoutBtn = document.getElementById('menuLayoutBtn');
     if (menuLayoutBtn) menuLayoutBtn.textContent = StringLoader.get('menu.layout', '布局');
 
-    const menuAiSpecBtn = document.getElementById('menuAiSpecBtn');
-    if (menuAiSpecBtn) menuAiSpecBtn.textContent = StringLoader.get('menu.aiSpec', 'AI规范');
-
     const menuSettingsBtn = document.getElementById('menuSettingsBtn');
     if (menuSettingsBtn) menuSettingsBtn.textContent = StringLoader.get('toolbar.settings', '设置');
 
@@ -293,6 +288,11 @@ const Toolbar = (function() {
     const elTutorial = document.getElementById('menuTutorial');
     if (elTutorial) {
       elTutorial.textContent = StringLoader.get('menu.tutorial', '教学');
+    }
+
+    const elAiSpec = document.getElementById('menuAiSpec');
+    if (elAiSpec) {
+      elAiSpec.textContent = StringLoader.get('menu.aiSpec', 'AI规范');
     }
 
     const elCreateProject = document.getElementById('menuCreateProject');

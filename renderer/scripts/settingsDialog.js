@@ -362,7 +362,7 @@ const SettingsDialog = (function() {
 
     const themeOptions = [
       { value: 'light', label: 'moreSettings.themeLight', defaultLabel: '浅色' },
-      { value: 'dark', label: 'moreSettings.themeDark', defaultLabel: '暗色' },
+      { value: 'dark', label: 'moreSettings.themeDark', defaultLabel: '深色' },
       { value: 'default', label: 'moreSettings.themeDefault', defaultLabel: '默认' },
       { value: 'system', label: 'moreSettings.themeSystem', defaultLabel: '跟随系统' }
     ];

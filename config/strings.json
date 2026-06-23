@@ -31,7 +31,7 @@
     "settings": "设置",
     "theme": "主题",
     "themeLight": "浅色",
-    "themeDark": "暗色",
+    "themeDark": "深色",
     "themeDefault": "默认",
     "themeSystem": "跟随系统",
     "shortcutSettings": "快捷键设置",
@@ -277,7 +277,7 @@
     "theme": "主题",
     "themeDesc": "选择界面主题配色方案",
     "themeLight": "浅色",
-    "themeDark": "暗色",
+    "themeDark": "深色",
     "themeDefault": "默认",
     "themeSystem": "跟随系统",
     "resizeTip": "拖动调整大小"

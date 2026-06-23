@@ -2743,6 +2743,38 @@ const App = (function() {
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
     }
 
+    function scrollToCardAndHighlight(fieldKey) {
+      const card = document.querySelector('.field-card[data-field-key="' + CSS.escape(fieldKey) + '"]');
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      card.classList.add('search-highlight-pulse');
+      const textarea = card.querySelector('textarea');
+      if (textarea) textarea.focus();
+      setTimeout(() => card.classList.remove('search-highlight-pulse'), 2000);
+    }
+
+    function navigateToSearchResult(r) {
+      const activeTask = Sidebar.getActiveTask();
+      if (activeTask && activeTask.id === r.taskId && r.fieldKey) {
+        // 已在当前任务，直接定位到卡片
+        close();
+        scrollToCardAndHighlight(r.fieldKey);
+      } else if (r.fieldKey) {
+        // 需要切换到其他任务
+        Sidebar.setActiveTask(r.taskId);
+        close();
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scrollToCardAndHighlight(r.fieldKey);
+          });
+        });
+      } else {
+        // 无 fieldKey（如匹配任务名），仅切换任务
+        Sidebar.setActiveTask(r.taskId);
+        close();
+      }
+    }
+
     // 搜索数据
     let cardNameResults = [];
     let cardContentResults = [];
@@ -2910,8 +2942,7 @@ const App = (function() {
               '<span class="global-search-result-path">' + subtitle + '</span>' +
             '</span>';
           item.addEventListener('click', () => {
-            Sidebar.setActiveTask(r.taskId);
-            close();
+            navigateToSearchResult(r);
           });
           resultsContainer.appendChild(item);
         });
@@ -2933,8 +2964,7 @@ const App = (function() {
               '<span class="global-search-result-path">' + escapeHtml(r.taskName) + ' · ' + highlightMatch(r.snippet, r.query) + '</span>' +
             '</span>';
           item.addEventListener('click', () => {
-            Sidebar.setActiveTask(r.taskId);
-            close();
+            navigateToSearchResult(r);
           });
           resultsContainer.appendChild(item);
         });

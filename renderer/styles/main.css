@@ -1119,6 +1119,27 @@ body.window-zoom-out {
   transition: none;
 }
 
+/* 搜索定位高亮脉冲 */
+.field-card.search-highlight-pulse {
+  animation: cardPulse 2s ease-out;
+  /* 保留最终状态让过渡自然结束 */
+}
+
+@keyframes cardPulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent);
+    border-color: var(--accent);
+  }
+  30% {
+    box-shadow: 0 0 16px 4px var(--accent);
+    border-color: var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--accent);
+    border-color: var(--border);
+  }
+}
+
 /* 拖拽幽灵卡片 */
 .card-drag-ghost {
   position: fixed;

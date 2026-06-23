@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="优化按钮问题,新增获取任务字符长度,选中卡片字符长度" />
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="纠正语言切换问题" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -82,15 +82,7 @@
       <workItem from="1782015916369" duration="37241000" />
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
-      <workItem from="1782176099051" duration="2134000" />
-    </task>
-    <task id="LOCAL-00028" summary="闪白问题修复(缺点,展出不够流畅)">
-      <option name="closed" value="true" />
-      <created>1782019962004</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1782019962004</updated>
+      <workItem from="1782176099051" duration="2455000" />
     </task>
     <task id="LOCAL-00029" summary="增加最大化,最小化,的过度动画">
       <option name="closed" value="true" />
@@ -476,7 +468,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782178214637</updated>
     </task>
-    <option name="localTasksCounter" value="77" />
+    <task id="LOCAL-00077" summary="纠正语言切换问题">
+      <option name="closed" value="true" />
+      <created>1782178418446</created>
+      <option name="number" value="00077" />
+      <option name="presentableId" value="LOCAL-00077" />
+      <option name="project" value="LOCAL" />
+      <updated>1782178418446</updated>
+    </task>
+    <option name="localTasksCounter" value="78" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -494,7 +494,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="右键任务项会弹出一个菜单(已实现),增加一个导出任务项;每张卡片加一个功能,导出卡片" />
     <MESSAGE value="卡片布局微调" />
     <MESSAGE value="项目数据导出 导出任务 导出卡片 的默认名称全局重构,项目数据导出 名称 父级目录名称_时间(精确到秒)_时间戳,导出任务 父级目录名称_任务项名称_时间(精确到秒)_时间戳 ,导出卡片,父级目录名称_ 父级目录名称_任务项名称_卡片名称_时间(精确到秒)_时间戳" />
     <MESSAGE value="元素聚焦和快捷键重构" />
@@ -519,6 +518,7 @@
     <MESSAGE value="修复bug,AI规范不加载" />
     <MESSAGE value="信息补充" />
     <MESSAGE value="优化按钮问题,新增获取任务字符长度,选中卡片字符长度" />
-    <option name="LAST_COMMIT_MESSAGE" value="优化按钮问题,新增获取任务字符长度,选中卡片字符长度" />
+    <MESSAGE value="纠正语言切换问题" />
+    <option name="LAST_COMMIT_MESSAGE" value="纠正语言切换问题" />
   </component>
 </project>

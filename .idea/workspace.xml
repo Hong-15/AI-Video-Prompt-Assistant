@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="创建项目模态窗口模块&#10;- 父级目录选择 + 浏览&#10;- 文件夹名校验（空值 / 非法字符）&#10;- 模板选择（空模板 / 默认模板）&#10;- 此窗口打开 / 新窗口打开">
-      <change beforePath="$PROJECT_DIR$/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/main.js" afterDir="false" />
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="拆分 aiSpecContent.js + mdToHtml.js — main.js 内联文本">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,14 +87,6 @@
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
       <workItem from="1782176099051" duration="2455000" />
-    </task>
-    <task id="LOCAL-00037" summary="全局搜索补丁">
-      <option name="closed" value="true" />
-      <created>1782034984552</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1782034984552</updated>
     </task>
     <task id="LOCAL-00038" summary="全日志打补丁(现在的日志只是简单日志)">
       <option name="closed" value="true" />
@@ -478,7 +472,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782200526794</updated>
     </task>
-    <option name="localTasksCounter" value="86" />
+    <task id="LOCAL-00086" summary="拆分 aiSpecContent.js + mdToHtml.js — main.js 内联文本">
+      <option name="closed" value="true" />
+      <created>1782200818077</created>
+      <option name="number" value="00086" />
+      <option name="presentableId" value="LOCAL-00086" />
+      <option name="project" value="LOCAL" />
+      <updated>1782200818077</updated>
+    </task>
+    <option name="localTasksCounter" value="87" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -496,7 +498,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="上一个的 无法导入(要点击) ,其实能导入,不过不管了,能跑就行;样式微重构" />
     <MESSAGE value="修复bug json文件不可修改问题" />
     <MESSAGE value="开始页面基本搭建" />
     <MESSAGE value="开始页面优化" />
@@ -521,6 +522,7 @@
     <MESSAGE value="重构弹窗模块" />
     <MESSAGE value="全局搜索重构" />
     <MESSAGE value="创建项目模态窗口模块&#10;- 父级目录选择 + 浏览&#10;- 文件夹名校验（空值 / 非法字符）&#10;- 模板选择（空模板 / 默认模板）&#10;- 此窗口打开 / 新窗口打开" />
-    <option name="LAST_COMMIT_MESSAGE" value="创建项目模态窗口模块&#10;- 父级目录选择 + 浏览&#10;- 文件夹名校验（空值 / 非法字符）&#10;- 模板选择（空模板 / 默认模板）&#10;- 此窗口打开 / 新窗口打开" />
+    <MESSAGE value="拆分 aiSpecContent.js + mdToHtml.js — main.js 内联文本" />
+    <option name="LAST_COMMIT_MESSAGE" value="拆分 aiSpecContent.js + mdToHtml.js — main.js 内联文本" />
   </component>
 </project>

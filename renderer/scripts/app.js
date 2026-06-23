@@ -48,7 +48,7 @@ const App = (function() {
           showNoFolderDialog();
           return;
         }
-        const parseResult = parseProjectExport(content);
+        const parseResult = ProjectImport.parseProjectExport(content);
         if (!parseResult.success) {
           Modal.show({
             title: '导入失败',
@@ -61,7 +61,7 @@ const App = (function() {
         Modal.confirm(
           '导入项目数据',
           '将导入 ' + parseResult.tasks.length + ' 个任务，当前项目中的任务不会被清空。确认导入？',
-          () => { applyProjectImport(parseResult.tasks); },
+          () => { ProjectImport.applyProjectImport(parseResult.tasks); },
           { confirmText: '确认', cancelText: '取消' }
         );
       }
@@ -74,7 +74,7 @@ const App = (function() {
       onResetCurrentLayout: handleResetCurrentLayout,
       onResetAllLayout: handleResetAllLayout,
       onExport: handleExport,
-      onImport: handleImportProject,
+      onImport: ProjectImport.importFromFile,
       onMoreSettings: () => SettingsDialog.show({
         onThemeChange: handleThemeChange,
         onLogEvent: logAppEvent
@@ -91,7 +91,7 @@ const App = (function() {
     // 5.1.1 解析数据按钮（工具栏）
     const parseDataBtn = document.getElementById('parseDataBtn');
     if (parseDataBtn) {
-      parseDataBtn.addEventListener('click', showParseDataDialog);
+      parseDataBtn.addEventListener('click', ProjectImport.showParseDialog);
     }
 
     // 5.2 侧边栏头部拖拽导入项目数据
@@ -138,7 +138,7 @@ const App = (function() {
         }
         const reader = new FileReader();
         reader.onload = (event) => {
-          const parseResult = parseProjectExport(event.target.result);
+          const parseResult = ProjectImport.parseProjectExport(event.target.result);
           if (!parseResult.success) {
             Modal.show({
               title: '导入失败',
@@ -151,7 +151,7 @@ const App = (function() {
           Modal.confirm(
             '导入项目数据',
             '将导入 ' + parseResult.tasks.length + ' 个任务，当前项目中的任务不会被清空。确认导入？',
-            () => { applyProjectImport(parseResult.tasks); },
+            () => { ProjectImport.applyProjectImport(parseResult.tasks); },
             { confirmText: '确认', cancelText: '取消' }
           );
         };
@@ -190,6 +190,16 @@ const App = (function() {
     // 10. 注册并初始化键盘快捷键
       _registerShortcuts();
       await ShortcutManager.init();
+
+    // 10b. 初始化项目导入模块
+      ProjectImport.init({
+        getCurrentFolder: () => _currentFolder,
+        getCurrentLanguage: () => _currentLanguage,
+        onShowNoFolder: showNoFolderDialog,
+        onMarkDirty: markDirty,
+        onUpdateTaskCount: updateStatusTaskCount,
+        onLogEvent: logAppEvent
+      });
 
     // 11. 注册全局用户操作监听，用于本地日志记录
     // 使用 requestIdleCallback 延迟到浏览器空闲时初始化，避免阻塞首帧渲染
@@ -595,604 +605,7 @@ const App = (function() {
   }
 
   // ========== 导入项目数据 ==========
-
-  async function handleImportProject() {
-    if (!_currentFolder) {
-      showNoFolderDialog();
-      return;
-    }
-
-    let fileResult;
-    try {
-      fileResult = await window.electronAPI.importFile();
-    } catch (e) {
-      console.error('选择导入文件失败:', e);
-      return;
-    }
-
-    if (!fileResult || !fileResult.success || fileResult.content === undefined) return;
-
-    const content = fileResult.content;
-    if (!content || content.trim().length === 0) {
-      Modal.show({
-        title: StringLoader.get('import.errorTitle', '导入失败'),
-        message: StringLoader.get('import.errorEmpty', '文件内容为空'),
-        showCancel: false,
-        confirmText: StringLoader.get('modal.ok', '确定')
-      });
-      return;
-    }
-
-    const parseResult = parseProjectExport(content);
-    if (!parseResult.success) {
-      Modal.show({
-        title: StringLoader.get('import.errorTitle', '导入失败'),
-        message: parseResult.error,
-        showCancel: false,
-        confirmText: StringLoader.get('modal.ok', '确定')
-      });
-      return;
-    }
-
-    Modal.confirm(
-      StringLoader.get('import.dialogTitle', '导入卡片数据'),
-      StringLoader.get('dialog.confirmImportProject', '将导入 {count} 个任务，当前项目中的任务不会被清空。确认导入？')
-        .replace('{count}', parseResult.tasks.length),
-      () => {
-        applyProjectImport(parseResult.tasks);
-      },
-      { confirmText: StringLoader.get('modal.confirm', '确认'), cancelText: StringLoader.get('modal.cancel', '取消') }
-    );
-  }
-
-  // ========== 解析数据（粘贴导入） ==========
-  let _parseDataDetectTimer = null;
-  let _parseDetectedFormat = null;
-  let _parseDataButtonsBound = false;  // 防止重复绑定的标志
-
-  function showParseDataDialog() {
-    const overlay = document.getElementById('parseDataOverlay');
-    if (!overlay) return;
-    if (overlay.style.display === 'flex') {
-      overlay.style.display = 'none';
-      return;
-    }
-
-    overlay.style.display = 'flex';
-
-    const textarea = document.getElementById('parseDataTextarea');
-    const badge = document.getElementById('parseDataBadge');
-    const btnTaskbar = document.getElementById('parseDataToTaskbar');
-    const btnWorkspace = document.getElementById('parseDataToWorkspace');
-    const closeBtn = document.getElementById('parseDataCloseBtn');
-    const header = document.querySelector('.parse-data-header');
-
-    if (!textarea) return;
-
-    // 只在首次打开时绑定两个按钮的事件（避免重复绑定）
-    if (!_parseDataButtonsBound && btnTaskbar && btnWorkspace) {
-      _parseDataButtonsBound = true;
-
-      // 添加到任务栏：使用已有的 parseProjectExport + applyProjectImport
-      btnTaskbar.addEventListener('click', () => {
-        const text = textarea.value.trim();
-        if (!text) return;
-        if (_parseDetectedFormat !== 'task') return;
-
-        const parseResult = parseProjectExport(text);
-        if (!parseResult.success) {
-          Modal.show({
-            title: StringLoader.get('import.errorTitle', '导入失败'),
-            message: parseResult.error,
-            showCancel: false,
-            confirmText: StringLoader.get('modal.ok', '确定')
-          });
-          return;
-        }
-
-        overlay.style.display = 'none';
-        applyProjectImport(parseResult.tasks);
-      });
-
-      // 添加到工作区：转换格式后调用已有的 ImportManager.importCardsToTask
-      btnWorkspace.addEventListener('click', () => {
-        const text = textarea.value.trim();
-        if (!text) return;
-        const activeTask = Sidebar.getActiveTask();
-        if (!activeTask) {
-          Modal.show({
-            title: StringLoader.get('modal.hint', '提示'),
-            message: StringLoader.get('parseData.noActiveTask', '请先选择一个任务'),
-            showCancel: false,
-            confirmText: StringLoader.get('modal.ok', '确定')
-          });
-          return;
-        }
-
-        const converted = convertParseDataToDemoMd3(text);
-        overlay.style.display = 'none';
-        ImportManager.importCardsToTask(activeTask.id, converted, '粘贴数据');
-      });
-    }
-
-    // 重置状态
-    textarea.value = '';
-    badge.className = 'parse-data-badge badge-empty';
-    badge.textContent = '—';
-    btnTaskbar.disabled = true;
-    btnTaskbar.title = '';
-    btnWorkspace.disabled = true;
-    btnWorkspace.title = '';
-    _parseDetectedFormat = null;
-    textarea.focus();
-
-    // 关闭按钮
-    closeBtn.onclick = () => { overlay.style.display = 'none'; };
-
-    // 点击遮罩关闭、Escape 关闭
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.style.display = 'none'; };
-    const onKeyDown = (e) => { if (e.key === 'Escape') { overlay.style.display = 'none'; document.removeEventListener('keydown', onKeyDown); } };
-    document.addEventListener('keydown', onKeyDown);
-    overlay._onKeyDown = onKeyDown;
-
-    // 拖拽
-    const dialog = overlay.querySelector('.parse-data-dialog');
-    let dragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
-    header.onmousedown = (e) => {
-      dragging = true; startX = e.clientX; startY = e.clientY;
-      const rect = dialog.getBoundingClientRect();
-      origX = rect.left; origY = rect.top;
-      dialog.style.transition = 'none';
-    };
-    document.addEventListener('mousemove', (e) => {
-      if (!dragging) return;
-      dialog.style.left = (origX + e.clientX - startX) + 'px';
-      dialog.style.top = (origY + e.clientY - startY) + 'px';
-    });
-    document.addEventListener('mouseup', () => { dragging = false; dialog.style.transition = ''; });
-
-    // 输入检测（200ms 防抖）
-    textarea.oninput = () => {
-      clearTimeout(_parseDataDetectTimer);
-      const text = textarea.value.trim();
-      if (!text) {
-        badge.className = 'parse-data-badge badge-empty';
-        badge.textContent = '—';
-        btnTaskbar.disabled = true;
-        btnTaskbar.title = '';
-        btnWorkspace.disabled = true;
-        btnWorkspace.title = '';
-        _parseDetectedFormat = null;
-        return;
-      }
-      _parseDataDetectTimer = setTimeout(() => detectParseFormat(textarea.value, textarea, badge, btnTaskbar, btnWorkspace), 200);
-    };
-  }
-
-  function detectParseFormat(text, textarea, badge, btnTaskbar, btnWorkspace) {
-    const lines = text.split(/\r?\n/).map(l => l.trim());
-    const hasTaskHeader = lines.some(l => /^##\s/.test(l) || /^【.+】$/.test(l));
-    const hasTaskCard = lines.some(l => /^\*\*(.+?)\*\*[：:]/.test(l));
-    const hasCardHeader = lines.some(l => /^###\s/.test(l));
-    const hasContentMarker = lines.some(l => /^\*\*内容(\d+)?\*\*$/.test(l));
-
-    // 卡片级：demoMd 格式 (### cardName + **内容**)
-    if (hasCardHeader && hasContentMarker) {
-      _parseDetectedFormat = 'card';
-      badge.className = 'parse-data-badge badge-card';
-      badge.textContent = '卡片级数据';
-      btnTaskbar.disabled = true;
-      btnTaskbar.title = '卡片级数据，无法以任务级数据输出';
-      btnWorkspace.disabled = false;
-      return;
-    }
-    // 任务级：## / 【】 任务头 + **card**：卡片内容
-    if (hasTaskHeader && hasTaskCard) {
-      _parseDetectedFormat = 'task';
-      badge.className = 'parse-data-badge badge-task';
-      badge.textContent = '任务级数据';
-      btnTaskbar.disabled = false;
-      btnWorkspace.disabled = true;
-      btnWorkspace.title = StringLoader.get('parseData.taskLevelHint', '任务级数据，无法导入到卡片工作区');
-      return;
-    }
-    // 卡片级：独立卡片（**card**：内容，无任务头）
-    if (!hasTaskHeader && hasTaskCard) {
-      _parseDetectedFormat = 'card';
-      badge.className = 'parse-data-badge badge-card';
-      badge.textContent = '卡片级数据';
-      btnTaskbar.disabled = true;
-      btnTaskbar.title = '卡片级数据，无法以任务级数据输出';
-      btnWorkspace.disabled = false;
-      return;
-    }
-    // 格式不识别
-    _parseDetectedFormat = 'unknown';
-    badge.className = 'parse-data-badge badge-unknown';
-    badge.textContent = '格式不识别';
-    btnTaskbar.disabled = true;
-    btnTaskbar.title = '';
-    btnWorkspace.disabled = true;
-    btnWorkspace.title = '';
-  }
-
-  // 将粘贴文本统一转为 demoMd3（### cardName + **内容**），交给 ImportManager 处理
-  function convertParseDataToDemoMd3(text) {
-    // 尝试任务级解析（parseProjectExport 是已有的通用方法）
-    const taskResult = parseProjectExport(text);
-    if (taskResult.success && taskResult.tasks.length > 0) {
-      let output = '';
-      taskResult.tasks.forEach(t => {
-        t.cards.forEach(c => {
-          output += '### ' + c.name + '\n**内容**\n' + c.content + '\n\n';
-        });
-      });
-      const trimmed = output.trim();
-      if (trimmed) return trimmed;
-    }
-
-    // 尝试独立卡片解析（**cardName**：content）
-    const lines = text.split(/\r?\n/);
-    let cardOutput = '';
-    let currentCardName = null;
-    let currentCardContent = '';
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      const mdMatch = trimmed.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
-      if (mdMatch) {
-        if (currentCardName) {
-          cardOutput += '### ' + currentCardName + '\n**内容**\n' + currentCardContent.trim() + '\n\n';
-        }
-        currentCardName = mdMatch[1].trim();
-        currentCardContent = mdMatch[2];
-      } else if (currentCardName && trimmed) {
-        currentCardContent += (currentCardContent ? '\n' : '') + line;
-      }
-    }
-    if (currentCardName) {
-      cardOutput += '### ' + currentCardName + '\n**内容**\n' + currentCardContent.trim() + '\n\n';
-    }
-
-    const trimmed = cardOutput.trim();
-    if (trimmed) return trimmed;
-
-    // 已经是 demoMd 格式或其他，原样交给 ImportManager 处理
-    return text;
-  }
-
-  // 解析导出文件内容（支持 md 和 txt 格式）
-  function parseProjectExport(content) {
-    const lines = content.split(/\r?\n/);
-    const tasks = [];
-
-    let currentTask = null;
-    let currentCardName = null;
-    let currentCardContent = '';
-
-    for (let i = 0; i < lines.length; i++) {
-      const trimmed = lines[i].trim();
-
-      // MD 格式：## 1. taskName 或 ## taskName
-      if (/^##\s/.test(trimmed)) {
-        if (currentTask) {
-          flushCard();
-          if (currentTask.cards.length > 0) tasks.push(currentTask);
-        }
-        const name = trimmed.replace(/^##\s+(?:\d+\.\s*)?/, '').trim();
-        if (name && !/^---$/.test(name)) {
-          currentTask = { name, cards: [] };
-        }
-        currentCardName = null;
-        currentCardContent = '';
-        continue;
-      }
-
-      // TXT 格式：【1. taskName】 或 【taskName】
-      if (/^【.+】$/.test(trimmed)) {
-        if (currentTask) {
-          flushCard();
-          if (currentTask.cards.length > 0) tasks.push(currentTask);
-        }
-        const name = trimmed.replace(/^【(?:\d+\.\s*)?/, '').replace(/】$/, '').trim();
-        if (name) {
-          currentTask = { name, cards: [] };
-        }
-        currentCardName = null;
-        currentCardContent = '';
-        continue;
-      }
-
-      // 分隔线
-      if (/^(---|\={10,})$/.test(trimmed)) continue;
-
-      if (!currentTask) continue;
-
-      // MD 格式卡片：**cardName**：content
-      const mdFieldMatch = trimmed.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
-      if (mdFieldMatch) {
-        flushCard();
-        currentCardName = mdFieldMatch[1].trim();
-        currentCardContent = mdFieldMatch[2];
-        continue;
-      }
-
-      // TXT 格式卡片：cardName：content
-      const txtFieldMatch = trimmed.match(/^(.+?)[：:]\s*(.*)$/);
-      if (txtFieldMatch && currentTask && !currentCardName) {
-        const possibleName = txtFieldMatch[1].trim();
-        // 排除时间、任务数等元信息行
-        if (!/^(导出时间|导出任务|项目任务|任务总数|Export Time|Total Tasks|Project Task)/i.test(possibleName)) {
-          flushCard();
-          currentCardName = possibleName;
-          currentCardContent = txtFieldMatch[2];
-          continue;
-        }
-      }
-
-      // 卡片内容的续行
-      if (currentCardName) {
-        currentCardContent += (currentCardContent ? '\n' : '') + lines[i];
-      }
-    }
-
-    // 最后一个任务
-    if (currentTask) {
-      flushCard();
-      if (currentTask.cards.length > 0) tasks.push(currentTask);
-    }
-
-    function flushCard() {
-      if (currentCardName && currentTask) {
-        currentTask.cards.push({ name: currentCardName, content: currentCardContent.trim() });
-      }
-      currentCardName = null;
-      currentCardContent = '';
-    }
-
-    if (tasks.length === 0) {
-      return { success: false, error: StringLoader.get('import.errorNoTask', '未找到任务项（## 任务名称）') };
-    }
-
-    return { success: true, tasks };
-  }
-
-  // 应用项目导入
-  let _inProjectImport = false; // 导入期间禁止 saveCurrentTaskFields 覆盖新数据
-  async function applyProjectImport(tasks) {
-    _inProjectImport = true;
-    const prevActiveTask = Sidebar.getActiveTask();
-    try {
-      const existingTasks = Sidebar.getTasks();
-      let allTasks = [...existingTasks];
-      let importedCount = 0;
-      let skipAll = false;
-      let overwriteAll = false;
-      let renameAll = false;
-      const renameConflicts = [];
-
-      // 预加载 fieldConfig，避免循环中重复请求
-      const fieldConfig = await window.electronAPI.getFieldConfig();
-      const isEnglish = _currentLanguage === 'en';
-
-      for (const taskData of tasks) {
-        const duplicate = allTasks.find(t => t.name === taskData.name);
-
-        if (duplicate) {
-          if (skipAll) continue;
-          if (overwriteAll) {
-            duplicate.fields = {};
-            duplicate.customCards = [];
-            duplicate.cardOrder = [];
-            fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
-            importedCount++;
-            continue;
-          }
-          if (renameAll) {
-            renameConflicts.push(taskData.name);
-            continue;
-          }
-
-          const action = await showDuplicateTaskDialog(taskData.name);
-          if (action === 'skipAll') {
-            skipAll = true;
-            continue;
-          }
-          if (action === 'overwriteAll') {
-            overwriteAll = true;
-            duplicate.fields = {};
-            duplicate.customCards = [];
-            duplicate.cardOrder = [];
-            fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
-            importedCount++;
-            continue;
-          }
-          if (action === 'renameAll') {
-            renameAll = true;
-            renameConflicts.push(taskData.name);
-            continue;
-          }
-          if (action === 'skip') {
-            continue;
-          }
-          if (action === 'overwrite') {
-            duplicate.fields = {};
-            duplicate.customCards = [];
-            duplicate.cardOrder = [];
-            fillTaskFields(duplicate, taskData.cards, fieldConfig, isEnglish);
-            importedCount++;
-            continue;
-          }
-          if (action === 'rename') {
-            renameConflicts.push(taskData.name);
-            continue;
-          }
-        } else {
-          const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-          const newTask = {
-            id: taskId,
-            name: taskData.name,
-            fields: {},
-            layout: {},
-            hiddenFields: [],
-            fieldLabels: {},
-            customCards: [],
-            cardOrder: []
-          };
-          fillTaskFields(newTask, taskData.cards, fieldConfig, isEnglish);
-          allTasks = [...allTasks, newTask];
-          importedCount++;
-        }
-      }
-
-      // 提示重命名列表
-      if (renameConflicts.length > 0) {
-        showProjectRenameListDialog(renameConflicts);
-      }
-
-      if (importedCount > 0) {
-        // 一次性应用到侧边栏
-        Sidebar.setTasks(allTasks, prevActiveTask ? prevActiveTask.id : undefined);
-        updateStatusTaskCount();
-
-        markDirty();
-        Sidebar.render();
-        Content.showToast(
-          StringLoader.get('dialog.importSuccess', '成功导入 {count} 个任务').replace('{count}', importedCount)
-        );
-        logAppEvent('IMPORT', '导入项目数据成功', { importedCount: String(importedCount), totalTasks: String(allTasks.length) });
-      }
-    } finally {
-      _inProjectImport = false;
-    }
-  }
-
-  // 将卡片数据填充到任务对象的 fields / customCards 中
-  function fillTaskFields(task, cards, fieldConfig, isEnglish) {
-    for (const card of cards) {
-      // 按名称匹配固定卡片
-      const field = fieldConfig.find(f => {
-        const label = isEnglish && f.labelEn ? f.labelEn : f.label;
-        return label === card.name;
-      });
-      if (field) {
-        task.fields[field.key] = card.content;
-      } else {
-        const key = 'custom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        task.customCards.push({ key, label: card.name });
-        task.fields[key] = card.content;
-        task.cardOrder.push(key);
-      }
-    }
-  }
-
-  // 同名任务处理对话框（复用 import.js 的 UI 风格）
-  function showDuplicateTaskDialog(taskName) {
-    return new Promise((resolve) => {
-      const overlay = document.createElement('div');
-      overlay.className = 'import-dialog-overlay';
-
-      const box = document.createElement('div');
-      box.className = 'import-dialog-box import-duplicate-box';
-
-      const title = document.createElement('div');
-      title.className = 'import-dialog-title';
-      title.textContent = '发现同名任务';
-      box.appendChild(title);
-
-      const msg = document.createElement('div');
-      msg.className = 'import-dialog-message';
-      msg.textContent = '任务"' + taskName + '"已存在，请选择处理方式';
-      box.appendChild(msg);
-
-      const actions = document.createElement('div');
-      actions.className = 'import-duplicate-actions';
-
-      const createBtn = (text, action) => {
-        const btn = document.createElement('button');
-        btn.className = 'import-duplicate-btn';
-        btn.textContent = text;
-        btn.addEventListener('click', () => {
-          overlay.remove();
-          resolve(action);
-        });
-        return btn;
-      };
-
-      actions.appendChild(createBtn('跳过', 'skip'));
-      actions.appendChild(createBtn('全部跳过', 'skipAll'));
-      actions.appendChild(createBtn('覆盖', 'overwrite'));
-      actions.appendChild(createBtn('全部覆盖', 'overwriteAll'));
-      actions.appendChild(createBtn('重命名', 'rename'));
-      actions.appendChild(createBtn('全部重命名', 'renameAll'));
-      box.appendChild(actions);
-
-      overlay.appendChild(box);
-      document.body.appendChild(overlay);
-
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          overlay.remove();
-          resolve('skip');
-        }
-      });
-    });
-  }
-
-  // 项目导入重命名列表弹窗
-  function showProjectRenameListDialog(conflicts) {
-    const overlay = document.createElement('div');
-    overlay.className = 'import-dialog-overlay';
-
-    const box = document.createElement('div');
-    box.className = 'import-dialog-box import-rename-box';
-
-    const title = document.createElement('div');
-    title.className = 'import-dialog-title';
-    title.textContent = '需要重命名的任务';
-    box.appendChild(title);
-
-    const msg = document.createElement('div');
-    msg.className = 'import-dialog-message';
-    msg.textContent = '以下任务与现有任务重名，请复制后在源文件中修改名称后重新导入：';
-    box.appendChild(msg);
-
-    const list = document.createElement('textarea');
-    list.className = 'import-rename-list';
-    list.readOnly = true;
-    list.value = conflicts.join('\n');
-    box.appendChild(list);
-
-    const actions = document.createElement('div');
-    actions.className = 'import-dialog-actions';
-
-    const understandBtn = document.createElement('button');
-    understandBtn.className = 'import-dialog-btn import-dialog-btn-confirm';
-    understandBtn.textContent = '了解';
-    understandBtn.addEventListener('click', () => overlay.remove());
-    actions.appendChild(understandBtn);
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'import-dialog-btn import-dialog-btn-cancel';
-    copyBtn.textContent = '复制';
-    copyBtn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(conflicts.join('\n'));
-        Content.showToast('已复制到剪贴板');
-      } catch (e) {
-        Content.showToast('复制失败');
-      }
-    });
-    actions.appendChild(copyBtn);
-
-    box.appendChild(actions);
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove();
-    });
-  }
+  // 已拆分至 projectImport.js，调用 ProjectImport.importFromFile / ProjectImport.showParseDialog
 
   // ========== 文件夹与任务管理 ==========
 
@@ -1321,7 +734,7 @@ const App = (function() {
 
   // 任务切换
   function handleTaskChange(task) {
-    if (Content.hasActiveTask() && !_inProjectImport) {
+    if (Content.hasActiveTask() && !ProjectImport.isImporting()) {
       saveCurrentTaskFields();
       autoSave();
     }
@@ -1722,7 +1135,7 @@ const App = (function() {
   // ========== 全局搜索面板 ==========
   // 已拆分至 globalSearch.js，调用 GlobalSearch.show(...)
 
-  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty, importProject: handleImportProject, updateStatusPreviewLength, updateStatusSelectedLength };
+  return { init, notifyCardFocused, getCurrentLanguage: () => _currentLanguage, markDirty, importProject: ProjectImport.importFromFile, updateStatusPreviewLength, updateStatusSelectedLength };
 })();
 
 // 启动应用

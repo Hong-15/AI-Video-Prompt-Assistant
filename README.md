@@ -1,6 +1,6 @@
 # AI 提示词助手
 
-> [中文](README.md) | [English](README_EN.md)
+> [中文](README.md) | [English](README_en.md)
 >
 > 安装教程：[INSTALL.md](INSTALL.md)
 

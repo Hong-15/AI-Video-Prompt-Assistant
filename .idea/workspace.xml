@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="P1-1: 拆分 projectImport.js — 导入/解析项目数据">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/window.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/window.json" afterDir="false" />
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="导出数据重构">
+      <change beforePath="$PROJECT_DIR$/renderer/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/renderer/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -87,14 +86,6 @@
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
       <workItem from="1782176099051" duration="2455000" />
-    </task>
-    <task id="LOCAL-00039" summary="文档">
-      <option name="closed" value="true" />
-      <created>1782039818629</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1782039818629</updated>
     </task>
     <task id="LOCAL-00040" summary="导入数据部分">
       <option name="closed" value="true" />
@@ -480,7 +471,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782202175591</updated>
     </task>
-    <option name="localTasksCounter" value="88" />
+    <task id="LOCAL-00088" summary="导出数据重构">
+      <option name="closed" value="true" />
+      <created>1782202543756</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1782202543756</updated>
+    </task>
+    <option name="localTasksCounter" value="89" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -498,7 +497,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="开始页面基本搭建" />
     <MESSAGE value="开始页面优化" />
     <MESSAGE value="AI规范;AI输出文本按照用户级别标准输入输出文档进行输出" />
     <MESSAGE value="重新编写文档" />
@@ -523,6 +521,7 @@
     <MESSAGE value="创建项目模态窗口模块&#10;- 父级目录选择 + 浏览&#10;- 文件夹名校验（空值 / 非法字符）&#10;- 模板选择（空模板 / 默认模板）&#10;- 此窗口打开 / 新窗口打开" />
     <MESSAGE value="拆分 aiSpecContent.js + mdToHtml.js — main.js 内联文本" />
     <MESSAGE value="P1-1: 拆分 projectImport.js — 导入/解析项目数据" />
-    <option name="LAST_COMMIT_MESSAGE" value="P1-1: 拆分 projectImport.js — 导入/解析项目数据" />
+    <MESSAGE value="导出数据重构" />
+    <option name="LAST_COMMIT_MESSAGE" value="导出数据重构" />
   </component>
 </project>

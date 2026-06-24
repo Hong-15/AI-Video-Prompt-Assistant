@@ -6,12 +6,12 @@
 
 ## 仓库与下载
 
-| 类型 | 地址 |
-|------|------|
-| 源码仓库 | [https://github.com/Hong-15/AI-Video-Prompt-Assistant](https://github.com/Hong-15/AI-Video-Prompt-Assistant) |
+| 类型              | 地址                                                                                                                             |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------|
+| 源码仓库            | [https://github.com/Hong-15/AI-Video-Prompt-Assistant](https://github.com/Hong-15/AI-Video-Prompt-Assistant)                   |
 | GitHub Releases | [https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases](https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases) |
-| 百度网盘（便携版） | [https://pan.baidu.com/s/1Rs-AQU8SHk7C84h5d3te9g?pwd=hong](https://pan.baidu.com/s/1Rs-AQU8SHk7C84h5d3te9g?pwd=hong) 提取码：`hong` |
-| 百度网盘（安装版） | [https://pan.baidu.com/s/1628nCtoUQYQOPb1L6CcaTA?pwd=hong](https://pan.baidu.com/s/1628nCtoUQYQOPb1L6CcaTA?pwd=hong) 提取码：`hong` |
+| 百度网盘（便携版）       | [https://pan.baidu.com/s/1U5BL774TexHIM24wZNyvuQ?pwd=hong 提取码：`hong`                                                           |
+| 百度网盘（安装版）       | [https://pan.baidu.com/s/1U5BL774TexHIM24wZNyvuQ?pwd=hong 提取码：`hong`                                                           |
 
 ---
 

@@ -10,8 +10,8 @@
 |------|-----|
 | Source | [https://github.com/Hong-15/AI-Video-Prompt-Assistant](https://github.com/Hong-15/AI-Video-Prompt-Assistant) |
 | GitHub Releases | [https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases](https://github.com/Hong-15/AI-Video-Prompt-Assistant/releases) |
-| Baidu Netdisk (Portable) | [https://pan.baidu.com/s/1Rs-AQU8SHk7C84h5d3te9g?pwd=hong](https://pan.baidu.com/s/1Rs-AQU8SHk7C84h5d3te9g?pwd=hong) Code: `hong` |
-| Baidu Netdisk (Installer) | [https://pan.baidu.com/s/1628nCtoUQYQOPb1L6CcaTA?pwd=hong](https://pan.baidu.com/s/1628nCtoUQYQOPb1L6CcaTA?pwd=hong) Code: `hong` |
+| Baidu Netdisk (Portable) | [https://pan.baidu.com/s/1U5BL774TexHIM24wZNyvuQ?pwd=hong Code: `hong` |
+| Baidu Netdisk (Installer) | [https://pan.baidu.com/s/1U5BL774TexHIM24wZNyvuQ?pwd=hong Code: `hong` |
 
 ---
 

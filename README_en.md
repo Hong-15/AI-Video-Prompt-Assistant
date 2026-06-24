@@ -390,7 +390,7 @@ Spec documents at project root:
 
 ## Tutorial
 
-Entry: File → Tutorial. Opens a standalone tutorial window (800×700, resizable) explaining app usage.
+Entry: File → Tutorial. Opens a standalone tutorial window explaining app usage.
 
 ---
 

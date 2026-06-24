@@ -518,7 +518,6 @@ AI_Helper/
 │   └── shortcuts.json            # 默认快捷键
 ├── renderer/                     # 渲染进程
 │   ├── index.html                # 主页面
-│   ├── index_en.html             # 英文主页面
 │   ├── tutorial.html             # 教程页面
 │   ├── styles/main.css           # 样式
 │   └── scripts/

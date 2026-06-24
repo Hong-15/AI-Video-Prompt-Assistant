@@ -939,9 +939,7 @@ const Sidebar = (function() {
 
     let content = '## 1. ' + task.name + '\n';
     cards.forEach(card => {
-      content += '\n### ' + card.name + '\n';
-      content += '**内容**\n';
-      content += card.content + '\n';
+      content += '\n**' + card.name + '**：' + card.content + '\n';
     });
 
     const safeName = task.name.replace(/[\\/:*?"<>|]/g, '_');

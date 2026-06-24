@@ -122,7 +122,7 @@ const ImportManager = (function () {
         dropZone.className = 'import-drop-zone';
         dropZone.innerHTML = '<div class="import-drop-icon">&#128194;</div>' +
             '<div class="import-drop-text">' + StringLoader.get('import.dragHint', '将 .md 或 .txt 文件拖到这里') + '</div>' +
-            '<div class="import-drop-formats">' + StringLoader.get('import.formatHint', '支持 demoMd2 / demoMd3 格式') + '</div>';
+            '<div class="import-drop-formats">' + StringLoader.get('import.formatHint', '支持标准输入输出格式') + '</div>';
         box.appendChild(dropZone);
 
         // 选择文件按钮
@@ -246,7 +246,7 @@ const ImportManager = (function () {
         const ext = file.name.split('.').pop().toLowerCase();
         if (ext !== 'md' && ext !== 'txt') {
             showError(StringLoader.get('import.errorInvalid', '文件格式错误：{reason}')
-                .replace('{reason}', StringLoader.get('import.formatHint', '支持 demoMd2 / demoMd3 格式')));
+                .replace('{reason}', StringLoader.get('import.formatHint', '支持标准输入输出格式')));
             return;
         }
 
@@ -282,22 +282,20 @@ const ImportManager = (function () {
     function parseImportContent(content) {
         const lines = content.split(/\r?\n/);
         const hasTask = lines.some(line => line.trim().startsWith('## '));
-        const hasCard = lines.some(line => line.trim().startsWith('### '));
+        const hasCard = lines.some(line => /^\*\*(.+?)\*\*[：:]/.test(line.trim()));
 
         if (!hasCard) {
-            return {success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（### 卡片名称）')};
+            return {success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（**卡片名称**：）')};
         }
 
-        const format = hasTask ? 'demoMd2' : 'demoMd3';
-
-        if (format === 'demoMd2') {
-            return parseDemoMd2(lines);
+        if (hasTask) {
+            return parseTaskLevel(lines);
         }
-        return parseDemoMd3(lines);
+        return parseCardLevel(lines);
     }
 
-    // 解析 demoMd2 格式：## 任务名称 + ### 卡片名称
-    function parseDemoMd2(lines) {
+    // 解析任务级别数据：## 任务名称 + **卡片名称**：内容
+    function parseTaskLevel(lines) {
         let taskName = '';
         const cards = [];
         let i = 0;
@@ -319,9 +317,11 @@ const ImportManager = (function () {
 
         while (i < lines.length) {
             const line = lines[i].trim();
-            if (line.startsWith('### ')) {
-                const cardName = line.substring(4).trim();
-                const cardResult = parseCardContent(lines, i + 1);
+            const cardMatch = line.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
+            if (cardMatch) {
+                const cardName = cardMatch[1].trim();
+                const inlineContent = cardMatch[2];
+                const cardResult = parseCardContent(lines, i + 1, inlineContent);
                 if (cardResult.success) {
                     cards.push({name: cardName, content: cardResult.content});
                     i = cardResult.nextIndex;
@@ -332,22 +332,24 @@ const ImportManager = (function () {
         }
 
         if (cards.length === 0) {
-            return {success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（### 卡片名称）')};
+            return {success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（**卡片名称**：）')};
         }
 
-        return {success: true, format: 'demoMd2', taskName, cards};
+        return {success: true, format: 'taskLevel', taskName, cards};
     }
 
-    // 解析 demoMd3 格式：只有 ### 卡片名称
-    function parseDemoMd3(lines) {
+    // 解析卡片级别数据：只有 **卡片名称**：内容
+    function parseCardLevel(lines) {
         const cards = [];
         let i = 0;
 
         while (i < lines.length) {
             const line = lines[i].trim();
-            if (line.startsWith('### ')) {
-                const cardName = line.substring(4).trim();
-                const cardResult = parseCardContent(lines, i + 1);
+            const cardMatch = line.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
+            if (cardMatch) {
+                const cardName = cardMatch[1].trim();
+                const inlineContent = cardMatch[2];
+                const cardResult = parseCardContent(lines, i + 1, inlineContent);
                 if (cardResult.success) {
                     cards.push({name: cardName, content: cardResult.content});
                     i = cardResult.nextIndex;
@@ -358,41 +360,27 @@ const ImportManager = (function () {
         }
 
         if (cards.length === 0) {
-            return {success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（### 卡片名称）')};
+            return {success: false, error: StringLoader.get('import.errorNoCards', '未找到卡片项（**卡片名称**：）')};
         }
 
-        return {success: true, format: 'demoMd3', cards};
+        return {success: true, format: 'cardLevel', cards};
     }
 
-    // 解析单个卡片内容
-    function parseCardContent(lines, startIndex) {
+    // 解析单个卡片内容（inlineContent 为冒号后同行内容，后续行追加到内容）
+    function parseCardContent(lines, startIndex, initialContent) {
         let contentLines = [];
+        if (initialContent) {
+            contentLines.push(initialContent);
+        }
         let i = startIndex;
-        let foundMarker = false;
 
         while (i < lines.length) {
             const line = lines[i];
             const trimmed = line.trim();
 
             // 遇到下一个卡片或任务时结束
-            if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
+            if (/^\*\*(.+?)\*\*[：:]/.test(trimmed) || trimmed.startsWith('## ')) {
                 break;
-            }
-
-            if (!foundMarker) {
-                // 匹配 **内容** 或 **内容2** / **内容3** 等标记
-                if (/^\*\*内容(\d+)?\*\*$/.test(trimmed)) {
-                    foundMarker = true;
-                    i++;
-                    continue;
-                }
-                // 忽略内容标记前的空行
-                if (trimmed === '') {
-                    i++;
-                    continue;
-                }
-                // 未找到内容标记，但遇到了非空行，视作内容开始（兼容容错）
-                foundMarker = true;
             }
 
             contentLines.push(line);
@@ -410,7 +398,7 @@ const ImportManager = (function () {
     // 确认导入
     function confirmImport(parseResult) {
         const count = parseResult.cards.length;
-        const message = parseResult.format === 'demoMd2'
+        const message = parseResult.format === 'taskLevel'
             ? StringLoader.get('import.confirmTaskCards', '是否导入任务"{task}"下的 {count} 个卡片数据？')
                 .replace('{task}', parseResult.taskName).replace('{count}', count)
             : StringLoader.get('import.confirmCards', '是否导入 {count} 个卡片数据？').replace('{count}', count);
@@ -680,7 +668,7 @@ const ImportManager = (function () {
         }
 
         const count = parseResult.cards.length;
-        const message = parseResult.format === 'demoMd2'
+        const message = parseResult.format === 'taskLevel'
             ? StringLoader.get('import.confirmTaskCards', '是否导入任务"{task}"下的 {count} 个卡片数据？')
                 .replace('{task}', parseResult.taskName).replace('{count}', count)
             : StringLoader.get('import.confirmCards', '是否导入 {count} 个卡片数据？').replace('{count}', count);
@@ -818,7 +806,7 @@ const ImportManager = (function () {
         }
     }
 
-    // 导出当前任务数据（demoMd2 标准导入格式）
+    // 导出当前任务数据（标准格式）
     async function exportTask() {
         const activeTask = Sidebar.getActiveTask();
         if (!activeTask) {
@@ -878,12 +866,10 @@ const ImportManager = (function () {
             return;
         }
 
-        // 构建 demoMd2 格式内容
+        // 构建标准格式内容
         let content = '## 1. ' + task.name + '\n';
         cards.forEach(card => {
-            content += '\n### ' + card.name + '\n';
-            content += '**内容**\n';
-            content += card.content + '\n';
+            content += '\n**' + card.name + '**：' + card.content + '\n';
         });
 
         // 生成文件名：父级目录名_任务名_时间(精确到秒)_时间戳

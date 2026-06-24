@@ -97,32 +97,33 @@
 
 <h2>零、重要：数据级别与导入方式</h2>
 
-<p>AI_Helper 的数据分为<strong>两个级别</strong>，格式不同，导入方式也不同：</p>
+<p>AI_Helper 使用<strong>统一的卡片标记格式</strong>：<code>**卡片名**：内容</code>（粗体+冒号，同行写数据）。</p>
+<p>根据文件中<strong>是否包含任务标题</strong>（<code>## </code>），分为两个级别，导入方式不同：</p>
 
 <table>
-  <tr><th>级别</th><th>格式</th><th>标记方式</th><th>正确的导入方式</th><th>错误的导入方式</th></tr>
+  <tr><th>级别</th><th>特征</th><th>标记方式</th><th>正确的导入方式</th><th>错误的导入方式</th></tr>
   <tr>
     <td><strong>任务级</strong></td>
-    <td>项目导入导出格式</td>
+    <td>含有 <code>## 任务名</code></td>
     <td><code>## 任务名</code> + <code>**卡片名**：内容</code></td>
-    <td>拖入<strong>侧边栏任务栏</strong>（空白区域）或 文件 → 导入项目数据</td>
+    <td><strong>拖入侧边栏任务栏空白区域</strong> 或 文件 → 导入项目数据</td>
     <td>拖入工作区 或 拖入任务项</td>
   </tr>
   <tr>
     <td><strong>卡片级</strong></td>
-    <td>卡片数据格式</td>
-    <td><code>### 卡片名</code> + <code>**内容**</code></td>
-    <td>拖入<strong>工作区</strong> 或 拖入<strong>具体任务项</strong>上</td>
+    <td>不含 <code>##</code> 标题</td>
+    <td>仅 <code>**卡片名**：内容</code></td>
+    <td><strong>拖入工作区</strong> 或 拖入<strong>具体任务项</strong>上</td>
     <td>拖入侧边栏任务栏空白区域</td>
   </tr>
 </table>
 
-<p><strong>拖入时请务必区分：</strong></p>
+<p><strong>简单判断：</strong></p>
 <ul>
-  <li>如果你的 .md 文件用 <code>##</code> 标记任务名、<code>**卡片名**：</code> 标记卡片 → 这是<strong>任务级数据</strong>，拖到<strong>侧边栏任务栏空白区域</strong></li>
-  <li>如果你的 .md 文件用 <code>###</code> 标记卡片名、<code>**内容**</code> 标记内容 → 这是<strong>卡片级数据</strong>，拖到<strong>工作区</strong>或<strong>某个任务项上</strong></li>
+  <li>文件里有 <code>## 任务名</code> 标题 → <strong>任务级数据</strong>，拖到<strong>侧边栏任务栏空白区域</strong>（或文件 → 导入项目数据）</li>
+  <li>文件里没有 <code>##</code> 标题 → <strong>卡片级数据</strong>，拖到<strong>工作区</strong>或<strong>某个任务项上</strong></li>
 </ul>
-<p>本教学文档以下内容针对<strong>任务级数据</strong>（项目导入导出格式）。卡片级数据格式请参考软件内"导入数据"按钮的说明。</p>
+<p>本教学文档以下内容针对<strong>任务级数据</strong>（含任务标题的项目导入导出格式）。</p>
 
 <h2>一、什么是标准输入文件</h2>
 <p>标准输入文件是一个 <code>.md</code> 文件，你可以用任意文本编辑器手动编写，然后通过菜单 <strong>文件 → 导入项目数据</strong> 导入到 AI_Helper，批量创建任务和卡片。</p>
@@ -220,8 +221,8 @@
 <ul>
   <li><strong>卡片名冒号后换行写内容</strong> — 内容必须与冒号在同一行</li>
   <li><strong>卡片名拼写错误</strong> — 如"光影氛围"应为"光影色彩"</li>
-  <li><strong>误用 <code>###</code> 三级标题</strong> — 那是卡片导入格式（工作台拖拽），不是项目导入格式</li>
-  <li><strong>误用 <code>**内容**</code> 独占一行</strong> — 那也是卡片导入格式</li>
+  <li><strong>误用 <code>###</code> 三级标题</strong> — 应使用 <code>**卡片名**：</code> 格式标记卡片</li>
+  <li><strong>误用 <code>**内容**</code> 独占一行</strong> — 卡片内容应在 <code>**卡片名**：</code> 同行冒号后</li>
   <li><strong>添加 <code>#</code> 一级标题</strong> 或元信息行 — 解析器可能误解析</li>
   <li><strong><code>##</code> 后面漏掉空格</strong> — 必须写成 <code>## 任务名</code>，不能写成 <code>##任务名</code></li>
 </ul>
@@ -243,32 +244,33 @@
 
 <h2>0. IMPORTANT: Data Levels &amp; Import Methods</h2>
 
-<p>AI_Helper data has <strong>two levels</strong> with different formats and import methods:</p>
+<p>AI_Helper uses a <strong>unified card markup format</strong>: <code>**CardName**：content</code> (bold + colon, data on the same line).</p>
+<p>Based on whether the file <strong>contains task headers</strong> (<code>## </code>), data falls into two levels with different import methods:</p>
 
 <table>
-  <tr><th>Level</th><th>Format</th><th>Markup</th><th>Correct Import Method</th><th>Wrong Import Method</th></tr>
+  <tr><th>Level</th><th>Feature</th><th>Markup</th><th>Correct Import Method</th><th>Wrong Import Method</th></tr>
   <tr>
     <td><strong>Task-level</strong></td>
-    <td>Project import/export format</td>
+    <td>Contains <code>## TaskName</code></td>
     <td><code>## TaskName</code> + <code>**CardName**：content</code></td>
-    <td>Drop onto <strong>sidebar task bar</strong> (empty area) or File → Import Project Data</td>
+    <td><strong>Drop onto sidebar task bar empty area</strong> or File → Import Project Data</td>
     <td>Drop onto workspace or onto a task item</td>
   </tr>
   <tr>
     <td><strong>Card-level</strong></td>
-    <td>Card data format</td>
-    <td><code>### CardName</code> + <code>**content**</code></td>
-    <td>Drop onto <strong>workspace</strong> or onto a <strong>specific task item</strong></td>
+    <td>No <code>##</code> headers</td>
+    <td>Only <code>**CardName**：content</code></td>
+    <td><strong>Drop onto workspace</strong> or onto a <strong>specific task item</strong></td>
     <td>Drop onto sidebar task bar empty area</td>
   </tr>
 </table>
 
-<p><strong>When dragging, be sure to distinguish:</strong></p>
+<p><strong>Quick rule:</strong></p>
 <ul>
-  <li>If your .md uses <code>##</code> for task names and <code>**CardName**：</code> for cards → this is <strong>task-level data</strong>, drop onto <strong>sidebar task bar empty area</strong></li>
-  <li>If your .md uses <code>###</code> for card names and <code>**content**</code> marker → this is <strong>card-level data</strong>, drop onto the <strong>workspace</strong> or a <strong>specific task item</strong></li>
+  <li>File has <code>## TaskName</code> headers → <strong>task-level data</strong>, drop onto <strong>sidebar task bar empty area</strong> (or File → Import Project Data)</li>
+  <li>File has no <code>##</code> headers → <strong>card-level data</strong>, drop onto the <strong>workspace</strong> or a <strong>specific task item</strong></li>
 </ul>
-<p>The rest of this tutorial covers <strong>task-level data</strong> (project import/export format). For card-level data format, see the "Import Data" button inside the software.</p>
+<p>The rest of this tutorial covers <strong>task-level data</strong> (project import/export format with task headers).</p>
 
 <h2>1. What is a Standard Input File</h2>
 <p>A standard input file is a <code>.md</code> file that you write with any text editor, then import via <strong>File → Import Project Data</strong> to batch-create tasks and cards in AI_Helper.</p>
@@ -364,10 +366,10 @@ Ground reflects purple and blue light.</pre>
 
 <h2>5. Common Mistakes</h2>
 <ul>
-  <li><strong>Putting content on a new line after the colon</strong> — content must be on the same line as <code>**card**：</code></li>
+  <li><strong>Putting content on a new line after the colon</strong> — content must be on the same line as <code>**Card**：</code></li>
   <li><strong>Misspelling card names</strong> — names must match the Chinese standard exactly</li>
-  <li><strong>Using <code>###</code> headings</strong> — that's the card-level import format, not project import</li>
-  <li><strong>Using <code>**content**</code> on its own line</strong> — also the card-level format</li>
+  <li><strong>Using <code>###</code> headings</strong> — use <code>**CardName**：</code> format instead</li>
+  <li><strong>Using <code>**content**</code> on its own line</strong> — card content belongs after the colon on the same line as <code>**CardName**：</code></li>
   <li><strong>Adding <code>#</code> headings</strong> or metadata lines</li>
   <li><strong>Missing the space after <code>##</code></strong> — must be <code>## TaskName</code>, not <code>##TaskName</code></li>
 </ul>

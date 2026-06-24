@@ -518,7 +518,6 @@ AI_Helper/
 │   └── urls.json                 # Official URLs
 ├── renderer/                     # Renderer process
 │   ├── index.html                # Main page (CN)
-│   ├── index_en.html             # Main page (EN)
 │   ├── tutorial.html             # Tutorial page
 │   ├── styles/main.css           # Stylesheet
 │   └── scripts/

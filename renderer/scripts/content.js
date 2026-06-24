@@ -1032,8 +1032,8 @@ const Content = (function() {
       return;
     }
 
-    // 构建单卡片 demoMd3 格式
-    const fileContent = '### ' + cardDef.label + '\n**内容**\n' + content + '\n';
+    // 构建单卡片标准格式
+    const fileContent = '**' + cardDef.label + '**：' + content + '\n';
 
     const safeCardName = cardDef.label.replace(/[\\/:*?"<>|]/g, '_');
     const now = new Date();

@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="文档更新">
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="拆分">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README_en.md" beforeDir="false" afterPath="$PROJECT_DIR$/README_en.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/strings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/strings_en.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings_en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/数据格式说明.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/数据格式说明.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/content.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/content.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/renderer/scripts/import.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/import.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/projectImport.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/projectImport.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/scripts/sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/sidebar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/renderer/tutorial.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/tutorial.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,15 +95,7 @@
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
       <workItem from="1782176099051" duration="2455000" />
-      <workItem from="1782260350556" duration="1304000" />
-    </task>
-    <task id="LOCAL-00044" summary="卡片布局微调">
-      <option name="closed" value="true" />
-      <created>1782045651254</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1782045651254</updated>
+      <workItem from="1782260350556" duration="2720000" />
     </task>
     <task id="LOCAL-00045" summary="项目数据导出 导出任务 导出卡片 的默认名称全局重构,项目数据导出 名称 父级目录名称_时间(精确到秒)_时间戳,导出任务 父级目录名称_任务项名称_时间(精确到秒)_时间戳 ,导出卡片,父级目录名称_ 父级目录名称_任务项名称_卡片名称_时间(精确到秒)_时间戳">
       <option name="closed" value="true" />
@@ -482,7 +481,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782210580055</updated>
     </task>
-    <option name="localTasksCounter" value="93" />
+    <task id="LOCAL-00093" summary="拆分">
+      <option name="closed" value="true" />
+      <created>1782261838015</created>
+      <option name="number" value="00093" />
+      <option name="presentableId" value="LOCAL-00093" />
+      <option name="project" value="LOCAL" />
+      <updated>1782261838015</updated>
+    </task>
+    <option name="localTasksCounter" value="94" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -500,7 +507,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="重新编写文档;打补丁" />
     <MESSAGE value="性能优化" />
     <MESSAGE value="删除无用文件" />
     <MESSAGE value="构建与安装" />
@@ -525,6 +531,7 @@
     <MESSAGE value="改了个名字" />
     <MESSAGE value="拖拽任务项,卡片到桌面,可以导出数据" />
     <MESSAGE value="文档更新" />
-    <option name="LAST_COMMIT_MESSAGE" value="文档更新" />
+    <MESSAGE value="拆分" />
+    <option name="LAST_COMMIT_MESSAGE" value="拆分" />
   </component>
 </project>

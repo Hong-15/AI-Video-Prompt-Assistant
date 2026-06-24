@@ -65,6 +65,11 @@
     "noFolderPrompt": "请先打开一个工作文件夹，数据将保存在该文件夹中",
     "openFolder": "打开项目",
     "openFolderAction": "打开项目",
+    "createProject": "新建项目",
+    "recentProjects": "最近项目",
+    "searchProjects": "搜索项目",
+    "noProjectsFound": "没有找到匹配的项目",
+    "removeFromRecent": "从列表中移除",
     "taskCount": "共 {count} 个任务",
     "contextMenu": {
       "reorder": "重构帧位置",
@@ -156,7 +161,7 @@
     "dialogTitle": "导入卡片数据",
     "selectFile": "选择文件",
     "dragHint": "将 .md 或 .txt 文件拖到这里",
-    "formatHint": "支持 demoMd2 / demoMd3 格式",
+    "formatHint": "支持标准输入输出格式",
     "confirmTaskCards": "是否导入任务\"{task}\"下的 {count} 个卡片数据？",
     "confirmCards": "是否导入 {count} 个卡片数据？",
     "success": "成功导入 {count} 个卡片",
@@ -164,7 +169,7 @@
     "errorEmpty": "文件内容为空",
     "errorInvalid": "文件格式错误：{reason}",
     "errorNoTask": "未找到任务项（## 任务名称）",
-    "errorNoCards": "未找到卡片项（### 卡片名称）",
+    "errorNoCards": "未找到卡片项（**卡片名称**：）",
     "duplicateTitle": "发现同名卡片",
     "duplicateMessage": "卡片\"{name}\"已存在，请选择处理方式",
     "skip": "跳过",
@@ -255,6 +260,7 @@
     "menuShortcuts": "快捷键设置",
     "menuLanguage": "语言",
     "menuLogs": "日志",
+    "menuDebug": "调试预览",
     "menuAbout": "关于",
     "closeBehavior": "关闭行为",
     "closeBehaviorDesc": "设置点击右上角 X 按钮时的行为",
@@ -299,6 +305,11 @@
     "expired": "已过期",
     "languageZh": "中文",
     "languageEn": "英文"
+  },
+  "debug": {
+    "title": "调试预览",
+    "clearBtn": "清空",
+    "autoScroll": "自动滚动"
   },
   "globalSearch": {
     "title": "全局搜索",

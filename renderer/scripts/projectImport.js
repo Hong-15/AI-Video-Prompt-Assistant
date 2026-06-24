@@ -425,7 +425,7 @@ const ProjectImport = (function() {
       let output = '';
       taskResult.tasks.forEach(t => {
         t.cards.forEach(c => {
-          output += '### ' + c.name + '\n**内容**\n' + c.content + '\n\n';
+          output += '**' + c.name + '**：' + c.content + '\n\n';
         });
       });
       const trimmed = output.trim();
@@ -442,7 +442,7 @@ const ProjectImport = (function() {
       const mdMatch = trimmed.match(/^\*\*(.+?)\*\*[：:]\s*(.*)$/);
       if (mdMatch) {
         if (currentCardName) {
-          cardOutput += '### ' + currentCardName + '\n**内容**\n' + currentCardContent.trim() + '\n\n';
+          cardOutput += '**' + currentCardName + '**：' + currentCardContent.trim() + '\n\n';
         }
         currentCardName = mdMatch[1].trim();
         currentCardContent = mdMatch[2];
@@ -451,7 +451,7 @@ const ProjectImport = (function() {
       }
     }
     if (currentCardName) {
-      cardOutput += '### ' + currentCardName + '\n**内容**\n' + currentCardContent.trim() + '\n\n';
+      cardOutput += '**' + currentCardName + '**：' + currentCardContent.trim() + '\n\n';
     }
 
     const trimmed = cardOutput.trim();

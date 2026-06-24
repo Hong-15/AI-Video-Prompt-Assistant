@@ -66,6 +66,11 @@
     "noFolderPrompt": "Please open a working folder first. Data will be saved in that folder.",
     "openFolder": "Open Project",
     "openFolderAction": "Open Project",
+    "createProject": "New Project",
+    "recentProjects": "Recent Projects",
+    "searchProjects": "Search Projects",
+    "noProjectsFound": "No matching projects found",
+    "removeFromRecent": "Remove from list",
     "taskCount": "{count} task(s)",
     "contextMenu": {
       "reorder": "Reorder",
@@ -157,7 +162,7 @@
     "dialogTitle": "Import Card Data",
     "selectFile": "Select File",
     "dragHint": "Drag .md or .txt file here",
-    "formatHint": "Supports demoMd2 / demoMd3 formats",
+    "formatHint": "Supports standard import/export formats",
     "confirmTaskCards": "Import {count} cards under task \"{task}\"?",
     "confirmCards": "Import {count} cards?",
     "success": "Successfully imported {count} cards",
@@ -165,7 +170,7 @@
     "errorEmpty": "File is empty",
     "errorInvalid": "Invalid file format: {reason}",
     "errorNoTask": "No task found (## Task Name)",
-    "errorNoCards": "No cards found (### Card Name)",
+    "errorNoCards": "No cards found (**CardName**:)",
     "duplicateTitle": "Duplicate Card Found",
     "duplicateMessage": "Card \"{name}\" already exists. Choose an action",
     "skip": "Skip",
@@ -256,6 +261,7 @@
     "menuShortcuts": "Shortcut Settings",
     "menuLanguage": "Language",
     "menuLogs": "Logs",
+    "menuDebug": "Debug Preview",
     "menuAbout": "About",
     "closeBehavior": "Close Behavior",
     "closeBehaviorDesc": "Configure what happens when clicking the X button",
@@ -300,6 +306,11 @@
     "expired": "Expired",
     "languageZh": "Chinese",
     "languageEn": "English"
+  },
+  "debug": {
+    "title": "Debug Preview",
+    "clearBtn": "Clear",
+    "autoScroll": "Auto Scroll"
   },
   "globalSearch": {
     "title": "Global Search",

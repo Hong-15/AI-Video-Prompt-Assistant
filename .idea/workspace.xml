@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="拆分">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README_en.md" beforeDir="false" afterPath="$PROJECT_DIR$/README_en.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/strings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/strings_en.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/strings_en.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/数据格式说明.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/数据格式说明.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderer/scripts/content.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/content.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderer/scripts/import.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/import.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderer/scripts/projectImport.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/projectImport.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderer/scripts/sidebar.js" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/scripts/sidebar.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/renderer/tutorial.html" beforeDir="false" afterPath="$PROJECT_DIR$/renderer/tutorial.html" afterDir="false" />
-    </list>
+    <list default="true" id="c15d23b8-9d3f-4000-8a5d-47891963d734" name="更改" comment="补丁" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -95,15 +83,7 @@
       <workItem from="1782087497270" duration="22975000" />
       <workItem from="1782119178572" duration="1905000" />
       <workItem from="1782176099051" duration="2455000" />
-      <workItem from="1782260350556" duration="2720000" />
-    </task>
-    <task id="LOCAL-00045" summary="项目数据导出 导出任务 导出卡片 的默认名称全局重构,项目数据导出 名称 父级目录名称_时间(精确到秒)_时间戳,导出任务 父级目录名称_任务项名称_时间(精确到秒)_时间戳 ,导出卡片,父级目录名称_ 父级目录名称_任务项名称_卡片名称_时间(精确到秒)_时间戳">
-      <option name="closed" value="true" />
-      <created>1782046050663</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1782046050663</updated>
+      <workItem from="1782260350556" duration="2897000" />
     </task>
     <task id="LOCAL-00046" summary="元素聚焦和快捷键重构">
       <option name="closed" value="true" />
@@ -489,7 +469,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782261838015</updated>
     </task>
-    <option name="localTasksCounter" value="94" />
+    <task id="LOCAL-00094" summary="补丁">
+      <option name="closed" value="true" />
+      <created>1782263216279</created>
+      <option name="number" value="00094" />
+      <option name="presentableId" value="LOCAL-00094" />
+      <option name="project" value="LOCAL" />
+      <updated>1782263216279</updated>
+    </task>
+    <option name="localTasksCounter" value="95" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -518,7 +506,6 @@
     <MESSAGE value="优化按钮问题,新增获取任务字符长度,选中卡片字符长度" />
     <MESSAGE value="纠正语言切换问题" />
     <MESSAGE value="补丁,和新增功能" />
-    <MESSAGE value="补丁" />
     <MESSAGE value="新增快捷键" />
     <MESSAGE value="快捷键系统拆分" />
     <MESSAGE value="重构弹窗模块" />
@@ -532,6 +519,7 @@
     <MESSAGE value="拖拽任务项,卡片到桌面,可以导出数据" />
     <MESSAGE value="文档更新" />
     <MESSAGE value="拆分" />
-    <option name="LAST_COMMIT_MESSAGE" value="拆分" />
+    <MESSAGE value="补丁" />
+    <option name="LAST_COMMIT_MESSAGE" value="补丁" />
   </component>
 </project>
